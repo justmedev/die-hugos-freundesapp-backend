@@ -1,6 +1,4 @@
-package at.ilja
-
--busch
+package at.ilja_busch
 
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable

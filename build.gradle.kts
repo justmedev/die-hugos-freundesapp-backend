@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = "at.ilja-busch"
+group = "at.ilja_busch"
 version = "1.0.0-SNAPSHOT"
 
 application {

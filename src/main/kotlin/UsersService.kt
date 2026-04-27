@@ -1,6 +1,4 @@
-package at.ilja
-
--busch
+package at.ilja_busch
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull

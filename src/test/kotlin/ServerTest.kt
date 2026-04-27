@@ -1,6 +1,4 @@
-package at.ilja
-
--busch
+package at.ilja_busch
 
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode

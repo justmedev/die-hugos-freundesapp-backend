@@ -3,12 +3,12 @@ ktor:
     port: 8080
   application:
     modules:
-      - at.ilja-busch.HttpKt.configureHttp
-      - at.ilja-busch.MonitoringKt.configureMonitoring
-      - at.ilja-busch.SerializationKt.configureSerialization
-      - at.ilja-busch.SecurityKt.configureSecurity
-      - at.ilja-busch.RequestValidationKt.configureRequestValidation
-      - at.ilja-busch.DIKt.configureDependencyInjection
-      - at.ilja-busch.ExposedKt.configureExposed
-      - at.ilja-busch.PostgresKt.configurePostgres
-      - at.ilja-busch.RoutingKt.configureRouting
+      - at.ilja_busch.HttpKt.configureHttp
+      - at.ilja_busch.MonitoringKt.configureMonitoring
+      - at.ilja_busch.SerializationKt.configureSerialization
+      - at.ilja_busch.SecurityKt.configureSecurity
+      - at.ilja_busch.RequestValidationKt.configureRequestValidation
+      - at.ilja_busch.DIKt.configureDependencyInjection
+      - at.ilja_busch.ExposedKt.configureExposed
+      - at.ilja_busch.PostgresKt.configurePostgres
+      - at.ilja_busch.RoutingKt.configureRouting
