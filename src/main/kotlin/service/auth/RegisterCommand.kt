@@ -1,12 +1,12 @@
-package service.users
+package service.auth
 
 import kotlinx.datetime.LocalDateTime
 
-data class CreateUserCommand(
+data class RegisterCommand(
     val email: String,
     val firstName: String,
     val lastName: String,
-    val passwordHash: String,
+    val plaintextPassword: String,
     val birthdate: LocalDateTime,
     val isAdmin: Boolean
 )

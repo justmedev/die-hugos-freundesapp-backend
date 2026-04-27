@@ -8,6 +8,7 @@ import domain.entities.User
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
 import io.ktor.server.plugins.*
+import service.users.CreateUserCommand
 import service.users.UsersService
 import java.util.*
 
@@ -31,10 +32,23 @@ class AuthService(
      */
     fun login(cmd: LoginCommand): UserTokenPair {
         val user = usersService.findByEmail(cmd.email)?.takeIf {
-            argon2.verify(cmd.password, it.password.toCharArray())
+            argon2.verify(it.password, cmd.password.toCharArray())
         }
         if (user == null) throw Exception("Invalid email or password")
         return generateTokens(user)
+    }
+
+    suspend fun register(cmd: RegisterCommand): User {
+        return usersService.create(
+            CreateUserCommand(
+                cmd.email,
+                cmd.firstName,
+                cmd.lastName,
+                argon2.hash(2, 2097152, 2, cmd.plaintextPassword.toCharArray()),
+                cmd.birthdate,
+                cmd.isAdmin
+            )
+        )
     }
 
     fun refresh(cmd: RefreshCommand): UserTokenPair {
