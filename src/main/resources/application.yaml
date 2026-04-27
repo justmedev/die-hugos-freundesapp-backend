@@ -1,9 +1,0 @@
-ktor:
-  deployment:
-    port: 8080
-  application:
-    modules:
-      - plugins.MonitoringKt.configureMonitoring
-      - plugins.SecurityKt.configureSecurity
-      - plugins.SerializationKt.configureSerialization
-      - plugins.ExposedKt.configureExposed

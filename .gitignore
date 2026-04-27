@@ -1,3 +1,5 @@
+local.conf
+
 build
 .gradle
 .gradletasknamecache
