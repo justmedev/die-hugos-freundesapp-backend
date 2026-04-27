@@ -1,0 +1,14 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - at.ilja-busch.HttpKt.configureHttp
+      - at.ilja-busch.MonitoringKt.configureMonitoring
+      - at.ilja-busch.SerializationKt.configureSerialization
+      - at.ilja-busch.SecurityKt.configureSecurity
+      - at.ilja-busch.RequestValidationKt.configureRequestValidation
+      - at.ilja-busch.DIKt.configureDependencyInjection
+      - at.ilja-busch.ExposedKt.configureExposed
+      - at.ilja-busch.PostgresKt.configurePostgres
+      - at.ilja-busch.RoutingKt.configureRouting
