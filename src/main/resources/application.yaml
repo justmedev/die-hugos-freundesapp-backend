@@ -6,3 +6,4 @@ ktor:
       - plugins.MonitoringKt.configureMonitoring
       - plugins.SecurityKt.configureSecurity
       - plugins.SerializationKt.configureSerialization
+      - plugins.ExposedKt.configureExposed
