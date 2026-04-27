@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.hayden.khealth)
     implementation(libs.logback.classic)
     implementation(libs.postgresql)
+    implementation(libs.argon2)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

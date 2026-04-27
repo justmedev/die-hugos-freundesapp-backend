@@ -14,6 +14,7 @@ h2database-h2 = { module = "com.h2database:h2", version.ref = "h2" }
 hayden-khealth = { module = "dev.hayden:khealth", version = "3.0.2" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 postgresql = { module = "org.postgresql:postgresql", version = "42.7.10" }
+argon2 = { module = "de.mkammerer:argon2-jvm", version = "2.12" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

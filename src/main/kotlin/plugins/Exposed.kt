@@ -4,7 +4,7 @@ import io.ktor.server.application.*
 import java.sql.Connection
 import java.sql.DriverManager
 
-suspend fun Application.configureExposed() {
+fun Application.configureExposed() {
     connectToPostgres(embeddedH2 = true)
 }
 

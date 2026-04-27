@@ -1,0 +1,67 @@
+package service.auth
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
+import com.auth0.jwt.algorithms.Algorithm
+import de.mkammerer.argon2.Argon2
+import domain.entities.User
+import domain.models.UserTokenPair
+import io.ktor.server.config.*
+import io.ktor.server.plugins.*
+import service.users.UsersService
+import java.util.*
+
+class AuthService(
+    private val usersService: UsersService,
+    config: ApplicationConfig,
+    val argon2: Argon2
+) {
+    val secret = config.property("jwt.secret").getString()
+    val issuer = config.property("jwt.issuer").getString()
+    val audience = config.property("jwt.audience").getString()
+    val verifier: JWTVerifier = JWT.require(Algorithm.HMAC256(secret))
+        .withIssuer(issuer)
+        .withAudience(audience)
+        .withClaim("type", "refresh")
+        .build()
+
+    /**
+     * Authenticates a user and returns a pair of JWT tokens (access, refresh).
+     * If the user is not found or the password is incorrect, returns null.
+     */
+    fun login(cmd: LoginCommand): UserTokenPair {
+        val user = usersService.findByEmail(cmd.email)?.takeIf {
+            argon2.verify(cmd.password, it.password.toCharArray())
+        }
+        if (user == null) throw Exception("Invalid email or password")
+        return generateTokens(user)
+    }
+
+    fun refresh(cmd: RefreshCommand): UserTokenPair {
+        val decoded = verifier.verify(cmd.refreshToken)
+        val userId = decoded.getClaim("sub").asInt()
+        val user = usersService.findById(userId)
+        return generateTokens(user ?: throw NotFoundException("User not found"))
+    }
+
+    private fun generateTokens(user: User): UserTokenPair {
+        val currentTime = System.currentTimeMillis()
+
+        val accessToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withSubject(user.id.toString())
+            .withExpiresAt(Date(currentTime + 15 * 60 * 1000)) // 15 min
+            .sign(Algorithm.HMAC256(secret))
+
+        val refreshToken = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withSubject(user.id.toString())
+            .withClaim("type", "refresh")
+            .withExpiresAt(Date(currentTime + 7 * 24 * 60 * 60 * 1000)) // 7 days
+            .sign(Algorithm.HMAC256(secret))
+
+        return UserTokenPair(accessToken, refreshToken, user)
+    }
+}
