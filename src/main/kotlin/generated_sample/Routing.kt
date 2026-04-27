@@ -1,4 +1,4 @@
-package at.ilja_busch
+package generated_sample
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*

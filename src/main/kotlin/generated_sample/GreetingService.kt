@@ -1,4 +1,4 @@
-package at.ilja_busch
+package generated_sample
 
 fun interface GreetingService {
     fun sayHello(): String

@@ -1,4 +1,4 @@
-package at.ilja_busch
+package plugins
 
 import io.ktor.server.application.*
 import dev.hayden.KHealth

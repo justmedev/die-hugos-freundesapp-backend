@@ -1,8 +1,8 @@
 [versions]
 exposed = "1.2.0"
 h2 = "2.4.240"
-kotlin = "2.3.20"
-logback = "1.5.21"
+kotlin = "2.3.21"
+logback = "1.5.32"
 
 [libraries]
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -15,5 +15,4 @@ postgresql = { module = "org.postgresql:postgresql", version = "42.7.10" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

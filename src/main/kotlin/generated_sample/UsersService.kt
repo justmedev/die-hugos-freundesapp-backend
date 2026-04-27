@@ -1,4 +1,4 @@
-package at.ilja_busch
+package generated_sample
 
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
