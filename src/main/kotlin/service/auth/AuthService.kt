@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import de.mkammerer.argon2.Argon2
-import domain.entities.User
+import domain.entities.UserEntity
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
 import io.ktor.server.plugins.*
@@ -38,7 +38,7 @@ class AuthService(
         return generateTokens(user)
     }
 
-    suspend fun register(cmd: RegisterCommand): User {
+    suspend fun register(cmd: RegisterCommand): UserEntity {
         return usersService.create(
             CreateUserCommand(
                 cmd.email,
@@ -58,7 +58,7 @@ class AuthService(
         return generateTokens(user ?: throw NotFoundException("User not found"))
     }
 
-    private fun generateTokens(user: User): UserTokenPair {
+    private fun generateTokens(user: UserEntity): UserTokenPair {
         val currentTime = System.currentTimeMillis()
 
         val accessToken = JWT.create()

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.datetime.CurrentDateTime
 import org.jetbrains.exposed.v1.datetime.datetime
 
-object Users : IntIdTable("users") {
+object UsersTable : IntIdTable("users") {
     val email = varchar("email", 254)
     val firstName = varchar("first_name", 128)
     val lastName = varchar("last_name", 128)
