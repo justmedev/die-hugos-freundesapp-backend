@@ -1,6 +1,7 @@
 package dto.user
 
 import domain.models.User
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +11,8 @@ data class UserResponse(
     val firstName: String,
     val lastName: String,
     val birthdate: String,
-    val isAdmin: Boolean
+    val isAdmin: Boolean,
+    val createdAt: LocalDateTime,
 ) {
     companion object {
         fun from(entity: User) = UserResponse(
@@ -19,7 +21,8 @@ data class UserResponse(
             firstName = entity.firstName,
             lastName = entity.lastName,
             birthdate = entity.birthdate.toString(),
-            isAdmin = entity.isAdmin
+            isAdmin = entity.isAdmin,
+            createdAt = entity.createdAt,
         )
     }
 }
