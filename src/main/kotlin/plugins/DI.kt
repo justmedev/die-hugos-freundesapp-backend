@@ -13,8 +13,9 @@ fun Application.configureDependencyInjection() {
     val env = environment
     dependencies {
         provide<ApplicationConfig> { env.config }
-
         provide<Argon2> { Argon2Factory.create() }
+
+        // Services
         provide<UsersService> { UsersService() }
         provide<CashpoolsService> { CashpoolsService(resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
