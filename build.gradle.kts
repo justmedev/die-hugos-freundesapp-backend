@@ -34,6 +34,8 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.postgresql)
     implementation(libs.argon2)
+    implementation(libs.ktor.openapi)
+    implementation(libs.ktor.swagger)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

@@ -3,6 +3,7 @@ package controller
 import dto.auth.AuthResponse
 import dto.auth.LoginRequest
 import dto.auth.RefreshRequest
+import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.di.*
@@ -18,7 +19,15 @@ fun Application.configureAuthController() {
 
     routing {
         route("/auth") {
-            post("/login") {
+            post("/login", {
+                description = "Authenticate an existing user with email and password"
+                tags = listOf("Auth")
+                request { body<LoginRequest>() }
+                response {
+                    code(HttpStatusCode.OK) { body<AuthResponse>() }
+                    code(HttpStatusCode.Unauthorized) { description = "Wrong email or password" }
+                }
+            }) {
                 val loginRequest = call.receive<LoginRequest>()
                 try {
                     val utp = authService.login(LoginCommand(loginRequest.email, loginRequest.password))
@@ -29,7 +38,15 @@ fun Application.configureAuthController() {
                 }
             }
 
-            post("/refresh") {
+            post("/refresh", {
+                description = "Use a refresh token to get a new token pair."
+                tags = listOf("Auth")
+                request { body< RefreshRequest>() }
+                response {
+                    code(HttpStatusCode.OK) { body<AuthResponse>() }
+                    code(HttpStatusCode.Unauthorized) { description = "Invalid refresh token" }
+                }
+            }) {
                 val refreshRequest = call.receive<RefreshRequest>()
                 try {
                     val utp = authService.refresh(RefreshCommand(refreshRequest.refreshToken))
