@@ -5,6 +5,7 @@ import domain.models.Cashpool
 import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import io.ktor.server.plugins.*
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -15,6 +16,10 @@ import service.users.UsersService
 class CashpoolsService(
     private val usersService: UsersService
 ) : Service {
+    init {
+        runBlocking { initSchema() }
+    }
+
     override suspend fun initSchema() {
         suspendTransaction {
             SchemaUtils.create(CashpoolsTable)

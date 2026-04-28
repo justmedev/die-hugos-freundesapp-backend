@@ -18,8 +18,6 @@ suspend fun Application.main() {
     val usersService: UsersService by dependencies
     val authService: AuthService by dependencies
 
-    usersService.initSchema()
-
     val adminEmail = environment.config.property("diehugos.adminuser.email").getString()
     val adminPassword = environment.config.property("diehugos.adminuser.password").getString()
 

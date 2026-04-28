@@ -20,7 +20,11 @@ class AuthService(
     val secret = config.property("jwt.secret").getString()
     val issuer = config.property("jwt.issuer").getString()
     val audience = config.property("jwt.audience").getString()
-    val verifier: JWTVerifier = JWT.require(Algorithm.HMAC256(secret))
+    val accessTokenVerifier: JWTVerifier = JWT.require(Algorithm.HMAC256(secret))
+        .withIssuer(issuer)
+        .withAudience(audience)
+        .build()
+    val refreshTokenVerifier: JWTVerifier = JWT.require(Algorithm.HMAC256(secret))
         .withIssuer(issuer)
         .withAudience(audience)
         .withClaim("type", "refresh")
@@ -52,8 +56,8 @@ class AuthService(
     }
 
     suspend fun refresh(cmd: RefreshCommand): UserTokenPair {
-        val decoded = verifier.verify(cmd.refreshToken)
-        val userId = decoded.getClaim("sub").asInt()
+        val decoded = refreshTokenVerifier.verify(cmd.refreshToken)
+        val userId = decoded.subject.toInt()
         val user = usersService.findById(userId)
         return generateTokens(user ?: throw NotFoundException("User not found"))
     }

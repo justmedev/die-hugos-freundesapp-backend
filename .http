@@ -7,3 +7,13 @@ Content-Type: application/json
 }
 
 ###
+
+
+POST http://localhost:8080/cashpools
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3NzczNzM5NDd9.2ZMp8UTfVZ_iVcEG2d5Edva-2RYcGxH2SWMIR0tIleA
+Content-Type: application/json
+
+{
+  "title": "title",
+  "description": "test"
+}

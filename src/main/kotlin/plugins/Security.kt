@@ -13,11 +13,12 @@ fun Application.configureSecurity() {
 
     authentication {
         jwt {
-
-            verifier(authService.verifier)
+            verifier(authService.accessTokenVerifier)
             validate { credential ->
-                val userId = credential.payload.subject.toInt()
-                usersService.findById(userId)
+                val subject = credential.payload.subject
+                return@validate if (subject?.toIntOrNull() != null) {
+                    JWTPrincipal(credential.payload)
+                } else null
             }
         }
     }
