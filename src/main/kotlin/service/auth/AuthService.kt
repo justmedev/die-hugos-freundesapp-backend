@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import de.mkammerer.argon2.Argon2
-import domain.entities.UserEntity
+import domain.models.User
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
 import io.ktor.server.plugins.*
@@ -30,7 +30,7 @@ class AuthService(
      * Authenticates a user and returns a pair of JWT tokens (access, refresh).
      * If the user is not found or the password is incorrect, returns null.
      */
-    fun login(cmd: LoginCommand): UserTokenPair {
+    suspend fun login(cmd: LoginCommand): UserTokenPair {
         val user = usersService.findByEmail(cmd.email)?.takeIf {
             argon2.verify(it.password, cmd.password.toCharArray())
         }
@@ -38,7 +38,7 @@ class AuthService(
         return generateTokens(user)
     }
 
-    suspend fun register(cmd: RegisterCommand): UserEntity {
+    suspend fun register(cmd: RegisterCommand): User {
         return usersService.create(
             CreateUserCommand(
                 cmd.email,
@@ -51,14 +51,14 @@ class AuthService(
         )
     }
 
-    fun refresh(cmd: RefreshCommand): UserTokenPair {
+    suspend fun refresh(cmd: RefreshCommand): UserTokenPair {
         val decoded = verifier.verify(cmd.refreshToken)
         val userId = decoded.getClaim("sub").asInt()
         val user = usersService.findById(userId)
         return generateTokens(user ?: throw NotFoundException("User not found"))
     }
 
-    private fun generateTokens(user: UserEntity): UserTokenPair {
+    private fun generateTokens(user: User): UserTokenPair {
         val currentTime = System.currentTimeMillis()
 
         val accessToken = JWT.create()

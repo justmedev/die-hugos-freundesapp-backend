@@ -1,6 +1,6 @@
 package dto.user
 
-import domain.entities.UserEntity
+import domain.models.User
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,8 +13,8 @@ data class UserResponse(
     val isAdmin: Boolean
 ) {
     companion object {
-        fun from(entity: UserEntity) = UserResponse(
-            id = entity.id.value,
+        fun from(entity: User) = UserResponse(
+            id = entity.id,
             email = entity.email,
             firstName = entity.firstName,
             lastName = entity.lastName,
