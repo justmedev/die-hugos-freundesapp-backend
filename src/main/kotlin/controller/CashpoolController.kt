@@ -1,6 +1,7 @@
 package controller
 
 import dto.cashpool.CashpoolResponse
+import dto.cashpool.CashpoolWithMemberFlagResponse
 import dto.cashpool.CreateCashpoolRequest
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
@@ -51,6 +52,27 @@ fun Application.configureCashpoolController() {
                     }
                 }) {
                     call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it!!) })
+                }
+
+                get("/{id}", {
+                    description = "Get a specific cashpool with the member flag by id."
+                    tags = listOf("Cashpool")
+                    response {
+                        code(HttpStatusCode.OK) { body<List<CashpoolWithMemberFlagResponse>>() }
+                    }
+                }) {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
+                        ?: return@get call.respond(HttpStatusCode.Forbidden)
+                    val id = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid id"
+                    )
+
+                    val domain = cashpoolService.findByIdWithMemberFlag(id, userId) ?: return@get call.respond(
+                        HttpStatusCode.NotFound,
+                        "Cashpool not found"
+                    );
+                    call.respond(HttpStatusCode.OK, CashpoolWithMemberFlagResponse.from(domain))
                 }
             }
         }
