@@ -13,17 +13,20 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import service.cashpool_members.CashpoolMemberService
+import service.cashpool_members.CreateCashpoolMemberCommand
 import service.cashpools.CashpoolsService
 import service.cashpools.CreateCashpoolCommand
 
 fun Application.configureCashpoolController() {
     val cashpoolService: CashpoolsService by dependencies
+    val cashpoolMemberService: CashpoolMemberService by dependencies
 
     routing {
         authenticate {
             route("/cashpools") {
                 post({
-                    description = "Create a new cashpool. You will still have to join (as a member), even as the owner."
+                    description = "Create a new cashpool. The creator will automatically be a member of the cashpool."
                     tags = listOf("Cashpool")
                     request { body<CreateCashpoolRequest>() }
                     response {
@@ -41,6 +44,8 @@ fun Application.configureCashpoolController() {
                             userId
                         )
                     )
+                    cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, created.id))
+
                     call.respond(HttpStatusCode.Created, CashpoolResponse.from(created))
                 }
 
