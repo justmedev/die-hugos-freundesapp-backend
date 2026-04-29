@@ -39,4 +39,6 @@ class CashpoolsService(
     }
 
     suspend fun findById(id: Int) = suspendTransaction { Cashpool.from(CashpoolEntity.find { CashpoolsTable.id eq id }.firstOrNull()) }
+
+    suspend fun findAll() = suspendTransaction { CashpoolEntity.all().map { Cashpool.from(it)} }
 }

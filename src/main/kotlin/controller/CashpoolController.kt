@@ -2,6 +2,7 @@ package controller
 
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
+import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -40,6 +41,16 @@ fun Application.configureCashpoolController() {
                         )
                     )
                     call.respond(HttpStatusCode.Created, CashpoolResponse.from(created))
+                }
+
+                get({
+                    description = "Get all cashpools."
+                    tags = listOf("Cashpool")
+                    response {
+                        code(HttpStatusCode.OK) { body<List<CashpoolResponse>>() }
+                    }
+                }) {
+                    call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it!!) })
                 }
             }
         }
