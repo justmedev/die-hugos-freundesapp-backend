@@ -7,6 +7,7 @@ import domain.tables.CashpoolMembersTable
 import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import io.ktor.server.plugins.*
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -46,5 +47,7 @@ class CashpoolsService(
         Cashpool.from(cashpool)
     }
 
-    suspend fun findAll() = suspendTransaction { CashpoolEntity.all().map { Cashpool.from(it) } }
+    suspend fun findAll() = suspendTransaction { CashpoolEntity.all().orderBy(
+        CashpoolsTable.createdAt to SortOrder.DESC
+    ).map { Cashpool.from(it) } }
 }
