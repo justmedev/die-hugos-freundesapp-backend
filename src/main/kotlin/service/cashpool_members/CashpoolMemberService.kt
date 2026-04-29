@@ -18,16 +18,7 @@ import service.users.UsersService
 class CashpoolMemberService(
     private val usersService: UsersService,
     private val cashpoolsService: CashpoolsService,
-) : Service {
-    init {
-        runBlocking { initSchema() }
-    }
-
-    override suspend fun initSchema() {
-        suspendTransaction {
-            SchemaUtils.create(CashpoolMembersTable)
-        }
-    }
+) {
 
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
         usersService.findById(cmd.userId) ?: throw NotFoundException("User not found")

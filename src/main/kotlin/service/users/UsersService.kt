@@ -9,17 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import service.Service
 
-class UsersService : Service {
-    init {
-        runBlocking { initSchema() }
-    }
-
-    override suspend fun initSchema() {
-        suspendTransaction {
-            SchemaUtils.create(UsersTable)
-        }
-    }
-
+class UsersService {
     suspend fun create(cmd: CreateUserCommand): User {
         return suspendTransaction {
             return@suspendTransaction User.from(UserEntity.new {
