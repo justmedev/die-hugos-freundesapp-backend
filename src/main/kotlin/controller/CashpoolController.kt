@@ -1,7 +1,7 @@
 package controller
 
+import core.exceptions.NotaCashpoolMember
 import dto.cashpool.CashpoolResponse
-import dto.cashpool.CashpoolWithMemberFlagResponse
 import dto.cashpool.CreateCashpoolRequest
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
@@ -55,10 +55,10 @@ fun Application.configureCashpoolController() {
                 }
 
                 get("/{id}", {
-                    description = "Get a specific cashpool with the member flag by id."
+                    description = "Get a specific cashpool. This only returns cashpools the user is a member of."
                     tags = listOf("Cashpool")
                     response {
-                        code(HttpStatusCode.OK) { body<CashpoolWithMemberFlagResponse>() }
+                        code(HttpStatusCode.OK) { body<CashpoolResponse>() }
                     }
                 }) {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
@@ -68,11 +68,18 @@ fun Application.configureCashpoolController() {
                         "Invalid id"
                     )
 
-                    val domain = cashpoolService.findByIdWithMemberFlag(id, userId) ?: return@get call.respond(
-                        HttpStatusCode.NotFound,
-                        "Cashpool not found"
-                    );
-                    call.respond(HttpStatusCode.OK, CashpoolWithMemberFlagResponse.from(domain))
+                    try {
+                        val domain = cashpoolService.findByIdOnlyIfMember(id, userId) ?: return@get call.respond(
+                            HttpStatusCode.NotFound,
+                            "Cashpool not found"
+                        )
+                        call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
+                    } catch (_: NotaCashpoolMember) {
+                        call.respond(
+                            HttpStatusCode.Forbidden,
+                            "You are not a member of this cashpool"
+                        )
+                    }
                 }
             }
         }
