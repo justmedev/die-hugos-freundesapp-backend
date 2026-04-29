@@ -20,8 +20,8 @@ data class CashpoolWithMemberFlagResponse(
             domain.title,
             domain.description,
             UserResponse.from(domain.owner),
-            domain.isOpened,
             domain.isMember,
+            domain.isOpened,
             domain.createdAt.toString(),
         )
     }
