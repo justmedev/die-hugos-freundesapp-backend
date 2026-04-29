@@ -1,4 +1,5 @@
 import domain.tables.CashpoolMembersTable
+import domain.tables.CashpoolTransactionsTable
 import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import io.ktor.server.application.*
@@ -20,7 +21,7 @@ fun main(args: Array<String>) {
 
 suspend fun Application.main() {
     suspendTransaction {
-        SchemaUtils.create(UsersTable, CashpoolsTable, CashpoolMembersTable)
+        SchemaUtils.create(UsersTable, CashpoolsTable, CashpoolMembersTable, CashpoolTransactionsTable)
     }
 
     // Create admin user if not exists

@@ -9,8 +9,8 @@ Content-Type: application/json
 ###
 
 
-GET http://localhost:8000/cashpools
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3Nzc0NDc3NTB9.gPuawqcpYrMX9x5Xa56sqKJG40C0BSGebwDdo_PUbFQ
+GET http://localhost:8000/cashpools/1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3Nzc0NTM0Njd9.3ImUY0gIT4YkvR-X4UDZZ9pHTsissyvKGV4OHG9UWoQ
 Content-Type: application/json
 
 {
