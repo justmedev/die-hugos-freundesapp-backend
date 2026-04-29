@@ -4,6 +4,7 @@ h2 = "2.4.240"
 kotlin = "2.3.21"
 logback = "1.5.32"
 ktorOpenApi = "5.7.0"
+schemaKenerator = "2.7.2"
 
 [libraries]
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -17,6 +18,9 @@ postgresql = { module = "org.postgresql:postgresql", version = "42.7.10" }
 argon2 = { module = "de.mkammerer:argon2-jvm", version = "2.12" }
 ktor-openapi = { module = "io.github.smiley4:ktor-openapi", version.ref = "ktorOpenApi" }
 ktor-swagger = { module = "io.github.smiley4:ktor-swagger-ui", version.ref = "ktorOpenApi" }
+schema-kenerator-core = { module = "io.github.smiley4:schema-kenerator-core", version.ref = "schemaKenerator" }
+schema-kenerator-serialization = { module = "io.github.smiley4:schema-kenerator-serialization", version.ref = "schemaKenerator" }
+schema-kenerator-swagger = { module = "io.github.smiley4:schema-kenerator-swagger", version.ref = "schemaKenerator" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

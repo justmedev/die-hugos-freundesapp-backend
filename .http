@@ -1,4 +1,4 @@
-POST http://localhost:8080/auth/login
+POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
@@ -9,8 +9,8 @@ Content-Type: application/json
 ###
 
 
-POST http://localhost:8080/cashpools
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3NzczNzM5NDd9.2ZMp8UTfVZ_iVcEG2d5Edva-2RYcGxH2SWMIR0tIleA
+GET http://localhost:8000/cashpools
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3Nzc0NDc3NTB9.gPuawqcpYrMX9x5Xa56sqKJG40C0BSGebwDdo_PUbFQ
 Content-Type: application/json
 
 {

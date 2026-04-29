@@ -37,6 +37,11 @@ dependencies {
     implementation(libs.ktor.openapi)
     implementation(libs.ktor.swagger)
 
+    implementation(libs.schema.kenerator.core)
+    implementation(libs.schema.kenerator.serialization)
+    implementation(libs.schema.kenerator.swagger)
+
+
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
 }

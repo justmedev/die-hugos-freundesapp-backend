@@ -58,7 +58,7 @@ fun Application.configureCashpoolController() {
                     description = "Get a specific cashpool with the member flag by id."
                     tags = listOf("Cashpool")
                     response {
-                        code(HttpStatusCode.OK) { body<List<CashpoolWithMemberFlagResponse>>() }
+                        code(HttpStatusCode.OK) { body<CashpoolWithMemberFlagResponse>() }
                     }
                 }) {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
