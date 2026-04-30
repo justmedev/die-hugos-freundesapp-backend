@@ -1,4 +1,4 @@
-package service.users
+package service.user
 
 import domain.entities.UserEntity
 import domain.models.User
@@ -6,7 +6,7 @@ import domain.tables.UsersTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
-class UsersService {
+class UserService {
     suspend fun create(cmd: CreateUserCommand): User {
         return suspendTransaction {
             return@suspendTransaction User.from(UserEntity.new {

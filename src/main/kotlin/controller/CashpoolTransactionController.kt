@@ -14,9 +14,9 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import service.cashpool_transactions.CashpoolTransactionService
-import service.cashpool_transactions.CreateCashpoolTransactionCommand
-import service.cashpool_transactions.UpdateCashpoolTransactionCommand
+import service.cashpool_transaction.CashpoolTransactionService
+import service.cashpool_transaction.CreateCashpoolTransactionCommand
+import service.cashpool_transaction.UpdateCashpoolTransactionCommand
 
 fun Application.configureCashpoolTransactionsController() {
     val cashpoolTransactionService: CashpoolTransactionService by dependencies

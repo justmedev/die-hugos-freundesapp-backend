@@ -1,4 +1,4 @@
-package service.cashpool_transactions
+package service.cashpool_transaction
 
 import core.exceptions.NotaCashpoolMember
 import domain.entities.CashpoolTransactionEntity
@@ -11,13 +11,13 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.cashpool_members.CashpoolMemberService
-import service.cashpools.CashpoolsService
-import service.users.UsersService
+import service.cashpool_member.CashpoolMemberService
+import service.cashpool.CashpoolService
+import service.user.UserService
 
 class CashpoolTransactionService(
-    private val usersService: UsersService,
-    private val cashpoolsService: CashpoolsService,
+    private val userService: UserService,
+    private val cashpoolService: CashpoolService,
     private val cashpoolMemberService: CashpoolMemberService,
 ) {
 
@@ -47,8 +47,8 @@ class CashpoolTransactionService(
     }
 
     private suspend fun checkIfUserCashpoolExistsAndUserIsMember(userId: Int, cashpoolId: Int) {
-        usersService.findById(userId) ?: throw NotFoundException("User not found")
-        cashpoolsService.findById(cashpoolId) ?: throw NotFoundException("Cashpool not found")
+        userService.findById(userId) ?: throw NotFoundException("User not found")
+        cashpoolService.findById(cashpoolId) ?: throw NotFoundException("Cashpool not found")
         cashpoolMemberService.findByCashpoolIdAndUserId(cashpoolId, userId) ?: throw NotaCashpoolMember()
     }
 

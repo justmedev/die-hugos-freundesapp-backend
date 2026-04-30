@@ -6,10 +6,10 @@ import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.plugins.di.*
 import service.auth.AuthService
-import service.cashpool_members.CashpoolMemberService
-import service.cashpool_transactions.CashpoolTransactionService
-import service.cashpools.CashpoolsService
-import service.users.UsersService
+import service.cashpool_member.CashpoolMemberService
+import service.cashpool_transaction.CashpoolTransactionService
+import service.cashpool.CashpoolService
+import service.user.UserService
 
 fun Application.configureDependencyInjection() {
     val env = environment
@@ -18,8 +18,8 @@ fun Application.configureDependencyInjection() {
         provide<Argon2> { Argon2Factory.create() }
 
         // Services
-        provide<UsersService> { UsersService() }
-        provide<CashpoolsService> { CashpoolsService(resolve()) }
+        provide<UserService> { UserService() }
+        provide<CashpoolService> { CashpoolService(resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }

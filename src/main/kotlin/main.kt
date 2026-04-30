@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import service.auth.AuthService
 import service.auth.RegisterCommand
-import service.users.UsersService
+import service.user.UserService
 import kotlin.time.Clock
 
 
@@ -25,13 +25,13 @@ suspend fun Application.main() {
     }
 
     // Create admin user if not exists
-    val usersService: UsersService by dependencies
+    val userService: UserService by dependencies
     val authService: AuthService by dependencies
 
     val adminEmail = environment.config.property("diehugos.adminuser.email").getString()
     val adminPassword = environment.config.property("diehugos.adminuser.password").getString()
 
-    usersService.findByEmail(adminEmail) ?: authService.register(
+    userService.findByEmail(adminEmail) ?: authService.register(
         RegisterCommand(
             email = adminEmail,
             plaintextPassword = adminPassword,

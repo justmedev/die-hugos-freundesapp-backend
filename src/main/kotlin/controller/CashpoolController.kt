@@ -13,13 +13,13 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import service.cashpool_members.CashpoolMemberService
-import service.cashpool_members.CreateCashpoolMemberCommand
-import service.cashpools.CashpoolsService
-import service.cashpools.CreateCashpoolCommand
+import service.cashpool_member.CashpoolMemberService
+import service.cashpool_member.CreateCashpoolMemberCommand
+import service.cashpool.CashpoolService
+import service.cashpool.CreateCashpoolCommand
 
 fun Application.configureCashpoolController() {
-    val cashpoolService: CashpoolsService by dependencies
+    val cashpoolService: CashpoolService by dependencies
     val cashpoolMemberService: CashpoolMemberService by dependencies
 
     routing {

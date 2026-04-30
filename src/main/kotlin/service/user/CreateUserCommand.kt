@@ -1,4 +1,4 @@
-package service.users
+package service.user
 
 import kotlinx.datetime.LocalDateTime
 

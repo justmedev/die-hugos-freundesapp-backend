@@ -1,4 +1,4 @@
-package service.cashpool_transactions
+package service.cashpool_transaction
 
 
 data class CreateCashpoolTransactionCommand(

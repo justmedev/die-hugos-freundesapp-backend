@@ -1,4 +1,4 @@
-package service.cashpool_members
+package service.cashpool_member
 
 import domain.entities.CashpoolMemberEntity
 import domain.models.CashpoolMember
@@ -10,17 +10,17 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.cashpools.CashpoolsService
-import service.users.UsersService
+import service.cashpool.CashpoolService
+import service.user.UserService
 
 class CashpoolMemberService(
-    private val usersService: UsersService,
-    private val cashpoolsService: CashpoolsService,
+    private val userService: UserService,
+    private val cashpoolService: CashpoolService,
 ) {
 
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
-        usersService.findById(cmd.userId) ?: throw NotFoundException("User not found")
-        cashpoolsService.findById(cmd.cashpoolId) ?: throw NotFoundException("Cashpool not found")
+        userService.findById(cmd.userId) ?: throw NotFoundException("User not found")
+        cashpoolService.findById(cmd.cashpoolId) ?: throw NotFoundException("Cashpool not found")
 
         return suspendTransaction {
             return@suspendTransaction CashpoolMember.from(CashpoolMemberEntity.new {
