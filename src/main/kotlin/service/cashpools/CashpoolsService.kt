@@ -31,7 +31,7 @@ class CashpoolsService(
     }
 
     suspend fun findById(id: Int) =
-        suspendTransaction { Cashpool.from(CashpoolEntity.find { CashpoolsTable.id eq id }.firstOrNull()) }
+        suspendTransaction { Cashpool.from(CashpoolEntity.findById(id)) }
 
     suspend fun findByIdOnlyIfMember(id: Int, userId: Int) = suspendTransaction {
         val cashpool = CashpoolEntity.find {

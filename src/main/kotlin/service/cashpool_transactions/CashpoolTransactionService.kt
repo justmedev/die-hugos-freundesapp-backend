@@ -36,7 +36,7 @@ class CashpoolTransactionService(
 
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         checkIfUserCashpoolExistsAndUserIsMember(cmd.ownerId, cmd.cashpoolId)
-        val transaction = suspendTransaction { CashpoolTransactionEntity.findById(cmd.transactionId) } ?: throw NotFoundException("Transaction not found");
+        val transaction = suspendTransaction { CashpoolTransactionEntity.findById(cmd.transactionId) } ?: throw NotFoundException("Transaction not found")
 
         return suspendTransaction {
             return@suspendTransaction CashpoolTransaction.from(transaction.apply {
@@ -53,7 +53,7 @@ class CashpoolTransactionService(
     }
 
     suspend fun findById(id: Int) = suspendTransaction {
-        CashpoolTransaction.from(CashpoolTransactionEntity.find { CashpoolTransactionsTable.id eq id }.firstOrNull())
+        CashpoolTransaction.from(CashpoolTransactionEntity.findById(id))
     }
 
     suspend fun findByCashpoolId(cashpoolId: Int) = suspendTransaction {

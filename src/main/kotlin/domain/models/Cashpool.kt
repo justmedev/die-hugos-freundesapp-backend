@@ -2,7 +2,6 @@ package domain.models
 
 import domain.entities.CashpoolEntity
 import kotlinx.datetime.LocalDateTime
-import kotlinx.serialization.Serializable
 
 data class Cashpool(
     val id: Int,

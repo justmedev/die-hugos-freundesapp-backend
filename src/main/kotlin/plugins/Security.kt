@@ -8,7 +8,6 @@ import service.auth.AuthService
 import service.users.UsersService
 
 fun Application.configureSecurity() {
-    val usersService: UsersService by dependencies
     val authService: AuthService by dependencies
 
     authentication {

@@ -21,7 +21,7 @@ class UsersService {
     }
 
     suspend fun findById(id: Int) =
-        suspendTransaction { User.from(UserEntity.find { UsersTable.id eq id }.firstOrNull()) }
+        suspendTransaction { User.from(UserEntity.findById(id)) }
 
     suspend fun findByEmail(email: String) =
         suspendTransaction { User.from(UserEntity.find { UsersTable.email eq email }.firstOrNull()) }
