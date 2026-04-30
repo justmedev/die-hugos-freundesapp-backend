@@ -3,11 +3,8 @@ package service.users
 import domain.entities.UserEntity
 import domain.models.User
 import domain.tables.UsersTable
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.Service
 
 class UsersService {
     suspend fun create(cmd: CreateUserCommand): User {
