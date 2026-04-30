@@ -1,11 +1,11 @@
 package controller
 
-import core.exceptions.NotaCashpoolMember
-import dto.cashpool.CashpoolResponse
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
+import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
+import io.github.smiley4.ktoropenapi.put
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -16,6 +16,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.cashpool_transactions.CashpoolTransactionService
 import service.cashpool_transactions.CreateCashpoolTransactionCommand
+import service.cashpool_transactions.UpdateCashpoolTransactionCommand
 
 fun Application.configureCashpoolTransactionsController() {
     val cashpoolTransactionService: CashpoolTransactionService by dependencies
@@ -50,6 +51,41 @@ fun Application.configureCashpoolTransactionsController() {
                     )
 
                     call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
+                }
+
+                put("/{transactionId}", {
+                    description = "Edit an existing cashpool transaction by id."
+                    tags = listOf("Cashpool")
+                    request { body<CreateCashpoolTransactionRequest>() }
+                    response {
+                        code(HttpStatusCode.OK) { body<UpdateCashpoolTransactionRequest>() }
+                    }
+                }) {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
+                        ?: return@put call.respond(HttpStatusCode.Forbidden)
+
+                    val cashpoolId = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid id"
+                    )
+
+                    val transactionId = call.parameters["transactionId"]?.toIntOrNull() ?: return@put call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid id"
+                    )
+
+                    val updateRequest = call.receive<UpdateCashpoolTransactionRequest>()
+                    val updated = cashpoolTransactionService.update(
+                        UpdateCashpoolTransactionCommand(
+                            userId,
+                            cashpoolId,
+                            transactionId,
+                            updateRequest.label,
+                            updateRequest.amountCents
+                        )
+                    )
+
+                    call.respond(HttpStatusCode.OK, CashpoolTransactionResponse.from(updated))
                 }
 
                 get({

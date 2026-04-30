@@ -22,9 +22,7 @@ class CashpoolTransactionService(
 ) {
 
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction {
-        usersService.findById(cmd.ownerId) ?: throw NotFoundException("User not found")
-        cashpoolsService.findById(cmd.cashpoolId) ?: throw NotFoundException("Cashpool not found")
-        cashpoolMemberService.findByCashpoolIdAndUserId(cmd.cashpoolId, cmd.ownerId) ?: throw NotaCashpoolMember()
+        checkIfUserCashpoolExistsAndUserIsMember(cmd.ownerId, cmd.cashpoolId)
 
         return suspendTransaction {
             return@suspendTransaction CashpoolTransaction.from(CashpoolTransactionEntity.new {
@@ -34,6 +32,24 @@ class CashpoolTransactionService(
                 amountCents = cmd.amountCents
             })!!
         }
+    }
+
+    suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
+        checkIfUserCashpoolExistsAndUserIsMember(cmd.ownerId, cmd.cashpoolId)
+        val transaction = suspendTransaction { CashpoolTransactionEntity.findById(cmd.transactionId) } ?: throw NotFoundException("Transaction not found");
+
+        return suspendTransaction {
+            return@suspendTransaction CashpoolTransaction.from(transaction.apply {
+                label = cmd.label
+                amountCents = cmd.amountCents
+            })!!
+        }
+    }
+
+    private suspend fun checkIfUserCashpoolExistsAndUserIsMember(userId: Int, cashpoolId: Int) {
+        usersService.findById(userId) ?: throw NotFoundException("User not found")
+        cashpoolsService.findById(cashpoolId) ?: throw NotFoundException("Cashpool not found")
+        cashpoolMemberService.findByCashpoolIdAndUserId(cashpoolId, userId) ?: throw NotaCashpoolMember()
     }
 
     suspend fun findById(id: Int) = suspendTransaction {
