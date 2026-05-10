@@ -6,14 +6,50 @@ Content-Type: application/json
   "password": "admin"
 }
 
+> {%
+    client.global.set("auth_token", response.body.accessToken);
+%}
+
 ###
 
 
-GET http://localhost:8000/cashpools/1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkaWVodWdvcyBjbGllbnRzIiwiaXNzIjoiZGllaHVnb3MgYmFja2VuZCIsInN1YiI6IjEiLCJleHAiOjE3Nzc0NTM0Njd9.3ImUY0gIT4YkvR-X4UDZZ9pHTsissyvKGV4OHG9UWoQ
+###
+
+POST http://localhost:8000/cashpools
+Authorization: Bearer {{ auth_token }}
 Content-Type: application/json
 
 {
   "title": "title",
   "description": "test"
 }
+
+###
+
+
+GET http://localhost:8000/cashpools
+Authorization: Bearer {{ auth_token}}
+Content-Type: application/json
+
+###
+
+GET http://localhost:8000/cashpools/1
+Authorization: Bearer {{ auth_token}}
+Content-Type: application/json
+
+###
+
+POST http://localhost:8000/cashpools/1/transactions
+Authorization: Bearer {{ auth_token }}
+Content-Type: application/json
+
+{
+  "label": "2",
+  "amountCents": 500
+}
+
+###
+
+GET http://localhost:8000/cashpools/1/settle
+Authorization: Bearer {{ auth_token }}
+Content-Type: application/json

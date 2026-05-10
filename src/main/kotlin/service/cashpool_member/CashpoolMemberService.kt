@@ -33,12 +33,16 @@ class CashpoolMemberService(
     suspend fun findByCashpoolIdAndUserId(cashpoolId: Int, userId: Int) = suspendTransaction {
         CashpoolMember.from(
             CashpoolMemberEntity
-            .find { (CashpoolMembersTable.cashpool eq cashpoolId) and (CashpoolMembersTable.user eq userId) }
-            .firstOrNull())
+                .find { (CashpoolMembersTable.cashpool eq cashpoolId) and (CashpoolMembersTable.user eq userId) }
+                .firstOrNull())
     }
 
     suspend fun findById(id: Int) = suspendTransaction {
         CashpoolMember.from(CashpoolMemberEntity.findById(id))
+    }
+
+    suspend fun findByCashpoolId(cashpoolId: Int) = suspendTransaction {
+        CashpoolMemberEntity.find { CashpoolMembersTable.cashpool eq cashpoolId }.map { CashpoolMember.from(it)!! }
     }
 
     suspend fun findAll() = suspendTransaction { CashpoolMemberEntity.all().map { CashpoolMember.from(it) } }

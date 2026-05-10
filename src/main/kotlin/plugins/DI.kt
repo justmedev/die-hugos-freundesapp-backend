@@ -6,9 +6,10 @@ import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.plugins.di.*
 import service.auth.AuthService
-import service.cashpool_member.CashpoolMemberService
-import service.cashpool_transaction.CashpoolTransactionService
 import service.cashpool.CashpoolService
+import service.cashpool_member.CashpoolMemberService
+import service.cashpool_settlement.CashpoolSettlementService
+import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 
 fun Application.configureDependencyInjection() {
@@ -22,6 +23,7 @@ fun Application.configureDependencyInjection() {
         provide<CashpoolService> { CashpoolService(resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
+        provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
     }
 }

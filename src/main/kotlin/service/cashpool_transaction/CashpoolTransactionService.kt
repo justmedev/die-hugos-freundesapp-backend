@@ -8,11 +8,12 @@ import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import io.ktor.server.plugins.*
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.cashpool_member.CashpoolMemberService
 import service.cashpool.CashpoolService
+import service.cashpool_member.CashpoolMemberService
 import service.user.UserService
 
 class CashpoolTransactionService(
@@ -36,7 +37,8 @@ class CashpoolTransactionService(
 
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         checkIfUserCashpoolExistsAndUserIsMember(cmd.ownerId, cmd.cashpoolId)
-        val transaction = suspendTransaction { CashpoolTransactionEntity.findById(cmd.transactionId) } ?: throw NotFoundException("Transaction not found")
+        val transaction = suspendTransaction { CashpoolTransactionEntity.findById(cmd.transactionId) }
+            ?: throw NotFoundException("Transaction not found")
 
         return suspendTransaction {
             return@suspendTransaction CashpoolTransaction.from(transaction.apply {
@@ -59,6 +61,14 @@ class CashpoolTransactionService(
     suspend fun findByCashpoolId(cashpoolId: Int) = suspendTransaction {
         CashpoolTransactionEntity.find { CashpoolTransactionsTable.cashpool eq cashpoolId }.orderBy(
             CashpoolTransactionsTable.createdAt to SortOrder.DESC
-        ).map { CashpoolTransaction.from(it) }
+        ).map { CashpoolTransaction.from(it)!! }
+    }
+
+    suspend fun findByCashpoolIdAndOwnerId(cashpoolId: Int, ownerId: Int) = suspendTransaction {
+        CashpoolTransactionEntity.find {
+            (CashpoolTransactionsTable.cashpool eq cashpoolId) and (CashpoolTransactionsTable.owner eq ownerId)
+        }.orderBy(
+            CashpoolTransactionsTable.createdAt to SortOrder.DESC
+        ).map { CashpoolTransaction.from(it)!! }
     }
 }
