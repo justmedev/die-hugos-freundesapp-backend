@@ -69,6 +69,7 @@ class AuthService(
             .withAudience(audience)
             .withIssuer(issuer)
             .withSubject(user.id.toString())
+            .withClaim("role", if (user.isAdmin) "admin" else "user")
             .withExpiresAt(Date(currentTime + 15 * 60 * 1000)) // 15 min
             .sign(Algorithm.HMAC256(secret))
 
