@@ -47,7 +47,9 @@ class CashpoolService(
         Cashpool.from(cashpool)
     }
 
-    suspend fun findAll() = suspendTransaction { CashpoolEntity.all().orderBy(
-        CashpoolsTable.createdAt to SortOrder.DESC
-    ).map { Cashpool.from(it) } }
+    suspend fun findAll() = suspendTransaction {
+        CashpoolEntity.all().orderBy(
+            CashpoolsTable.createdAt to SortOrder.DESC
+        ).map { Cashpool.from(it) }
+    }
 }

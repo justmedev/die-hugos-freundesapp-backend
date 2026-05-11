@@ -1,6 +1,5 @@
 package service.cashpool_settlement
 
-import domain.models.Cashpool
 import domain.models.CashpoolSettlement
 import io.ktor.server.plugins.*
 import service.cashpool.CashpoolService

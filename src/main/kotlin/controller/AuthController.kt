@@ -41,7 +41,7 @@ fun Application.configureAuthController() {
             post("/refresh", {
                 description = "Use a refresh token to get a new token pair."
                 tags = listOf("Auth")
-                request { body< RefreshRequest>() }
+                request { body<RefreshRequest>() }
                 response {
                     code(HttpStatusCode.OK) { body<AuthResponse>() }
                     code(HttpStatusCode.Unauthorized) { description = "Invalid refresh token" }

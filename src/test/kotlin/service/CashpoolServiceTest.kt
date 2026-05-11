@@ -3,7 +3,6 @@ package service
 import core.exceptions.NotaCashpoolMember
 import io.ktor.server.plugins.*
 import kotlinx.coroutines.runBlocking
-import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
@@ -14,6 +13,7 @@ import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
+import kotlin.time.Clock
 
 class CashpoolServiceTest : BaseServiceTest() {
     private val userService = UserService()

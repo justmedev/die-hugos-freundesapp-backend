@@ -8,7 +8,7 @@ import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*

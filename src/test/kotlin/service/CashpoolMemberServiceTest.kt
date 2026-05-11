@@ -1,7 +1,6 @@
 package service
 
 import kotlinx.coroutines.runBlocking
-import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
@@ -14,6 +13,7 @@ import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.time.Clock
 
 class CashpoolMemberServiceTest : BaseServiceTest() {
     private val userService = UserService()
