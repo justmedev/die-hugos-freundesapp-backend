@@ -32,6 +32,7 @@ class CashpoolSettlementService(
         // 2. Calculate the total amount of money that each member should pay
         val totalAmountCents = settlementMembers.sumOf { it.totalAmountCentsMoved }
         // TODO: support uneven distributions, e.g. one person being excluded by one transaction
+        if (members.isEmpty()) return listOf()
         val totalAmountCentsPerMember = totalAmountCents / members.size
 
         // 3. Calculate the settlements required to reach totalAmountCentsPerMember for each member
