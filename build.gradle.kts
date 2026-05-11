@@ -44,4 +44,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+    testImplementation(ktorLibs.client.contentNegotiation)
+    testImplementation(ktorLibs.client.serialization)
+    testImplementation(libs.mockk)
 }

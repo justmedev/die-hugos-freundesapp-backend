@@ -5,6 +5,7 @@ kotlin = "2.3.21"
 logback = "1.5.32"
 ktorOpenApi = "5.7.0"
 schemaKenerator = "2.7.2"
+mockk = "1.14.9"
 
 [libraries]
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
@@ -21,6 +22,7 @@ ktor-swagger = { module = "io.github.smiley4:ktor-swagger-ui", version.ref = "kt
 schema-kenerator-core = { module = "io.github.smiley4:schema-kenerator-core", version.ref = "schemaKenerator" }
 schema-kenerator-serialization = { module = "io.github.smiley4:schema-kenerator-serialization", version.ref = "schemaKenerator" }
 schema-kenerator-swagger = { module = "io.github.smiley4:schema-kenerator-swagger", version.ref = "schemaKenerator" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

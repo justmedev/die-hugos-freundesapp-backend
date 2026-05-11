@@ -7,8 +7,8 @@ import dto.user.UserResponse
 import io.github.smiley4.ktoropenapi.post
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -20,36 +20,38 @@ fun Application.configureUserController() {
     val authService: AuthService by dependencies
 
     routing {
-        route("/user") {
-            post({
-                description = "Create a new user."
-                tags = listOf("User")
-                request { body<LoginRequest>() }
-                response {
-                    code(HttpStatusCode.OK) { body<AuthResponse>() }
-                    code(HttpStatusCode.Forbidden) { description = "Only admin accounts can create users" }
-                }
-            }) {
-                val userRole = call.principal<JWTPrincipal>()?.payload?.claims["role"]?.asString()
-                    ?: return@post call.respond(HttpStatusCode.Forbidden)
-                if (userRole != "admin") return@post call.respond(HttpStatusCode.Forbidden)
+        authenticate {
+            route("/user") {
+                post({
+                    description = "Create a new user."
+                    tags = listOf("User")
+                    request { body<LoginRequest>() }
+                    response {
+                        code(HttpStatusCode.OK) { body<AuthResponse>() }
+                        code(HttpStatusCode.Forbidden) { description = "Only admin accounts can create users" }
+                    }
+                }) {
+                    val userRole = call.principal<JWTPrincipal>()?.payload?.claims?.get("role")?.asString()
+                        ?: return@post call.respond(HttpStatusCode.Forbidden)
+                    if (userRole != "admin") return@post call.respond(HttpStatusCode.Forbidden)
 
-                val createUserRequest = call.receive<CreateUserRequest>()
-                try {
-                    val entity = authService.register(
-                        RegisterCommand(
-                            createUserRequest.email,
-                            createUserRequest.firstName,
-                            createUserRequest.lastName,
-                            createUserRequest.password,
-                            createUserRequest.birthDate,
-                            createUserRequest.isAdmin,
+                    val createUserRequest = call.receive<CreateUserRequest>()
+                    try {
+                        val entity = authService.register(
+                            RegisterCommand(
+                                createUserRequest.email,
+                                createUserRequest.firstName,
+                                createUserRequest.lastName,
+                                createUserRequest.password,
+                                createUserRequest.birthDate,
+                                createUserRequest.isAdmin,
+                            )
                         )
-                    )
-                    call.respond(HttpStatusCode.OK, UserResponse.from(entity))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.Unauthorized)
+                        call.respond(HttpStatusCode.OK, UserResponse.from(entity))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        call.respond(HttpStatusCode.Unauthorized)
+                    }
                 }
             }
         }
