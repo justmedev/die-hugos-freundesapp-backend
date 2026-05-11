@@ -25,9 +25,9 @@ fun Application.configureUserController() {
                 post({
                     description = "Create a new user."
                     tags = listOf("User")
-                    request { body<LoginRequest>() }
+                    request { body<CreateUserRequest>() }
                     response {
-                        code(HttpStatusCode.OK) { body<AuthResponse>() }
+                        code(HttpStatusCode.OK) { body<UserResponse>() }
                         code(HttpStatusCode.Forbidden) { description = "Only admin accounts can create users" }
                     }
                 }) {
