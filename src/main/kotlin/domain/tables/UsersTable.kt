@@ -8,6 +8,8 @@ object UsersTable : IntIdTable("users") {
     val email = varchar("email", 254)
     val firstName = varchar("first_name", 128)
     val lastName = varchar("last_name", 128)
+    val accountHolderName = varchar("account_holder_name", 255).nullable()
+    val accountIBAN = varchar("account_iban", 50).nullable()
     val password = varchar("password", 128)
     val birthdate = datetime("birthdate")
     val isAdmin = bool("is_admin").default(false)

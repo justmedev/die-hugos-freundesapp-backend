@@ -11,6 +11,8 @@ class UserEntity(id: EntityID<Int>) : IntEntity(id) {
     var email by UsersTable.email
     var firstName by UsersTable.firstName
     var lastName by UsersTable.lastName
+    var accountHolderName by UsersTable.accountHolderName
+    var accountIBAN by UsersTable.accountIBAN
     var password by UsersTable.password
     var birthdate by UsersTable.birthdate
     var isAdmin by UsersTable.isAdmin

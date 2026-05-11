@@ -42,6 +42,8 @@ fun Application.configureUserController() {
                                 createUserRequest.email,
                                 createUserRequest.firstName,
                                 createUserRequest.lastName,
+                                null,
+                                null,
                                 createUserRequest.password,
                                 createUserRequest.birthDate,
                                 createUserRequest.isAdmin,

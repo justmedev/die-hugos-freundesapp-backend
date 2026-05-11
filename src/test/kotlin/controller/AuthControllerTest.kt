@@ -18,7 +18,7 @@ import kotlin.time.Clock
 class AuthControllerTest : BaseControllerTest() {
 
     private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user = User(1, "test@example.com", "Test", "User", "hashed", now, false, now)
+    private val user = User(1, "test@example.com", "Test", "User", null, null, "hashed", now, false, now)
 
     @Test
     fun `login - success`() = withTestApplication {

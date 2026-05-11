@@ -18,7 +18,7 @@ import kotlin.time.Clock
 class CashpoolMemberControllerTest : BaseControllerTest() {
 
     private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user = User(1, "user@example.com", "First", "Last", "pass", now, false, now)
+    private val user = User(1, "user@example.com", "First", "Last", null, null, "pass", now, false, now)
     private val cashpool = Cashpool(1, "Title", "Desc", user, true, now)
 
     @Test

@@ -13,6 +13,8 @@ class UserService {
                 email = cmd.email
                 firstName = cmd.firstName
                 lastName = cmd.lastName
+                accountHolderName = cmd.accountHolderName
+                accountIBAN = cmd.accountIBAN
                 password = cmd.passwordHash
                 birthdate = cmd.birthdate
                 isAdmin = cmd.isAdmin

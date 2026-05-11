@@ -39,7 +39,7 @@ class UserServiceTest : BaseServiceTest() {
     fun `findById - existing user - returns user`() {
         runBlocking {
             val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-            val cmd = CreateUserCommand("test@example.com", "Test", "User", "hash", now, false)
+            val cmd = CreateUserCommand("test@example.com", "Test", "User", null, null, "hash", now, false)
             val created = userService.create(cmd)
 
             val found = userService.findById(created.id)
@@ -61,7 +61,7 @@ class UserServiceTest : BaseServiceTest() {
     fun `findByEmail - existing user - returns user`() {
         runBlocking {
             val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-            val cmd = CreateUserCommand("test@example.com", "Test", "User", "hash", now, false)
+            val cmd = CreateUserCommand("test@example.com", "Test", "User", null, null, "hash", now, false)
             userService.create(cmd)
 
             val found = userService.findByEmail("test@example.com")

@@ -32,11 +32,12 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
             val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
 
-            val userAId = userService.create(CreateUserCommand("a@a.com", "Sarah", "A", "h", now, false)).id
-            val userBId = userService.create(CreateUserCommand("b@b.com", "Elias", "B", "h", now, false)).id
-            val userCId = userService.create(CreateUserCommand("c@c.com", "Leon", "C", "h", now, false)).id
-            val userDId = userService.create(CreateUserCommand("d@d.com", "Donald", "D", "h", now, false)).id
-            val userEId = userService.create(CreateUserCommand("e@e.com", "Mina", "E", "h", now, false)).id
+            val userAId = userService.create(CreateUserCommand("a@a.com", "Sarah", "A", null, null, "h", now, false)).id
+            val userBId = userService.create(CreateUserCommand("b@b.com", "Elias", "B", null, null, "h", now, false)).id
+            val userCId = userService.create(CreateUserCommand("c@c.com", "Leon", "C", null, null, "h", now, false)).id
+            val userDId =
+                userService.create(CreateUserCommand("d@d.com", "Donald", "D", null, null, "h", now, false)).id
+            val userEId = userService.create(CreateUserCommand("e@e.com", "Mina", "E", null, null, "h", now, false)).id
             val users = listOf(userAId, userBId, userCId, userDId, userEId)
             val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", userAId)).id
 

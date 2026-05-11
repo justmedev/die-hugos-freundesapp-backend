@@ -22,7 +22,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
 
     private suspend fun createTestUser(email: String = "test@example.com"): Int {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        return userService.create(CreateUserCommand(email, "F", "L", "h", now, false)).id
+        return userService.create(CreateUserCommand(email, "F", "L", null, null, "h", now, false)).id
     }
 
     private suspend fun createTestCashpool(ownerId: Int): Int {

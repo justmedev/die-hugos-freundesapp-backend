@@ -48,6 +48,8 @@ class AuthService(
                 cmd.email,
                 cmd.firstName,
                 cmd.lastName,
+                cmd.accountHolderName,
+                cmd.accountIBAN,
                 argon2.hash(2, 2097152, 2, cmd.plaintextPassword.toCharArray()),
                 cmd.birthdate,
                 cmd.isAdmin

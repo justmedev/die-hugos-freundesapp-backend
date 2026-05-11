@@ -16,8 +16,8 @@ import kotlin.time.Clock
 class CashpoolSettlementControllerTest : BaseControllerTest() {
 
     private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user1 = User(1, "u1@ex.com", "U1", "L1", "p", now, false, now)
-    private val user2 = User(2, "u2@ex.com", "U2", "L2", "p", now, false, now)
+    private val user1 = User(1, "u1@ex.com", "U1", "L1", null, null,"p", now, false, now)
+    private val user2 = User(2, "u2@ex.com", "U2", "L2", null, null,"p", now, false, now)
 
     @Test
     fun `get settlements - success`() = withTestApplication(createMockPrincipal(1)) {
