@@ -1,14 +1,20 @@
 package dto.cashpool_settlement
 
 import domain.models.CashpoolSettlement
-import domain.models.User
+import dto.user.UserResponse
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CashpoolSettlementResponse(
-    val from: User,
-    val to: User,
+    val from: UserResponse,
+    val to: UserResponse,
     val amountCents: Long,
 ) {
     companion object {
-        fun from(domain: CashpoolSettlement) = CashpoolSettlementResponse(domain.from, domain.to, domain.amountCents)
+        fun from(domain: CashpoolSettlement) = CashpoolSettlementResponse(
+            UserResponse.from(domain.from),
+            UserResponse.from(domain.to),
+            domain.amountCents
+        )
     }
 }
