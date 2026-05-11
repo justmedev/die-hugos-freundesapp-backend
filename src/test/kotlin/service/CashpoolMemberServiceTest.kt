@@ -79,4 +79,47 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
             assertEquals(2, members.size)
         }
     }
+
+    @Test(expected = io.ktor.server.plugins.NotFoundException::class)
+    fun `create member - user not found - throws exception`() {
+        runBlocking {
+            val userId = createTestUser()
+            val cashpoolId = createTestCashpool(userId)
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(999, cashpoolId))
+        }
+    }
+
+    @Test(expected = io.ktor.server.plugins.NotFoundException::class)
+    fun `create member - cashpool not found - throws exception`() {
+        runBlocking {
+            val userId = createTestUser()
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, 999))
+        }
+    }
+
+    @Test
+    fun `findById - exists - returns member`() {
+        runBlocking {
+            val userId = createTestUser()
+            val cashpoolId = createTestCashpool(userId)
+            val member = cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))
+
+            val found = cashpoolMemberService.findById(member.id)
+
+            assertNotNull(found)
+            assertEquals(member.id, found.id)
+        }
+    }
+
+    @Test
+    fun `findAll - returns all`() {
+        runBlocking {
+            val userId = createTestUser()
+            val cashpoolId = createTestCashpool(userId)
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))
+
+            val all = cashpoolMemberService.findAll()
+            assert(all.isNotEmpty())
+        }
+    }
 }
