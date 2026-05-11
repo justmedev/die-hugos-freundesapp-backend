@@ -7,6 +7,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.di.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import service.auth.AuthService
@@ -19,9 +20,13 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
+val tables: Array<Table>
+    get() = arrayOf(UsersTable, CashpoolsTable, CashpoolMembersTable, CashpoolTransactionsTable)
+
 suspend fun Application.main() {
+
     suspendTransaction {
-        SchemaUtils.create(UsersTable, CashpoolsTable, CashpoolMembersTable, CashpoolTransactionsTable)
+        SchemaUtils.create(*tables)
     }
 
     // Create admin user if not exists
