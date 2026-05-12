@@ -1,12 +1,14 @@
 package controller
 
+import controller.resources.CashpoolsResource
+import core.extensions.requireUserId
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
 import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
-import io.github.smiley4.ktoropenapi.delete
-import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.github.smiley4.ktoropenapi.put
+import io.github.smiley4.ktoropenapi.resources.delete
+import io.github.smiley4.ktoropenapi.resources.get
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -23,32 +25,23 @@ import service.cashpool_transaction.UpdateCashpoolTransactionCommand
 fun Application.configureCashpoolTransactionsController() {
     val tag = "Cashpool Transaction"
     val cashpoolTransactionService: CashpoolTransactionService by dependencies
-    val cashpoolService: CashpoolService by dependencies
 
     routing {
         authenticate {
             route("/cashpools/{id}/transactions") {
-                post({
+                post<CashpoolsResource.Id.Transactions>({
                     description = "Create a new cashpool transaction inside of a cashpool."
                     tags = listOf(tag)
                     request { body<CreateCashpoolTransactionRequest>() }
                     response {
                         code(HttpStatusCode.Created) { body<CashpoolTransactionResponse>() }
                     }
-                }) {
-                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
-                        ?: return@post call.respond(HttpStatusCode.Forbidden)
-
-                    val id = call.parameters["id"]?.toIntOrNull() ?: return@post call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid id"
-                    )
-
+                }) { resource ->
                     val createRequest = call.receive<CreateCashpoolTransactionRequest>()
                     val created = cashpoolTransactionService.create(
                         CreateCashpoolTransactionCommand(
-                            userId,
-                            id,
+                            call.requireUserId(),
+                            resource.parent.id,
                             createRequest.label,
                             createRequest.amountCents
                         )
@@ -57,33 +50,36 @@ fun Application.configureCashpoolTransactionsController() {
                     call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
                 }
 
-                put("/{transactionId}", {
+                get<CashpoolsResource.Id.Transactions>({
+                    description = "Get all cashpool transactions inside a cashpool."
+                    tags = listOf(tag)
+                    response {
+                        code(HttpStatusCode.OK) { body<List<CashpoolTransactionResponse>>() }
+                        code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
+                    }
+                }) { resource ->
+                    val transactions = cashpoolTransactionService.findByCashpoolId(
+                        cashpoolId = resource.parent.id,
+                        requestingUserId = call.requireUserId()
+                    )
+
+                    call.respond(HttpStatusCode.OK, transactions.map { CashpoolTransactionResponse.from(it) })
+                }
+
+                put<CashpoolsResource.Id.Transactions.Transaction>({
                     description = "Edit an existing cashpool transaction by id."
                     tags = listOf(tag)
                     request { body<UpdateCashpoolTransactionRequest>() }
                     response {
                         code(HttpStatusCode.OK) { body<CashpoolTransactionResponse>() }
                     }
-                }) {
-                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
-                        ?: return@put call.respond(HttpStatusCode.Forbidden)
-
-                    val cashpoolId = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid id"
-                    )
-
-                    val transactionId = call.parameters["transactionId"]?.toIntOrNull() ?: return@put call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid transactionId"
-                    )
-
+                }) { resource ->
                     val updateRequest = call.receive<UpdateCashpoolTransactionRequest>()
                     val updated = cashpoolTransactionService.update(
                         UpdateCashpoolTransactionCommand(
-                            userId,
-                            cashpoolId,
-                            transactionId,
+                            call.requireUserId(),
+                            resource.parent.parent.id,
+                            resource.transactionId,
                             updateRequest.label,
                             updateRequest.amountCents
                         )
@@ -92,58 +88,19 @@ fun Application.configureCashpoolTransactionsController() {
                     call.respond(HttpStatusCode.OK, CashpoolTransactionResponse.from(updated))
                 }
 
-                get({
-                    description = "Get all cashpool transactions inside a cashpool."
-                    tags = listOf(tag)
-                    response {
-                        code(HttpStatusCode.OK) { body<List<CashpoolTransactionResponse>>() }
-                        code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
-                    }
-                }) {
-                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
-                        ?: return@get call.respond(HttpStatusCode.Forbidden)
-
-                    val id = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid id"
-                    )
-
-                    if (cashpoolService.findByIdOnlyIfMember(id, userId) == null) return@get call.respond(
-                        HttpStatusCode.Forbidden,
-                        "You are not a member of this cashpool"
-                    )
-
-                    call.respond(
-                        HttpStatusCode.OK,
-                        cashpoolTransactionService.findByCashpoolId(id).map { CashpoolTransactionResponse.from(it) })
-                }
-
-                delete("/{transactionId}", {
+                delete<CashpoolsResource.Id.Transactions.Transaction>({
                     description = "Delete a specific cashpool transaction by id."
                     tags = listOf(tag)
                     response {
                         code(HttpStatusCode.NoContent) {}
                         code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
                     }
-                }) {
-                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
-                        ?: return@delete call.respond(HttpStatusCode.Forbidden)
-
-                    val id = call.parameters["id"]?.toIntOrNull() ?: return@delete call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid id"
+                }) { resource ->
+                    cashpoolTransactionService.deleteById(
+                        cashpoolId = resource.parent.parent.id,
+                        requestingUserId = call.requireUserId(),
+                        transactionId = resource.transactionId
                     )
-
-                    val transactionId = call.parameters["transactionId"]?.toIntOrNull() ?: return@delete call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid transactionId"
-                    )
-
-                    if (cashpoolService.findByIdOnlyIfMember(id, userId) == null) return@delete call.respond(
-                        HttpStatusCode.Forbidden,
-                        "You are not a member of this cashpool"
-                    )
-                    cashpoolTransactionService.deleteById(transactionId)
 
                     call.respond(HttpStatusCode.NoContent)
                 }
