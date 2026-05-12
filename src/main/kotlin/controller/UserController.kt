@@ -1,7 +1,5 @@
 package controller
 
-import dto.auth.AuthResponse
-import dto.auth.LoginRequest
 import dto.user.CreateUserRequest
 import dto.user.UserResponse
 import io.github.smiley4.ktoropenapi.post
@@ -17,6 +15,7 @@ import service.auth.AuthService
 import service.auth.RegisterCommand
 
 fun Application.configureUserController() {
+    val tag = "User"
     val authService: AuthService by dependencies
 
     routing {
@@ -24,7 +23,7 @@ fun Application.configureUserController() {
             route("/user") {
                 post({
                     description = "Create a new user."
-                    tags = listOf("User")
+                    tags = listOf(tag)
                     request { body<CreateUserRequest>() }
                     response {
                         code(HttpStatusCode.OK) { body<UserResponse>() }

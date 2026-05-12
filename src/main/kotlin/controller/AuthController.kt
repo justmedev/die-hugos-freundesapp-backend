@@ -15,13 +15,14 @@ import service.auth.LoginCommand
 import service.auth.RefreshCommand
 
 fun Application.configureAuthController() {
+    val tag = "Auth"
     val authService: AuthService by dependencies
 
     routing {
         route("/auth") {
             post("/login", {
                 description = "Authenticate an existing user with email and password"
-                tags = listOf("Auth")
+                tags = listOf(tag)
                 request { body<LoginRequest>() }
                 response {
                     code(HttpStatusCode.OK) { body<AuthResponse>() }
@@ -40,7 +41,7 @@ fun Application.configureAuthController() {
 
             post("/refresh", {
                 description = "Use a refresh token to get a new token pair."
-                tags = listOf("Auth")
+                tags = listOf(tag)
                 request { body<RefreshRequest>() }
                 response {
                     code(HttpStatusCode.OK) { body<AuthResponse>() }

@@ -11,20 +11,21 @@ import io.ktor.server.routing.*
 import service.cashpool_settlement.CashpoolSettlementService
 
 fun Application.configureCashpoolSettlementController() {
+    val tag = "Cashpool Settlement"
     val cashpoolSettlementService: CashpoolSettlementService by dependencies
 
     routing {
         authenticate {
-            route("/cashpools/{cashpoolId}/settle") {
+            route("/cashpools/{id}/settle") {
                 get({
                     description =
                         "Get a list of settlement transactions that need to be made by each member to even out the cashpool."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     response {
                         code(HttpStatusCode.OK) { body<List<CashpoolSettlementResponse>>() }
                     }
                 }) {
-                    val cashpoolId = call.parameters["cashpoolId"]?.toIntOrNull() ?: return@get call.respond(
+                    val cashpoolId = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(
                         HttpStatusCode.BadRequest,
                         "Invalid id"
                     )

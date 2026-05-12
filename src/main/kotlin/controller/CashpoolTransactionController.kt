@@ -19,6 +19,7 @@ import service.cashpool_transaction.CreateCashpoolTransactionCommand
 import service.cashpool_transaction.UpdateCashpoolTransactionCommand
 
 fun Application.configureCashpoolTransactionsController() {
+    val tag = "Cashpool Transaction"
     val cashpoolTransactionService: CashpoolTransactionService by dependencies
 
     routing {
@@ -26,7 +27,7 @@ fun Application.configureCashpoolTransactionsController() {
             route("/cashpools/{id}/transactions") {
                 post({
                     description = "Create a new cashpool transaction inside of a cashpool."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     request { body<CreateCashpoolTransactionRequest>() }
                     response {
                         code(HttpStatusCode.Created) { body<CashpoolTransactionResponse>() }
@@ -55,7 +56,7 @@ fun Application.configureCashpoolTransactionsController() {
 
                 put("/{transactionId}", {
                     description = "Edit an existing cashpool transaction by id."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     request { body<CreateCashpoolTransactionRequest>() }
                     response {
                         code(HttpStatusCode.OK) { body<UpdateCashpoolTransactionRequest>() }
@@ -90,7 +91,7 @@ fun Application.configureCashpoolTransactionsController() {
 
                 get({
                     description = "Get all cashpool transactions inside a cashpool."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     response {
                         code(HttpStatusCode.OK) { body<List<CashpoolTransactionResponse>>() }
                     }

@@ -19,6 +19,7 @@ import service.cashpool_member.CashpoolMemberService
 import service.cashpool_member.CreateCashpoolMemberCommand
 
 fun Application.configureCashpoolController() {
+    val tag = "Cashpool"
     val cashpoolService: CashpoolService by dependencies
     val cashpoolMemberService: CashpoolMemberService by dependencies
 
@@ -27,7 +28,7 @@ fun Application.configureCashpoolController() {
             route("/cashpools") {
                 post({
                     description = "Create a new cashpool. The creator will automatically be a member of the cashpool."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     request { body<CreateCashpoolRequest>() }
                     response {
                         code(HttpStatusCode.Created) { body<CashpoolResponse>() }
@@ -51,7 +52,7 @@ fun Application.configureCashpoolController() {
 
                 get({
                     description = "Get all cashpools."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     response {
                         code(HttpStatusCode.OK) { body<List<CashpoolResponse>>() }
                     }
@@ -61,7 +62,7 @@ fun Application.configureCashpoolController() {
 
                 get("/{id}", {
                     description = "Get a specific cashpool. This only returns cashpools the user is a member of."
-                    tags = listOf("Cashpool")
+                    tags = listOf(tag)
                     response {
                         code(HttpStatusCode.OK) { body<CashpoolResponse>() }
                     }

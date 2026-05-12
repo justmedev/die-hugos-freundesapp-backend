@@ -13,14 +13,15 @@ import service.cashpool_member.CashpoolMemberService
 import service.cashpool_member.CreateCashpoolMemberCommand
 
 fun Application.configureCashpoolMemberController() {
+    val tag = "Cashpool Membership"
     val cashpoolMemberService: CashpoolMemberService by dependencies
 
     routing {
         authenticate {
-            route("/cashpools/{cashpoolId}/members") {
+            route("/cashpools/{id}/members") {
                 post({
                     description = "Join an existing cashpool."
-                    tags = listOf("Cashpool Memberships")
+                    tags = listOf(tag)
                     response {
                         code(HttpStatusCode.Created) { body<CashpoolMemberResponse>() }
                     }
@@ -28,9 +29,9 @@ fun Application.configureCashpoolMemberController() {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
                         ?: return@post call.respond(HttpStatusCode.Forbidden)
 
-                    val cashpoolId = call.parameters["cashpoolId"]?.toIntOrNull() ?: return@post call.respond(
+                    val cashpoolId = call.parameters["id"]?.toIntOrNull() ?: return@post call.respond(
                         HttpStatusCode.BadRequest,
-                        "Invalid cashpoolId"
+                        "Invalid id"
                     )
 
                     val created = cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))

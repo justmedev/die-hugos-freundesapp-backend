@@ -4,6 +4,8 @@ package plugins
 
 
 import io.github.smiley4.ktoropenapi.OpenApi
+import io.github.smiley4.ktoropenapi.config.AuthScheme
+import io.github.smiley4.ktoropenapi.config.AuthType
 import io.github.smiley4.ktoropenapi.config.SchemaGenerator
 import io.github.smiley4.ktoropenapi.openApi
 import io.github.smiley4.ktorswaggerui.swaggerUI
@@ -15,8 +17,19 @@ import kotlinx.serialization.ExperimentalSerializationApi
 fun Application.configureSwagger() {
     install(OpenApi) {
         info {
-            title = "Diehugos Backend"
+            title = "Diehugos API"
             version = "1.0.0"
+        }
+
+        security {
+            securityScheme("jwt") {
+                type = AuthType.HTTP
+                scheme = AuthScheme.BEARER
+                bearerFormat = "JWT"
+            }
+            defaultUnauthorizedResponse {
+                description = "Wrong email or password."
+            }
         }
 
         schemas {
