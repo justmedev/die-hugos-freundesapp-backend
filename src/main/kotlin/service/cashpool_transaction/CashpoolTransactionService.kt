@@ -71,4 +71,8 @@ class CashpoolTransactionService(
             CashpoolTransactionsTable.createdAt to SortOrder.DESC
         ).map { CashpoolTransaction.from(it)!! }
     }
+
+    suspend fun deleteById(transactionId: Int) = suspendTransaction {
+        CashpoolTransactionEntity.find { CashpoolTransactionsTable.id eq transactionId }.firstOrNull()?.delete()
+    }
 }

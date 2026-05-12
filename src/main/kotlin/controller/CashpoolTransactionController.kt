@@ -3,6 +3,7 @@ package controller
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
 import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
+import io.github.smiley4.ktoropenapi.delete
 import io.github.smiley4.ktoropenapi.get
 import io.github.smiley4.ktoropenapi.post
 import io.github.smiley4.ktoropenapi.put
@@ -14,6 +15,7 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
 import service.cashpool_transaction.CreateCashpoolTransactionCommand
 import service.cashpool_transaction.UpdateCashpoolTransactionCommand
@@ -21,6 +23,7 @@ import service.cashpool_transaction.UpdateCashpoolTransactionCommand
 fun Application.configureCashpoolTransactionsController() {
     val tag = "Cashpool Transaction"
     val cashpoolTransactionService: CashpoolTransactionService by dependencies
+    val cashpoolService: CashpoolService by dependencies
 
     routing {
         authenticate {
@@ -57,9 +60,9 @@ fun Application.configureCashpoolTransactionsController() {
                 put("/{transactionId}", {
                     description = "Edit an existing cashpool transaction by id."
                     tags = listOf(tag)
-                    request { body<CreateCashpoolTransactionRequest>() }
+                    request { body<UpdateCashpoolTransactionRequest>() }
                     response {
-                        code(HttpStatusCode.OK) { body<UpdateCashpoolTransactionRequest>() }
+                        code(HttpStatusCode.OK) { body<CashpoolTransactionResponse>() }
                     }
                 }) {
                     val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
@@ -72,7 +75,7 @@ fun Application.configureCashpoolTransactionsController() {
 
                     val transactionId = call.parameters["transactionId"]?.toIntOrNull() ?: return@put call.respond(
                         HttpStatusCode.BadRequest,
-                        "Invalid id"
+                        "Invalid transactionId"
                     )
 
                     val updateRequest = call.receive<UpdateCashpoolTransactionRequest>()
@@ -94,16 +97,55 @@ fun Application.configureCashpoolTransactionsController() {
                     tags = listOf(tag)
                     response {
                         code(HttpStatusCode.OK) { body<List<CashpoolTransactionResponse>>() }
+                        code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
                     }
                 }) {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
+                        ?: return@get call.respond(HttpStatusCode.Forbidden)
+
                     val id = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(
                         HttpStatusCode.BadRequest,
                         "Invalid id"
                     )
 
+                    if (cashpoolService.findByIdOnlyIfMember(id, userId) == null) return@get call.respond(
+                        HttpStatusCode.Forbidden,
+                        "You are not a member of this cashpool"
+                    )
+
                     call.respond(
                         HttpStatusCode.OK,
-                        cashpoolTransactionService.findByCashpoolId(id).map { CashpoolTransactionResponse.from(it!!) })
+                        cashpoolTransactionService.findByCashpoolId(id).map { CashpoolTransactionResponse.from(it) })
+                }
+
+                delete("/{transactionId}", {
+                    description = "Delete a specific cashpool transaction by id."
+                    tags = listOf(tag)
+                    response {
+                        code(HttpStatusCode.NoContent) {}
+                        code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
+                    }
+                }) {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.subject?.toIntOrNull()
+                        ?: return@delete call.respond(HttpStatusCode.Forbidden)
+
+                    val id = call.parameters["id"]?.toIntOrNull() ?: return@delete call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid id"
+                    )
+
+                    val transactionId = call.parameters["transactionId"]?.toIntOrNull() ?: return@delete call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Invalid transactionId"
+                    )
+
+                    if (cashpoolService.findByIdOnlyIfMember(id, userId) == null) return@delete call.respond(
+                        HttpStatusCode.Forbidden,
+                        "You are not a member of this cashpool"
+                    )
+                    cashpoolTransactionService.deleteById(transactionId)
+
+                    call.respond(HttpStatusCode.NoContent)
                 }
             }
         }
