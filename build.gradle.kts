@@ -25,6 +25,7 @@ dependencies {
     implementation(ktorLibs.server.di)
     implementation(ktorLibs.server.netty)
     implementation(ktorLibs.server.requestValidation)
+    implementation(ktorLibs.server.resources)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)
