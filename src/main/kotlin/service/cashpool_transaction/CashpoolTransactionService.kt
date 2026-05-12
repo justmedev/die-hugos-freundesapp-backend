@@ -4,8 +4,8 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
 import domain.models.CashpoolTransaction
-import repositories.CashpoolRepository
-import repositories.CashpoolTransactionRepository
+import domain.repositories.CashpoolRepository
+import domain.repositories.CashpoolTransactionRepository
 
 class CashpoolTransactionService(
     private val transactionRepo: CashpoolTransactionRepository,

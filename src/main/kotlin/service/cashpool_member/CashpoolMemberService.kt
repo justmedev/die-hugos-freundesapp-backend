@@ -2,7 +2,7 @@ package service.cashpool_member
 
 import core.exceptions.CashpoolMemberNotFound
 import domain.models.CashpoolMember
-import repositories.CashpoolMemberRepository
+import domain.repositories.CashpoolMemberRepository
 
 class CashpoolMemberService(
     private val cashpoolMemberRepo: CashpoolMemberRepository,

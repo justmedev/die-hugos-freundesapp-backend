@@ -1,7 +1,7 @@
 package service.cashpool
 
 import domain.models.Cashpool
-import repositories.CashpoolRepository
+import domain.repositories.CashpoolRepository
 import service.user.UserService
 
 class CashpoolService(

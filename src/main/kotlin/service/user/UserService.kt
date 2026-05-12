@@ -2,7 +2,7 @@ package service.user
 
 import core.exceptions.UserNotFound
 import domain.models.User
-import repositories.UserRepository
+import domain.repositories.UserRepository
 
 class UserService(
     private val userRepo: UserRepository,

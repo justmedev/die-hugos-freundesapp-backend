@@ -1,4 +1,4 @@
-package repositories
+package domain.repositories
 
 import domain.entities.CashpoolMemberEntity
 import domain.models.CashpoolMember
