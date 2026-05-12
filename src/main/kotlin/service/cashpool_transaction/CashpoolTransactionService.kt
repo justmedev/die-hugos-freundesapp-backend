@@ -27,6 +27,11 @@ class CashpoolTransactionService(
         return transactionRepo.findByCashpoolId(cashpoolId)
     }
 
+    suspend fun findByCashpoolIdAndTransactionOwnerId(cashpoolId: Int, ownerId: Int): List<CashpoolTransaction> {
+        requireMembership(cashpoolId, ownerId)
+        return transactionRepo.findByCashpoolIdAndOwnerId(cashpoolId, ownerId)
+    }
+
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         requireMembership(cmd.cashpoolId, cmd.ownerId)
         return transactionRepo.update(cmd)

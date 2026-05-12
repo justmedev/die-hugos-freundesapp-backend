@@ -26,7 +26,7 @@ class CashpoolSettlementService(
         // 1. Calculate the total amount of money that each member moved without Double pollution
         members.forEach { member ->
             val transactionsByMember =
-                cashpoolTransactionService.findByCashpoolIdAndOwnerId(cashpool.id, member.user.id)
+                cashpoolTransactionService.findByCashpoolIdAndTransactionOwnerId(cashpool.id, member.user.id)
 
             val totalPaid = transactionsByMember.sumOf {
                 BigDecimal.valueOf(it.amountCents).movePointLeft(2)
