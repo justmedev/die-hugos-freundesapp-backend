@@ -1,6 +1,5 @@
 package service.cashpool
 
-import core.exceptions.UserNotFound
 import domain.models.Cashpool
 import repositories.CashpoolRepository
 import service.user.UserService
@@ -10,7 +9,7 @@ class CashpoolService(
     private val cashpoolRepo: CashpoolRepository,
 ) {
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool {
-        userService.findById(cmd.ownerId) ?: throw UserNotFound()
+        userService.findById(cmd.ownerId)
         return cashpoolRepo.create(cmd)
     }
 
