@@ -2,6 +2,7 @@ package service.cashpool_transaction
 
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
+import core.exceptions.TransactionNotFound
 import domain.models.CashpoolTransaction
 import repositories.CashpoolRepository
 import repositories.CashpoolTransactionRepository
@@ -34,7 +35,7 @@ class CashpoolTransactionService(
 
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         requireMembership(cmd.cashpoolId, cmd.ownerId)
-        return transactionRepo.update(cmd)
+        return transactionRepo.update(cmd) ?: throw TransactionNotFound()
     }
 
     suspend fun deleteById(cashpoolId: Int, transactionId: Int, requestingUserId: Int) {

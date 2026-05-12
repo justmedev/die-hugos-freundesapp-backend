@@ -1,6 +1,5 @@
 package repositories
 
-import core.exceptions.TransactionNotFound
 import domain.entities.CashpoolTransactionEntity
 import domain.models.CashpoolTransaction
 import domain.tables.CashpoolTransactionsTable
@@ -18,7 +17,7 @@ interface CashpoolTransactionRepository {
     suspend fun findById(id: Int): CashpoolTransaction?
     suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolTransaction>
     suspend fun findByCashpoolIdAndOwnerId(cashpoolId: Int, ownerId: Int): List<CashpoolTransaction>
-    suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction
+    suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction?
     suspend fun deleteById(id: Int)
 }
 
@@ -47,13 +46,13 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
         }.map { CashpoolTransaction.from(it)!! }.toList()
     }
 
-    override suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction = suspendTransaction {
+    override suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction? = suspendTransaction {
         CashpoolTransactionEntity.findById(cmd.transactionId)?.let {
             it.apply {
                 label = cmd.label
                 amountCents = cmd.amountCents
             }.let { entity -> CashpoolTransaction.from(entity)!! }
-        } ?: throw TransactionNotFound()
+        }
     }
 
     override suspend fun deleteById(id: Int): Unit = suspendTransaction {
