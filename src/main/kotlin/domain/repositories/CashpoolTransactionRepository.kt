@@ -1,5 +1,7 @@
 package domain.repositories
 
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.commands.UpdateCashpoolTransactionCommand
 import domain.entities.CashpoolTransactionEntity
 import domain.models.CashpoolTransaction
 import domain.tables.CashpoolTransactionsTable
@@ -9,8 +11,6 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import domain.commands.CreateCashpoolTransactionCommand
-import domain.commands.UpdateCashpoolTransactionCommand
 
 interface CashpoolTransactionRepository {
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction
@@ -40,11 +40,12 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
             .map { CashpoolTransaction.from(it)!! }
     }
 
-    override suspend fun findByCashpoolIdAndOwnerId(cashpoolId: Int, ownerId: Int): List<CashpoolTransaction> {
-        return CashpoolTransactionEntity.find {
-            (CashpoolTransactionsTable.cashpool eq cashpoolId) and (CashpoolTransactionsTable.owner eq ownerId)
-        }.map { CashpoolTransaction.from(it)!! }.toList()
-    }
+    override suspend fun findByCashpoolIdAndOwnerId(cashpoolId: Int, ownerId: Int): List<CashpoolTransaction> =
+        suspendTransaction {
+            return@suspendTransaction CashpoolTransactionEntity.find {
+                (CashpoolTransactionsTable.cashpool eq cashpoolId) and (CashpoolTransactionsTable.owner eq ownerId)
+            }.map { CashpoolTransaction.from(it)!! }.toList()
+        }
 
     override suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction? = suspendTransaction {
         CashpoolTransactionEntity.findById(cmd.transactionId)?.let {
