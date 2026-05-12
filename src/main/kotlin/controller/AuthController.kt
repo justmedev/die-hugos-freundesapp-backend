@@ -11,8 +11,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.auth.AuthService
-import service.auth.LoginCommand
-import service.auth.RefreshCommand
+import domain.commands.LoginCommand
+import domain.commands.RefreshCommand
 
 fun Application.configureAuthController() {
     val tag = "Auth"

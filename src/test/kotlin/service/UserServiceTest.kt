@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
-import service.user.CreateUserCommand
+import domain.commands.CreateUserCommand
 import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

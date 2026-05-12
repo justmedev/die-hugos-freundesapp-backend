@@ -7,8 +7,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.cashpool.CashpoolService
-import service.cashpool.CreateCashpoolCommand
-import service.user.CreateUserCommand
+import domain.commands.CreateCashpoolCommand
+import domain.commands.CreateCashpoolMemberCommand
+import domain.commands.CreateUserCommand
 import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -55,7 +56,7 @@ class CashpoolServiceTest : BaseServiceTest() {
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
 
             val cashpoolMemberService = service.cashpool_member.CashpoolMemberService(userService, cashpoolService)
-            cashpoolMemberService.create(service.cashpool_member.CreateCashpoolMemberCommand(userId, cashpool.id))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
 
             val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, userId)
             assertNotNull(found)

@@ -3,6 +3,8 @@ package service.cashpool_transaction
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.commands.UpdateCashpoolTransactionCommand
 import domain.models.CashpoolTransaction
 import domain.repositories.CashpoolRepository
 import domain.repositories.CashpoolTransactionRepository

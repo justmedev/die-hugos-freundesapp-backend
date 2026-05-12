@@ -11,7 +11,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import service.auth.AuthService
-import service.auth.RegisterCommand
+import domain.commands.RegisterCommand
 import service.user.UserService
 import kotlin.time.Clock
 

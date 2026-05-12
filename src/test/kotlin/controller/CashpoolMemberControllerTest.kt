@@ -11,7 +11,7 @@ import io.mockk.coEvery
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
-import service.cashpool_member.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolMemberCommand
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 

@@ -5,13 +5,13 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.cashpool.CashpoolService
-import service.cashpool.CreateCashpoolCommand
+import domain.commands.CreateCashpoolCommand
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_member.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolMemberCommand
 import service.cashpool_settlement.CashpoolSettlementService
 import service.cashpool_transaction.CashpoolTransactionService
-import service.cashpool_transaction.CreateCashpoolTransactionCommand
-import service.user.CreateUserCommand
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.commands.CreateUserCommand
 import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.time.Clock

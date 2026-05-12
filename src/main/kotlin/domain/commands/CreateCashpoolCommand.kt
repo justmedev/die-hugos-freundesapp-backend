@@ -1,4 +1,4 @@
-package service.cashpool
+package domain.commands
 
 
 data class CreateCashpoolCommand(

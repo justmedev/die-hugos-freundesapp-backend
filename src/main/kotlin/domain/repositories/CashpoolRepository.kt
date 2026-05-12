@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.cashpool.CreateCashpoolCommand
+import domain.commands.CreateCashpoolCommand
 
 interface CashpoolRepository {
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool

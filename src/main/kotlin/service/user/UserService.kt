@@ -1,6 +1,7 @@
 package service.user
 
 import core.exceptions.UserNotFound
+import domain.commands.CreateUserCommand
 import domain.models.User
 import domain.repositories.UserRepository
 

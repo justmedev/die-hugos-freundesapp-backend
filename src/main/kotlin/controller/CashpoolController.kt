@@ -14,9 +14,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.cashpool.CashpoolService
-import service.cashpool.CreateCashpoolCommand
+import domain.commands.CreateCashpoolCommand
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_member.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolMemberCommand
 
 fun Application.configureCashpoolController() {
     val tag = "Cashpool"

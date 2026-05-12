@@ -5,7 +5,7 @@ import domain.models.User
 import domain.tables.UsersTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import service.user.CreateUserCommand
+import domain.commands.CreateUserCommand
 
 interface UserRepository {
     suspend fun create(cmd: CreateUserCommand): User

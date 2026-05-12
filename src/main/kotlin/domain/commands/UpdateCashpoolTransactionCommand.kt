@@ -1,4 +1,4 @@
-package service.cashpool_transaction
+package domain.commands
 
 
 data class UpdateCashpoolTransactionCommand(

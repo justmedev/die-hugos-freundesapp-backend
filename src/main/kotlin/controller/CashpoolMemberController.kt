@@ -10,7 +10,7 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_member.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolMemberCommand
 
 fun Application.configureCashpoolMemberController() {
     val tag = "Cashpool Membership"

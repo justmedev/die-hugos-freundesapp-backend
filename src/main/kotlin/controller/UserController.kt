@@ -12,7 +12,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.auth.AuthService
-import service.auth.RegisterCommand
+import domain.commands.RegisterCommand
 
 fun Application.configureUserController() {
     val tag = "User"

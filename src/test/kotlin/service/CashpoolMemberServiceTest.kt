@@ -5,10 +5,10 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.cashpool.CashpoolService
-import service.cashpool.CreateCashpoolCommand
+import domain.commands.CreateCashpoolCommand
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_member.CreateCashpoolMemberCommand
-import service.user.CreateUserCommand
+import domain.commands.CreateCashpoolMemberCommand
+import domain.commands.CreateUserCommand
 import service.user.UserService
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

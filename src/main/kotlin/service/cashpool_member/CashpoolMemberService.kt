@@ -1,6 +1,7 @@
 package service.cashpool_member
 
 import core.exceptions.CashpoolMemberNotFound
+import domain.commands.CreateCashpoolMemberCommand
 import domain.models.CashpoolMember
 import domain.repositories.CashpoolMemberRepository
 

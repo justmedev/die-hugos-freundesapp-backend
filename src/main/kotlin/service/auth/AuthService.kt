@@ -4,11 +4,14 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import de.mkammerer.argon2.Argon2
+import domain.commands.LoginCommand
+import domain.commands.RefreshCommand
 import domain.models.User
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
 import io.ktor.server.plugins.*
-import service.user.CreateUserCommand
+import domain.commands.CreateUserCommand
+import domain.commands.RegisterCommand
 import service.user.UserService
 import java.util.*
 

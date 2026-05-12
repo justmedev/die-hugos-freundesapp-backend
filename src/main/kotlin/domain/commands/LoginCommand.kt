@@ -1,4 +1,4 @@
-package service.auth
+package domain.commands
 
 data class LoginCommand(
     val email: String,

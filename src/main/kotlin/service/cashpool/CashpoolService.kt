@@ -1,5 +1,6 @@
 package service.cashpool
 
+import domain.commands.CreateCashpoolCommand
 import domain.models.Cashpool
 import domain.repositories.CashpoolRepository
 import service.user.UserService

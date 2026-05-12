@@ -12,15 +12,13 @@ import io.github.smiley4.ktoropenapi.resources.get
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
-import service.cashpool_transaction.CreateCashpoolTransactionCommand
-import service.cashpool_transaction.UpdateCashpoolTransactionCommand
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.commands.UpdateCashpoolTransactionCommand
 
 fun Application.configureCashpoolTransactionsController() {
     val tag = "Cashpool Transaction"
