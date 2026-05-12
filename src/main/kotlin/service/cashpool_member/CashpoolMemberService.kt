@@ -1,49 +1,20 @@
 package service.cashpool_member
 
-import domain.entities.CashpoolMemberEntity
+import core.exceptions.CashpoolMemberNotFound
 import domain.models.CashpoolMember
-import domain.tables.CashpoolMembersTable
-import domain.tables.CashpoolsTable
-import domain.tables.UsersTable
-import io.ktor.server.plugins.*
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import repositories.CashpoolMemberRepository
 import service.cashpool.CashpoolService
 import service.user.UserService
 
 class CashpoolMemberService(
-    private val userService: UserService,
-    private val cashpoolService: CashpoolService,
+    private val cashpoolMemberRepo: CashpoolMemberRepository,
 ) {
+    // TODO: Handle duplicates
+    suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember = cashpoolMemberRepo.create(cmd)
 
-    suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
-        userService.findById(cmd.userId) ?: throw NotFoundException("User not found")
-        cashpoolService.findById(cmd.cashpoolId) ?: throw NotFoundException("Cashpool not found")
+    suspend fun findById(id: Int) = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()
 
-        return suspendTransaction {
-            return@suspendTransaction CashpoolMember.from(CashpoolMemberEntity.new {
-                userId = EntityID(cmd.userId, UsersTable)
-                cashpoolId = EntityID(cmd.cashpoolId, CashpoolsTable)
-            })!!
-        }
-    }
+    suspend fun findByCashpoolId(cashpoolId: Int) = cashpoolMemberRepo.findByCashpoolId(cashpoolId)
 
-    suspend fun findByCashpoolIdAndUserId(cashpoolId: Int, userId: Int) = suspendTransaction {
-        CashpoolMember.from(
-            CashpoolMemberEntity
-                .find { (CashpoolMembersTable.cashpool eq cashpoolId) and (CashpoolMembersTable.user eq userId) }
-                .firstOrNull())
-    }
-
-    suspend fun findById(id: Int) = suspendTransaction {
-        CashpoolMember.from(CashpoolMemberEntity.findById(id))
-    }
-
-    suspend fun findByCashpoolId(cashpoolId: Int) = suspendTransaction {
-        CashpoolMemberEntity.find { CashpoolMembersTable.cashpool eq cashpoolId }.map { CashpoolMember.from(it)!! }
-    }
-
-    suspend fun findAll() = suspendTransaction { CashpoolMemberEntity.all().map { CashpoolMember.from(it) } }
+    suspend fun findAll() = cashpoolMemberRepo.findAll()
 }

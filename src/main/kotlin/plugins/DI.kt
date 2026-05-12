@@ -5,6 +5,8 @@ import de.mkammerer.argon2.Argon2Factory
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import io.ktor.server.plugins.di.*
+import repositories.CashpoolMemberRepository
+import repositories.CashpoolMemberRepositoryImpl
 import repositories.CashpoolRepository
 import repositories.CashpoolRepositoryImpl
 import repositories.CashpoolTransactionRepository
@@ -27,12 +29,13 @@ fun Application.configureDependencyInjection() {
         // Repositories
         provide<UserRepository> { UserRepositoryImpl() }
         provide<CashpoolRepository> { CashpoolRepositoryImpl() }
+        provide<CashpoolMemberRepository> { CashpoolMemberRepositoryImpl() }
         provide<CashpoolTransactionRepository> { CashpoolTransactionRepositoryImpl() }
 
         // Services
         provide<UserService> { UserService(resolve()) }
         provide<CashpoolService> { CashpoolService(resolve(), resolve()) }
-        provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve()) }
+        provide<CashpoolMemberService> { CashpoolMemberService(resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve()) }
         provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
