@@ -1,30 +1,15 @@
 package service.user
 
-import domain.entities.UserEntity
+import core.exceptions.UserNotFound
 import domain.models.User
-import domain.tables.UsersTable
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
+import repositories.UserRepository
 
-class UserService {
-    suspend fun create(cmd: CreateUserCommand): User {
-        return suspendTransaction {
-            return@suspendTransaction User.from(UserEntity.new {
-                email = cmd.email
-                firstName = cmd.firstName
-                lastName = cmd.lastName
-                accountHolderName = cmd.accountHolderName
-                accountIBAN = cmd.accountIBAN
-                password = cmd.passwordHash
-                birthdate = cmd.birthdate
-                isAdmin = cmd.isAdmin
-            }) as User
-        }
-    }
+class UserService(
+    private val userRepo: UserRepository,
+) {
+    suspend fun create(cmd: CreateUserCommand): User = userRepo.create(cmd)
 
-    suspend fun findById(id: Int) =
-        suspendTransaction { User.from(UserEntity.findById(id)) }
+    suspend fun findById(id: Int) = userRepo.findById(id) ?: throw UserNotFound()
 
-    suspend fun findByEmail(email: String) =
-        suspendTransaction { User.from(UserEntity.find { UsersTable.email eq email }.firstOrNull()) }
+    suspend fun findByEmail(email: String) = userRepo.findByEmail(email) ?: throw UserNotFound()
 }

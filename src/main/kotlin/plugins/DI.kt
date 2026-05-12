@@ -9,6 +9,8 @@ import repositories.CashpoolRepository
 import repositories.CashpoolRepositoryImpl
 import repositories.CashpoolTransactionRepository
 import repositories.CashpoolTransactionRepositoryImpl
+import repositories.UserRepository
+import repositories.UserRepositoryImpl
 import service.auth.AuthService
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
@@ -23,11 +25,12 @@ fun Application.configureDependencyInjection() {
         provide<Argon2> { Argon2Factory.create() }
 
         // Repositories
+        provide<UserRepository> { UserRepositoryImpl() }
         provide<CashpoolRepository> { CashpoolRepositoryImpl() }
         provide<CashpoolTransactionRepository> { CashpoolTransactionRepositoryImpl() }
 
         // Services
-        provide<UserService> { UserService() }
+        provide<UserService> { UserService(resolve()) }
         provide<CashpoolService> { CashpoolService(resolve(), resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve()) }
