@@ -57,7 +57,7 @@ fun Application.configureCashpoolController() {
                         code(HttpStatusCode.OK) { body<List<CashpoolResponse>>() }
                     }
                 }) {
-                    call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it!!) })
+                    call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it) })
                 }
 
                 get("/{id}", {
@@ -74,18 +74,8 @@ fun Application.configureCashpoolController() {
                         "Invalid id"
                     )
 
-                    try {
-                        val domain = cashpoolService.findByIdOnlyIfMember(id, userId) ?: return@get call.respond(
-                            HttpStatusCode.NotFound,
-                            "Cashpool not found"
-                        )
-                        call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
-                    } catch (_: NotaCashpoolMember) {
-                        call.respond(
-                            HttpStatusCode.Forbidden,
-                            "You are not a member of this cashpool"
-                        )
-                    }
+                    val domain = cashpoolService.findByIdOnlyIfMember(id, userId)
+                    call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
                 }
             }
         }

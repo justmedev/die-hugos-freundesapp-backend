@@ -17,11 +17,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.time.Clock
 
+import core.exceptions.CashpoolNotFound
+import core.exceptions.NotaCashpoolMember
+import core.exceptions.TransactionNotFound
+import domain.repositories.CashpoolMemberRepositoryImpl
+import domain.repositories.CashpoolRepositoryImpl
+import domain.repositories.CashpoolTransactionRepositoryImpl
+import domain.repositories.UserRepositoryImpl
+import kotlin.test.assertFailsWith
+
 class CashpoolTransactionServiceTest : BaseServiceTest() {
-    private val userService = UserService()
-    private val cashpoolService = CashpoolService(userService)
-    private val cashpoolMemberService = CashpoolMemberService(userService, cashpoolService)
-    private val transactionService = CashpoolTransactionService(userService, cashpoolService, cashpoolMemberService)
+    private val userRepo = UserRepositoryImpl()
+    private val userService = UserService(userRepo)
+    private val cashpoolRepo = CashpoolRepositoryImpl()
+    private val cashpoolService = CashpoolService(userService, cashpoolRepo)
+    private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
+    private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
+    private val transactionRepo = CashpoolTransactionRepositoryImpl()
+    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo)
 
     private suspend fun createTestUser(email: String = "test@example.com"): Int {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
@@ -30,7 +43,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
         val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id
-        cashpoolMemberService.create(CreateCashpoolMemberCommand(ownerId, cpId))
+        cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
         return cpId
     }
 
@@ -50,6 +63,20 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     }
 
     @Test
+    fun `create transaction - not a member - fails`() {
+        runBlocking {
+            val ownerId = createTestUser("owner@ex.com")
+            val otherId = createTestUser("other@ex.com")
+            val cpId = createTestCashpool(ownerId)
+
+            val cmd = CreateCashpoolTransactionCommand(otherId, cpId, "Label", 1000)
+            assertFailsWith<NotaCashpoolMember> {
+                transactionService.create(cmd)
+            }
+        }
+    }
+
+    @Test
     fun `update transaction - success`() {
         runBlocking {
             val userId = createTestUser()
@@ -65,6 +92,19 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     }
 
     @Test
+    fun `update transaction - not found - fails`() {
+        runBlocking {
+            val userId = createTestUser()
+            val cpId = createTestCashpool(userId)
+
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, 999, "New", 2000)
+            assertFailsWith<TransactionNotFound> {
+                transactionService.update(updateCmd)
+            }
+        }
+    }
+
+    @Test
     fun `findByCashpoolId - returns transactions`() {
         runBlocking {
             val userId = createTestUser()
@@ -72,8 +112,21 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000))
             transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T2", 2000))
 
-            val txs = transactionService.findByCashpoolId(cpId)
+            val txs = transactionService.findByCashpoolId(cpId, userId)
             assertEquals(2, txs.size)
+        }
+    }
+
+    @Test
+    fun `findByCashpoolId - not a member - fails`() {
+        runBlocking {
+            val ownerId = createTestUser("owner@ex.com")
+            val otherId = createTestUser("other@ex.com")
+            val cpId = createTestCashpool(ownerId)
+
+            assertFailsWith<NotaCashpoolMember> {
+                transactionService.findByCashpoolId(cpId, otherId)
+            }
         }
     }
 }

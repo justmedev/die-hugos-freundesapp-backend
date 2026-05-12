@@ -77,7 +77,7 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `get cashpool by id - not found`() = withTestApplication(createMockPrincipal(1)) {
-        coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } returns null
+        coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
         val response = client.get("/cashpools/1") {
@@ -85,5 +85,17 @@ class CashpoolControllerTest : BaseControllerTest() {
         }
 
         assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @Test
+    fun `get cashpool by id - forbidden`() = withTestApplication(createMockPrincipal(1)) {
+        coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } throws core.exceptions.NotaCashpoolMember()
+
+        val client = createClient()
+        val response = client.get("/cashpools/1") {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
     }
 }

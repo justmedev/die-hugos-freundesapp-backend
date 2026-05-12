@@ -11,8 +11,13 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.time.Clock
 
+import domain.repositories.UserRepositoryImpl
+import core.exceptions.UserNotFound
+import kotlin.test.assertFailsWith
+
 class UserServiceTest : BaseServiceTest() {
-    private val userService = UserService()
+    private val userRepo = UserRepositoryImpl()
+    private val userService = UserService(userRepo)
 
     @Test
     fun `create user - success`() {
@@ -50,10 +55,11 @@ class UserServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `findById - non-existing user - returns null`() {
+    fun `findById - non-existing user - throws UserNotFound`() {
         runBlocking {
-            val found = userService.findById(999)
-            assertNull(found)
+            assertFailsWith<UserNotFound> {
+                userService.findById(999)
+            }
         }
     }
 
@@ -72,10 +78,11 @@ class UserServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `findByEmail - non-existing user - returns null`() {
+    fun `findByEmail - non-existing user - throws UserNotFound`() {
         runBlocking {
-            val found = userService.findByEmail("notfound@example.com")
-            assertNull(found)
+            assertFailsWith<UserNotFound> {
+                userService.findByEmail("notfound@example.com")
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ import domain.commands.RefreshCommand
 import domain.models.User
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
-import io.ktor.server.plugins.*
 import domain.commands.CreateUserCommand
 import domain.commands.RegisterCommand
 import service.user.UserService
@@ -38,7 +37,7 @@ class AuthService(
      * If the user is not found or the password is incorrect, returns null.
      */
     suspend fun login(cmd: LoginCommand): UserTokenPair {
-        val user = userService.findByEmail(cmd.email)?.takeIf {
+        val user = userService.findByEmail(cmd.email).takeIf {
             argon2.verify(it.password, cmd.password.toCharArray())
         }
         if (user == null) throw Exception("Invalid email or password")
@@ -64,7 +63,7 @@ class AuthService(
         val decoded = refreshTokenVerifier.verify(cmd.refreshToken)
         val userId = decoded.subject.toInt()
         val user = userService.findById(userId)
-        return generateTokens(user ?: throw NotFoundException("User not found"))
+        return generateTokens(user)
     }
 
     private fun generateTokens(user: User): UserTokenPair {

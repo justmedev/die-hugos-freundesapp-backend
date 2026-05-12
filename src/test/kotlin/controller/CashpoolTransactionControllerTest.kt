@@ -46,7 +46,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
             CashpoolTransaction(2, user, "Label 2", 2000, now)
         )
 
-        coEvery { cashpoolTransactionService.findByCashpoolId(1) } returns transactions
+        coEvery { cashpoolTransactionService.findByCashpoolId(1, 1) } returns transactions
 
         val client = createClient()
         val response = client.get("/cashpools/1/transactions") {
@@ -90,7 +90,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `delete transaction - forbidden if not member`() = withTestApplication(createMockPrincipal(1)) {
-        coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } returns null
+        coEvery { cashpoolTransactionService.deleteById(1, 1, 1) } throws core.exceptions.NotaCashpoolMember()
 
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {
@@ -98,5 +98,17 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         }
 
         assertEquals(HttpStatusCode.Forbidden, response.status)
+    }
+
+    @Test
+    fun `delete transaction - not found`() = withTestApplication(createMockPrincipal(1)) {
+        coEvery { cashpoolTransactionService.deleteById(1, 1, 1) } throws core.exceptions.TransactionNotFound()
+
+        val client = createClient()
+        val response = client.delete("/cashpools/1/transactions/1") {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
     }
 }

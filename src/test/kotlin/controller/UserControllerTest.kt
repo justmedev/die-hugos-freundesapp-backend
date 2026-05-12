@@ -96,4 +96,28 @@ class UserControllerTest : BaseControllerTest() {
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
+
+    @Test
+    fun `post user - service failure - unauthorized`() = withTestApplication(createMockPrincipal(1, "admin")) {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        val request = CreateUserRequest(
+            email = "test@ex.com",
+            firstName = "F",
+            lastName = "L",
+            password = "p",
+            birthDate = now,
+            isAdmin = false
+        )
+
+        coEvery { authService.register(any()) } throws Exception("Failed")
+
+        val client = createClient()
+        val response = client.post("/user") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
 }

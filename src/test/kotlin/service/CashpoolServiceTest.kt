@@ -16,9 +16,16 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.time.Clock
 
+import core.exceptions.CashpoolNotFound
+import core.exceptions.UserNotFound
+import domain.repositories.CashpoolRepositoryImpl
+import domain.repositories.UserRepositoryImpl
+
 class CashpoolServiceTest : BaseServiceTest() {
-    private val userService = UserService()
-    private val cashpoolService = CashpoolService(userService)
+    private val userRepo = UserRepositoryImpl()
+    private val userService = UserService(userRepo)
+    private val cashpoolRepo = CashpoolRepositoryImpl()
+    private val cashpoolService = CashpoolService(userService, cashpoolRepo)
 
     private suspend fun createTestUser(email: String = "test@example.com"): Int {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
@@ -43,7 +50,7 @@ class CashpoolServiceTest : BaseServiceTest() {
     fun `create cashpool - user not found - fails`() {
         runBlocking {
             val cmd = CreateCashpoolCommand("Title", "Desc", 999)
-            assertFailsWith<NotFoundException> {
+            assertFailsWith<UserNotFound> {
                 cashpoolService.create(cmd)
             }
         }
@@ -55,7 +62,8 @@ class CashpoolServiceTest : BaseServiceTest() {
             val userId = createTestUser()
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
 
-            val cashpoolMemberService = service.cashpool_member.CashpoolMemberService(userService, cashpoolService)
+            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
+            val cashpoolMemberService = service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
             cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
 
             val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, userId)
@@ -73,6 +81,15 @@ class CashpoolServiceTest : BaseServiceTest() {
 
             assertFailsWith<NotaCashpoolMember> {
                 cashpoolService.findByIdOnlyIfMember(cashpool.id, otherId)
+            }
+        }
+    }
+
+    @Test
+    fun `findById - non-existing - fails`() {
+        runBlocking {
+            assertFailsWith<CashpoolNotFound> {
+                cashpoolService.findById(999)
             }
         }
     }

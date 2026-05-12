@@ -38,4 +38,16 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
         assertEquals(500, body[0].amountCents)
         assertEquals(user1.id, body[0].from.id)
     }
+
+    @Test
+    fun `get settlements - not found`() = withTestApplication(createMockPrincipal(1)) {
+        coEvery { cashpoolSettlementService.calculateSettlements(1) } throws core.exceptions.CashpoolNotFound()
+
+        val client = createClient()
+        val response = client.get("/cashpools/1/settle") {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+    }
 }

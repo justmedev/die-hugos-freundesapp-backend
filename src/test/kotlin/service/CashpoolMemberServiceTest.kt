@@ -15,10 +15,21 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.time.Clock
 
+import core.exceptions.CashpoolMemberNotFound
+import domain.repositories.CashpoolMemberRepositoryImpl
+import domain.repositories.CashpoolRepositoryImpl
+import domain.repositories.UserRepositoryImpl
+import core.exceptions.CashpoolNotFound
+import core.exceptions.UserNotFound
+import kotlin.test.assertFailsWith
+
 class CashpoolMemberServiceTest : BaseServiceTest() {
-    private val userService = UserService()
-    private val cashpoolService = CashpoolService(userService)
-    private val cashpoolMemberService = CashpoolMemberService(userService, cashpoolService)
+    private val userRepo = UserRepositoryImpl()
+    private val userService = UserService(userRepo)
+    private val cashpoolRepo = CashpoolRepositoryImpl()
+    private val cashpoolService = CashpoolService(userService, cashpoolRepo)
+    private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
+    private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
 
     private suspend fun createTestUser(email: String = "test@example.com"): Int {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
@@ -45,24 +56,23 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `findByCashpoolIdAndUserId - exists - returns member`() {
+    fun `create member - user not found - fails`() {
         runBlocking {
             val userId = createTestUser()
             val cashpoolId = createTestCashpool(userId)
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))
-
-            val found = cashpoolMemberService.findByCashpoolIdAndUserId(cashpoolId, userId)
-
-            assertNotNull(found)
-            assertEquals(userId, found.user.id)
+            assertFailsWith<UserNotFound> {
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(999, cashpoolId))
+            }
         }
     }
 
     @Test
-    fun `findByCashpoolIdAndUserId - not exists - returns null`() {
+    fun `create member - cashpool not found - fails`() {
         runBlocking {
-            val found = cashpoolMemberService.findByCashpoolIdAndUserId(999, 999)
-            assertNull(found)
+            val userId = createTestUser()
+            assertFailsWith<CashpoolNotFound> {
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, 999))
+            }
         }
     }
 
@@ -80,23 +90,6 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
         }
     }
 
-    @Test(expected = io.ktor.server.plugins.NotFoundException::class)
-    fun `create member - user not found - throws exception`() {
-        runBlocking {
-            val userId = createTestUser()
-            val cashpoolId = createTestCashpool(userId)
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(999, cashpoolId))
-        }
-    }
-
-    @Test(expected = io.ktor.server.plugins.NotFoundException::class)
-    fun `create member - cashpool not found - throws exception`() {
-        runBlocking {
-            val userId = createTestUser()
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, 999))
-        }
-    }
-
     @Test
     fun `findById - exists - returns member`() {
         runBlocking {
@@ -108,6 +101,15 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
 
             assertNotNull(found)
             assertEquals(member.id, found.id)
+        }
+    }
+
+    @Test
+    fun `findById - not found - throws exception`() {
+        runBlocking {
+            assertFailsWith<CashpoolMemberNotFound> {
+                cashpoolMemberService.findById(999)
+            }
         }
     }
 

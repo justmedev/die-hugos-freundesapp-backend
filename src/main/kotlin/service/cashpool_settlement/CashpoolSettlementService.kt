@@ -1,7 +1,7 @@
 package service.cashpool_settlement
 
+import core.exceptions.CashpoolNotFound
 import domain.models.CashpoolSettlement
-import io.ktor.server.plugins.*
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
 import service.cashpool_transaction.CashpoolTransactionService
@@ -17,7 +17,7 @@ class CashpoolSettlementService(
      * Calculate the settlements required to make everybody pay their share of a cashpool.
      */
     suspend fun calculateSettlements(cashpoolId: Int): List<CashpoolSettlement> {
-        val cashpool = cashpoolService.findById(cashpoolId) ?: throw NotFoundException("Cashpool not found")
+        val cashpool = cashpoolService.findById(cashpoolId)
         val members = cashpoolMemberService.findByCashpoolId(cashpool.id)
         if (members.isEmpty()) return listOf()
 

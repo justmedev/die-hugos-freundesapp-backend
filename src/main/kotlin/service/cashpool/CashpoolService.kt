@@ -5,6 +5,9 @@ import domain.models.Cashpool
 import domain.repositories.CashpoolRepository
 import service.user.UserService
 
+import core.exceptions.CashpoolNotFound
+import core.exceptions.NotaCashpoolMember
+
 class CashpoolService(
     private val userService: UserService,
     private val cashpoolRepo: CashpoolRepository,
@@ -14,10 +17,10 @@ class CashpoolService(
         return cashpoolRepo.create(cmd)
     }
 
-    suspend fun findById(id: Int) = cashpoolRepo.findById(id)
+    suspend fun findById(id: Int) = cashpoolRepo.findById(id) ?: throw CashpoolNotFound()
 
-    suspend fun findByIdOnlyIfMember(id: Int, userId: Int): Cashpool? {
-        if (!cashpoolRepo.isMember(id, userId)) return null
+    suspend fun findByIdOnlyIfMember(id: Int, userId: Int): Cashpool {
+        if (!cashpoolRepo.isMember(id, userId)) throw NotaCashpoolMember()
         return findById(id)
     }
 

@@ -39,6 +39,18 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     }
 
     @Test
+    fun `post join cashpool - not found`() = withTestApplication(createMockPrincipal(1)) {
+        coEvery { cashpoolMemberService.create(any()) } throws core.exceptions.CashpoolNotFound()
+
+        val client = createClient()
+        val response = client.post("/cashpools/1/members") {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @Test
     fun `post join cashpool - invalid cashpoolId`() = withTestApplication(createMockPrincipal(1)) {
         val client = createClient()
         val response = client.post("/cashpools/invalid/members") {

@@ -9,7 +9,9 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
+import plugins.configureResources
 import plugins.configureSerialization
+import plugins.configureStatusPages
 import service.auth.AuthService
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
@@ -41,6 +43,8 @@ abstract class BaseControllerTest {
     ) = testApplication {
         application {
             configureSerialization()
+            configureResources()
+            configureStatusPages()
             dependencies {
                 provide { userService }
                 provide { cashpoolService }
