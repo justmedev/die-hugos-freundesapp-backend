@@ -1,3 +1,4 @@
+import domain.commands.RegisterCommand
 import domain.tables.CashpoolMembersTable
 import domain.tables.CashpoolTransactionsTable
 import domain.tables.CashpoolsTable
@@ -11,7 +12,6 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import service.auth.AuthService
-import domain.commands.RegisterCommand
 import service.user.UserService
 import kotlin.time.Clock
 
@@ -36,14 +36,16 @@ suspend fun Application.main() {
     val adminEmail = environment.config.property("diehugos.adminuser.email").getString()
     val adminPassword = environment.config.property("diehugos.adminuser.password").getString()
 
-    userService.findByEmail(adminEmail) ?: authService.register(
-        RegisterCommand(
-            email = adminEmail,
-            plaintextPassword = adminPassword,
-            firstName = "Diego",
-            lastName = "Hugo",
-            birthdate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-            isAdmin = true
+    runCatching { userService.findByEmail(adminEmail) }.onFailure {
+        authService.register(
+            RegisterCommand(
+                email = adminEmail,
+                plaintextPassword = adminPassword,
+                firstName = "Diego",
+                lastName = "Hugo",
+                birthdate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                isAdmin = true
+            )
         )
-    )
+    }
 }
