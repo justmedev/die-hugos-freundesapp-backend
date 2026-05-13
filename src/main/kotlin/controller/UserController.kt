@@ -75,7 +75,7 @@ fun Application.configureUserController() {
                         updateUserRequest.lastName,
                         updateUserRequest.accountHolderName,
                         updateUserRequest.accountIBAN,
-                        updateUserRequest.birthDate,
+                        updateUserRequest.birthdate,
                     )
                 )
                 call.respond(HttpStatusCode.OK, UserResponse.from(updated))

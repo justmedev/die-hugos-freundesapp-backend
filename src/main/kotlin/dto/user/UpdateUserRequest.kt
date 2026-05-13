@@ -10,5 +10,5 @@ data class UpdateUserRequest(
     val lastName: String,
     val accountHolderName: String? = null,
     val accountIBAN: String? = null,
-    val birthDate: LocalDateTime,
+    val birthdate: LocalDateTime,
 )
