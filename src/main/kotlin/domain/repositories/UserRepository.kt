@@ -44,7 +44,7 @@ class UserRepositoryImpl : UserRepository {
                 firstName = cmd.firstName
                 lastName = cmd.lastName
                 accountHolderName = cmd.accountHolderName
-                accountIBAN = cmd.accountIBAN
+                accountIBAN = cmd.accountIBAN?.value
                 birthdate = cmd.birthdate
             }
         })

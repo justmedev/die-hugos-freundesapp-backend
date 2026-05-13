@@ -1,5 +1,6 @@
 package dto.user
 
+import domain.models.valueobjects.IBAN
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
@@ -9,6 +10,6 @@ data class UpdateUserRequest(
     val firstName: String,
     val lastName: String,
     val accountHolderName: String? = null,
-    val accountIBAN: String? = null,
+    val accountIBAN: IBAN? = null,
     val birthdate: LocalDateTime,
 )
