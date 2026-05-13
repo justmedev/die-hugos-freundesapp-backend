@@ -68,7 +68,7 @@ fun Application.configureUserController() {
                 }
             }) {
                 val updateUserRequest = call.receive<UpdateUserRequest>()
-                userService.update(
+                val updated = userService.update(
                     call.requireUserId(), UpdateUserCommand(
                         updateUserRequest.email,
                         updateUserRequest.firstName,
@@ -78,6 +78,7 @@ fun Application.configureUserController() {
                         updateUserRequest.birthDate,
                     )
                 )
+                call.respond(HttpStatusCode.OK, UserResponse.from(updated))
             }
         }
     }

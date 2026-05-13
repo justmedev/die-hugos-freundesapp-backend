@@ -1,6 +1,7 @@
 package controller
 
 import dto.user.CreateUserRequest
+import dto.user.UpdateUserRequest
 import dto.user.UserResponse
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -116,6 +117,81 @@ class UserControllerTest : BaseControllerTest() {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `put user - success`() = withTestApplication(createMockPrincipal(1)) {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        val request = UpdateUserRequest(
+            email = "updated@example.com",
+            firstName = "Updated",
+            lastName = "User",
+            birthDate = now
+        )
+
+        coEvery { userService.update(any(), any()) } returns domain.models.User(
+            id = 1,
+            email = request.email,
+            firstName = request.firstName,
+            lastName = request.lastName,
+            password = "hashed_password",
+            birthdate = request.birthDate,
+            isAdmin = false,
+            createdAt = now
+        )
+
+        val client = createClient()
+        val response = client.put("/user") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = response.body<UserResponse>()
+        assertEquals(request.email, body.email)
+        assertEquals(1, body.id)
+    }
+
+    @Test
+    fun `put user - user not found - not found`() = withTestApplication(createMockPrincipal(1)) {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        val request = UpdateUserRequest(
+            email = "updated@example.com",
+            firstName = "Updated",
+            lastName = "User",
+            birthDate = now
+        )
+
+        coEvery { userService.update(any(), any()) } throws core.exceptions.UserNotFound()
+
+        val client = createClient()
+        val response = client.put("/user") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @Test
+    fun `put user - no auth - unauthorized`() = withTestApplication {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+        val request = UpdateUserRequest(
+            email = "updated@example.com",
+            firstName = "Updated",
+            lastName = "User",
+            birthDate = now
+        )
+
+        val client = createClient()
+        val response = client.put("/user") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
         }
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
