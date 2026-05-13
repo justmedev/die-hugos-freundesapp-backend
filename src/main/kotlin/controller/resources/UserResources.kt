@@ -2,5 +2,5 @@ package controller.resources
 
 import io.ktor.resources.*
 
-@Resource("/user")
+@Resource("/users")
 class UserResource

@@ -40,7 +40,7 @@ class UserControllerTest : BaseControllerTest() {
         )
 
         val client = createClient()
-        val response = client.post("/user") {
+        val response = client.post("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
@@ -68,7 +68,7 @@ class UserControllerTest : BaseControllerTest() {
         )
 
         val client = createClient()
-        val response = client.post("/user") {
+        val response = client.post("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
@@ -90,7 +90,7 @@ class UserControllerTest : BaseControllerTest() {
         )
 
         val client = createClient()
-        val response = client.post("/user") {
+        val response = client.post("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
@@ -113,7 +113,7 @@ class UserControllerTest : BaseControllerTest() {
         coEvery { authService.register(any()) } throws Exception("Failed")
 
         val client = createClient()
-        val response = client.post("/user") {
+        val response = client.post("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
@@ -144,7 +144,7 @@ class UserControllerTest : BaseControllerTest() {
         )
 
         val client = createClient()
-        val response = client.put("/user") {
+        val response = client.put("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
@@ -169,7 +169,7 @@ class UserControllerTest : BaseControllerTest() {
         coEvery { userService.update(any(), any()) } throws core.exceptions.UserNotFound()
 
         val client = createClient()
-        val response = client.put("/user") {
+        val response = client.put("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer test")
@@ -189,7 +189,7 @@ class UserControllerTest : BaseControllerTest() {
         )
 
         val client = createClient()
-        val response = client.put("/user") {
+        val response = client.put("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
