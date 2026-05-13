@@ -1,7 +1,8 @@
 package controller
 
+import controller.resources.CashpoolResource
 import dto.cashpool_settlement.CashpoolSettlementResponse
-import io.github.smiley4.ktoropenapi.get
+import io.github.smiley4.ktoropenapi.resources.get
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -16,28 +17,21 @@ fun Application.configureCashpoolSettlementController() {
 
     routing {
         authenticate {
-            route("/cashpools/{id}/settle") {
-                get({
-                    description =
-                        "Get a list of settlement transactions that need to be made by each member to even out the cashpool."
-                    tags = listOf(tag)
-                    response {
-                        code(HttpStatusCode.OK) { body<List<CashpoolSettlementResponse>>() }
-                    }
-                }) {
-                    val cashpoolId = call.parameters["id"]?.toIntOrNull() ?: return@get call.respond(
-                        HttpStatusCode.BadRequest,
-                        "Invalid id"
-                    )
-
-                    call.respond(
-                        HttpStatusCode.OK,
-                        cashpoolSettlementService.calculateSettlements(cashpoolId).map {
-                            CashpoolSettlementResponse.from(
-                                it
-                            )
-                        })
+            get<CashpoolResource.Id.Settle>({
+                description =
+                    "Get a list of settlement transactions that need to be made by each member to even out the cashpool."
+                tags = listOf(tag)
+                response {
+                    code(HttpStatusCode.OK) { body<List<CashpoolSettlementResponse>>() }
                 }
+            }) { resource ->
+                call.respond(
+                    HttpStatusCode.OK,
+                    cashpoolSettlementService.calculateSettlements(resource.parent.id).map {
+                        CashpoolSettlementResponse.from(
+                            it
+                        )
+                    })
             }
         }
     }

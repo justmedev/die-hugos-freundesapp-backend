@@ -1,6 +1,6 @@
 package controller
 
-import controller.resources.CashpoolsResource
+import controller.resources.CashpoolResource
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
@@ -26,7 +26,7 @@ fun Application.configureCashpoolTransactionsController() {
 
     routing {
         authenticate {
-            post<CashpoolsResource.Id.Transactions>({
+            post<CashpoolResource.Id.Transactions>({
                 description = "Create a new cashpool transaction inside of a cashpool."
                 tags = listOf(tag)
                 request { body<CreateCashpoolTransactionRequest>() }
@@ -47,7 +47,7 @@ fun Application.configureCashpoolTransactionsController() {
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
             }
 
-            get<CashpoolsResource.Id.Transactions>({
+            get<CashpoolResource.Id.Transactions>({
                 description = "Get all cashpool transactions inside a cashpool."
                 tags = listOf(tag)
                 response {
@@ -63,7 +63,7 @@ fun Application.configureCashpoolTransactionsController() {
                 call.respond(HttpStatusCode.OK, transactions.map { CashpoolTransactionResponse.from(it) })
             }
 
-            put<CashpoolsResource.Id.Transactions.Transaction>({
+            put<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Edit an existing cashpool transaction by id."
                 tags = listOf(tag)
                 request { body<UpdateCashpoolTransactionRequest>() }
@@ -85,7 +85,7 @@ fun Application.configureCashpoolTransactionsController() {
                 call.respond(HttpStatusCode.OK, CashpoolTransactionResponse.from(updated))
             }
 
-            delete<CashpoolsResource.Id.Transactions.Transaction>({
+            delete<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Delete a specific cashpool transaction by id."
                 tags = listOf(tag)
                 response {

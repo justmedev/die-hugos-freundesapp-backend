@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @Resource("/cashpools")
-class CashpoolsResource {
+class CashpoolResource {
 
     @Serializable
     @Resource("{id}")
-    class Id(val parent: CashpoolsResource = CashpoolsResource(), val id: Int) {
+    class Id(val parent: CashpoolResource = CashpoolResource(), val id: Int) {
 
         @Serializable
         @Resource("transactions")
@@ -19,5 +19,13 @@ class CashpoolsResource {
             @Resource("{transactionId}")
             class Transaction(val parent: Transactions, val transactionId: Int)
         }
+
+        @Serializable
+        @Resource("members")
+        class Members(val parent: Id)
+
+        @Serializable
+        @Resource("settle")
+        class Settle(val parent: Id)
     }
 }
