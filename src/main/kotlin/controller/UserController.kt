@@ -1,6 +1,7 @@
 package controller
 
 import controller.resources.UserResource
+import core.extensions.requireUserRole
 import domain.commands.RegisterCommand
 import dto.user.CreateUserRequest
 import dto.user.UserResponse
@@ -8,7 +9,6 @@ import io.github.smiley4.ktoropenapi.resources.post
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -30,9 +30,7 @@ fun Application.configureUserController() {
                     code(HttpStatusCode.Forbidden) { description = "Only admin accounts can create users" }
                 }
             }) {
-                val userRole = call.principal<JWTPrincipal>()?.payload?.claims?.get("role")?.asString()
-                    ?: return@post call.respond(HttpStatusCode.Forbidden)
-                if (userRole != "admin") return@post call.respond(HttpStatusCode.Forbidden)
+                if (call.requireUserRole() != "admin") return@post call.respond(HttpStatusCode.Forbidden)
 
                 val createUserRequest = call.receive<CreateUserRequest>()
                 try {
