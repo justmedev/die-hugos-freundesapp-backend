@@ -3,14 +3,15 @@ package service.auth
 import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
+import core.exceptions.Unauthorized
 import de.mkammerer.argon2.Argon2
+import domain.commands.CreateUserCommand
 import domain.commands.LoginCommand
 import domain.commands.RefreshCommand
+import domain.commands.RegisterCommand
 import domain.models.User
 import domain.models.UserTokenPair
 import io.ktor.server.config.*
-import domain.commands.CreateUserCommand
-import domain.commands.RegisterCommand
 import service.user.UserService
 import java.util.*
 
@@ -37,11 +38,16 @@ class AuthService(
      * If the user is not found or the password is incorrect, returns null.
      */
     suspend fun login(cmd: LoginCommand): UserTokenPair {
-        val user = userService.findByEmail(cmd.email).takeIf {
-            argon2.verify(it.password, cmd.password.toCharArray())
+        try {
+            val user = userService.findByEmail(cmd.email).takeIf {
+                argon2.verify(it.password, cmd.password.toCharArray())
+            }
+            if (user == null) throw Unauthorized()
+            return generateTokens(user)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Unauthorized()
         }
-        if (user == null) throw Exception("Invalid email or password")
-        return generateTokens(user)
     }
 
     suspend fun register(cmd: RegisterCommand): User {
@@ -60,10 +66,15 @@ class AuthService(
     }
 
     suspend fun refresh(cmd: RefreshCommand): UserTokenPair {
-        val decoded = refreshTokenVerifier.verify(cmd.refreshToken)
-        val userId = decoded.subject.toInt()
-        val user = userService.findById(userId)
-        return generateTokens(user)
+        try {
+            val decoded = refreshTokenVerifier.verify(cmd.refreshToken)
+            val userId = decoded.subject.toInt()
+            val user = userService.findById(userId)
+            return generateTokens(user)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw Unauthorized()
+        }
     }
 
     private fun generateTokens(user: User): UserTokenPair {

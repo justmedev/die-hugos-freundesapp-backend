@@ -1,5 +1,6 @@
 package controller
 
+import core.exceptions.Unauthorized
 import domain.models.User
 import domain.models.UserTokenPair
 import dto.auth.AuthResponse
@@ -43,7 +44,7 @@ class AuthControllerTest : BaseControllerTest() {
     fun `login - failure`() = withTestApplication {
         val request = LoginRequest("test@example.com", "wrong")
 
-        coEvery { authService.login(any()) } throws Exception("Invalid email or password")
+        coEvery { authService.login(any()) } throws Unauthorized()
 
         val client = createClient()
         val response = client.post("/auth/login") {
