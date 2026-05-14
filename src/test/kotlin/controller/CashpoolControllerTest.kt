@@ -3,6 +3,7 @@ package controller
 import domain.models.Cashpool
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
+import dto.cashpool.UpdateCashpoolRequest
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -37,6 +38,57 @@ class CashpoolControllerTest : BaseControllerTest() {
         assertEquals(HttpStatusCode.Created, response.status)
         val body = response.body<CashpoolResponse>()
         assertEquals(request.title, body.title)
+    }
+
+    @Test
+    fun `put cashpool - success`() = withTestApplication(createMockPrincipal(1)) {
+        val request = UpdateCashpoolRequest("New Title", "New Description")
+        val updated = Cashpool(1, request.title, request.description, owner, true, now)
+
+        coEvery { cashpoolService.update(1, any()) } returns updated
+
+        val client = createClient()
+        val response = client.put("/cashpools/1") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.OK, response.status)
+        val body = response.body<CashpoolResponse>()
+        assertEquals(request.title, body.title)
+    }
+
+    @Test
+    fun `put cashpool - unauthorized`() = withTestApplication(createMockPrincipal(1)) {
+        val request = UpdateCashpoolRequest("New Title", "New Description")
+
+        coEvery { cashpoolService.update(1, any()) } throws core.exceptions.Unauthorized("Forbidden")
+
+        val client = createClient()
+        val response = client.put("/cashpools/1") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
+
+    @Test
+    fun `put cashpool - not a member`() = withTestApplication(createMockPrincipal(1)) {
+        val request = UpdateCashpoolRequest("New Title", "New Description")
+
+        coEvery { cashpoolService.update(1, any()) } throws core.exceptions.NotaCashpoolMember()
+
+        val client = createClient()
+        val response = client.put("/cashpools/1") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.Forbidden, response.status)
     }
 
     @Test

@@ -1,26 +1,22 @@
 package service
 
+import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
-import io.ktor.server.plugins.*
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import org.junit.Test
-import service.cashpool.CashpoolService
+import core.exceptions.Unauthorized
+import core.exceptions.UserNotFound
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
-import domain.commands.CreateUserCommand
+import domain.commands.UpdateCashpoolCommand
+import domain.repositories.CashpoolRepositoryImpl
+import domain.repositories.UserRepositoryImpl
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import service.cashpool.CashpoolService
 import service.user.UserService
+import testutils.Commands
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
-
-import core.exceptions.CashpoolNotFound
-import core.exceptions.UserNotFound
-import domain.repositories.CashpoolRepositoryImpl
-import domain.repositories.UserRepositoryImpl
-import testutils.Commands
 
 class CashpoolServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -39,6 +35,55 @@ class CashpoolServiceTest : BaseServiceTest() {
             assertNotNull(cashpool)
             assertEquals("Title", cashpool.title)
             assertEquals(userId, cashpool.owner.id)
+        }
+    }
+
+    @Test
+    fun `update cashpool - owner - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
+
+            // Need to be a member to update (owner is usually a member, but we need to ensure it for findByIdOnlyIfMember)
+            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
+            val cashpoolMemberService =
+                service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+
+            val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
+            val updated = cashpoolService.update(userId, cmd)
+
+            assertEquals("New Title", updated.title)
+            assertEquals("New Desc", updated.description)
+        }
+    }
+
+    @Test
+    fun `update cashpool - not owner - fails`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
+
+            // Other user is a member but NOT owner
+            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
+            val cashpoolMemberService =
+                service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(otherId, cashpool.id))
+
+            val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
+            assertFailsWith<Unauthorized> {
+                cashpoolService.update(otherId, cmd)
+            }
+        }
+    }
+
+    @Test
+    fun `update cashpool - invalid command - fails`() {
+        runBlocking {
+            assertFailsWith<IllegalArgumentException> {
+                UpdateCashpoolCommand(1, "", "")
+            }
         }
     }
 
