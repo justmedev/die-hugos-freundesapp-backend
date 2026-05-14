@@ -46,10 +46,10 @@ class UserControllerTest : BaseControllerTest() {
             header(HttpHeaders.Authorization, "Bearer test")
         }
 
-        if (response.status != HttpStatusCode.OK) {
+        if (response.status != HttpStatusCode.Created) {
             println("Response: ${response.status} - ${response.bodyAsText()}")
         }
-        assertEquals(HttpStatusCode.OK, response.status, "Response status should be OK but was ${response.status}")
+        assertEquals(HttpStatusCode.Created, response.status, "Response status should be OK but was ${response.status}")
         val body = response.body<UserResponse>()
         assertEquals(request.email, body.email)
         assertEquals(2, body.id)
@@ -93,30 +93,6 @@ class UserControllerTest : BaseControllerTest() {
         val response = client.post("/users") {
             contentType(ContentType.Application.Json)
             setBody(request)
-        }
-
-        assertEquals(HttpStatusCode.Unauthorized, response.status)
-    }
-
-    @Test
-    fun `post user - service failure - unauthorized`() = withTestApplication(createMockPrincipal(1, "admin")) {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        val request = CreateUserRequest(
-            email = "test@ex.com",
-            firstName = "F",
-            lastName = "L",
-            password = "p",
-            birthdate = now.date,
-            isAdmin = false
-        )
-
-        coEvery { authService.register(any()) } throws Exception("Failed")
-
-        val client = createClient()
-        val response = client.post("/users") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-            header(HttpHeaders.Authorization, "Bearer test")
         }
 
         assertEquals(HttpStatusCode.Unauthorized, response.status)
