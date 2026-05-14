@@ -26,6 +26,10 @@ class CashpoolResource {
 
         @Serializable
         @Resource("settle")
-        class Settle(val parent: Id)
+        class Settle(val parent: Id) {
+            @Serializable
+            @Resource("suggest")
+            class Suggest(val parent: Settle)
+        }
     }
 }

@@ -2,7 +2,7 @@ package controller
 
 import core.extensions.requireUserId
 import controller.resources.CashpoolResource
-import dto.cashpool_settlement.CashpoolSettlementResponse
+import dto.cashpool_settlement.CashpoolSuggestedSettlementResponse
 import io.github.smiley4.ktoropenapi.resources.get
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -10,22 +10,22 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import service.cashpool_settlement.CashpoolSettlementService
+import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationService
 
-fun Application.configureCashpoolSettlementController() {
-    val tag = "Cashpool Settlement"
-    val cashpoolSettlementService: CashpoolSettlementService by dependencies
+fun Application.configureCashpoolSuggestedSettlementController() {
+    val tag = "Cashpool Suggested Settlement"
+    val cashpoolSuggestedSettlementCalculationService: CashpoolSuggestedSettlementCalculationService by dependencies
 
     routing {
         authenticate {
-            get<CashpoolResource.Id.Settle>({
+            get<CashpoolResource.Id.Settle.Suggest>({
                 description =
-                    "Get a list of settlement transactions that need to be made by each member to even out the cashpool."
+                    "Get a list of settlement transactions that need to be made by each member to even out the cashpool (referred to as 'suggested settlements')."
                 tags = listOf(tag)
                 response {
                     code(HttpStatusCode.OK) {
                         description = "List of settlements"
-                        body<List<CashpoolSettlementResponse>>()
+                        body<List<CashpoolSuggestedSettlementResponse>>()
                     }
                     code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                     code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
@@ -34,8 +34,8 @@ fun Application.configureCashpoolSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSettlementService.calculateSettlements(resource.parent.id, call.requireUserId()).map {
-                        CashpoolSettlementResponse.from(
+                    cashpoolSuggestedSettlementCalculationService.calculateSettlements(resource.parent.parent.id, call.requireUserId()).map {
+                        CashpoolSuggestedSettlementResponse.from(
                             it
                         )
                     })

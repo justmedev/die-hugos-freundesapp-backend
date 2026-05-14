@@ -1,6 +1,6 @@
 package domain.models
 
-data class CashpoolSettlement(
+data class CashpoolSuggestedSettlement(
     val from: User,
     val to: User,
     val amountCents: Long,

@@ -16,7 +16,7 @@ import domain.repositories.UserRepositoryImpl
 import service.auth.AuthService
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_settlement.CashpoolSettlementService
+import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationService
 import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 
@@ -37,7 +37,7 @@ fun Application.configureDependencyInjection() {
         provide<CashpoolService> { CashpoolService(resolve(), resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve(), resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
-        provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve(), resolve()) }
+        provide<CashpoolSuggestedSettlementCalculationService> { CashpoolSuggestedSettlementCalculationService(resolve(), resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
     }
 }

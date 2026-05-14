@@ -7,6 +7,6 @@ fun Application.configureControllers() {
     configureCashpoolController()
     configureCashpoolTransactionsController()
     configureCashpoolMemberController()
-    configureCashpoolSettlementController()
+    configureCashpoolSuggestedSettlementController()
     configureUserController()
 }

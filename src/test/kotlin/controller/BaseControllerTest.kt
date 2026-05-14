@@ -15,7 +15,7 @@ import plugins.configureStatusPages
 import service.auth.AuthService
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
-import service.cashpool_settlement.CashpoolSettlementService
+import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationService
 import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 
@@ -24,7 +24,7 @@ abstract class BaseControllerTest {
     val cashpoolService = mockk<CashpoolService>(relaxed = true)
     val cashpoolMemberService = mockk<CashpoolMemberService>(relaxed = true)
     val cashpoolTransactionService = mockk<CashpoolTransactionService>(relaxed = true)
-    val cashpoolSettlementService = mockk<CashpoolSettlementService>(relaxed = true)
+    val cashpoolSuggestedSettlementCalculationService = mockk<CashpoolSuggestedSettlementCalculationService>(relaxed = true)
     val authService = mockk<AuthService>(relaxed = true)
 
     fun createMockPrincipal(userId: Int, role: String = "user"): JWTPrincipal {
@@ -50,7 +50,7 @@ abstract class BaseControllerTest {
                 provide { cashpoolService }
                 provide { cashpoolMemberService }
                 provide { cashpoolTransactionService }
-                provide { cashpoolSettlementService }
+                provide { cashpoolSuggestedSettlementCalculationService }
                 provide { authService }
             }
             authentication {

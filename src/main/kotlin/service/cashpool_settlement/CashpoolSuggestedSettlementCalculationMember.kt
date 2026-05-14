@@ -3,11 +3,11 @@ package service.cashpool_settlement
 import domain.models.CashpoolMember
 import java.math.BigDecimal
 
-data class CashpoolSettlementMember(
+data class CashpoolSuggestedSettlementCalculationMember(
     val member: CashpoolMember,
     var balancePaid: BigDecimal,
 ) {
     override fun toString(): String {
-        return "CashpoolSettlementMember(\"${member.user.firstName} ${member.user.lastName}\", $balancePaid €)"
+        return "CashpoolSuggestedSettlementCalculationMember(\"${member.user.firstName} ${member.user.lastName}\", $balancePaid €)"
     }
 }

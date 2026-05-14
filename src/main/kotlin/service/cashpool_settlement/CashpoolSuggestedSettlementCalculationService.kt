@@ -1,14 +1,13 @@
 package service.cashpool_settlement
 
-import core.exceptions.CashpoolNotFound
-import domain.models.CashpoolSettlement
+import domain.models.CashpoolSuggestedSettlement
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
 import service.cashpool_transaction.CashpoolTransactionService
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class CashpoolSettlementService(
+class CashpoolSuggestedSettlementCalculationService(
     val cashpoolService: CashpoolService,
     val cashpoolTransactionService: CashpoolTransactionService,
     val cashpoolMemberService: CashpoolMemberService,
@@ -16,7 +15,7 @@ class CashpoolSettlementService(
     /**
      * Calculate the settlements required to make everybody pay their share of a cashpool.
      */
-    suspend fun calculateSettlements(cashpoolId: Int, requestingUserId: Int): List<CashpoolSettlement> {
+    suspend fun calculateSettlements(cashpoolId: Int, requestingUserId: Int): List<CashpoolSuggestedSettlement> {
         val cashpool = cashpoolService.findByIdOnlyIfMember(cashpoolId, requestingUserId)
         val members = cashpoolMemberService.findByCashpoolId(cashpool.id)
         if (members.isEmpty()) return listOf()
@@ -30,7 +29,7 @@ class CashpoolSettlementService(
                 BigDecimal.valueOf(it.amountCents).movePointLeft(2)
             } ?: BigDecimal.ZERO
 
-            CashpoolSettlementMember(member, totalPaid)
+            CashpoolSuggestedSettlementCalculationMember(member, totalPaid)
         }
 
         // 2. Calculate the fair share, specifying scale and rounding mode
@@ -57,7 +56,7 @@ class CashpoolSettlementService(
             throw IllegalStateException("Debtors total ($debtSum) and creditors total ($creditSum) mismatch beyond tolerance!")
         }
 
-        val settlements = mutableListOf<CashpoolSettlement>()
+        val settlements = mutableListOf<CashpoolSuggestedSettlement>()
 
         // 4. Resolve debts
         while (debtors.isNotEmpty() && creditors.isNotEmpty()) {
@@ -79,7 +78,7 @@ class CashpoolSettlementService(
             highestCreditor.balancePaid -= amount
 
             settlements.add(
-                CashpoolSettlement(
+                CashpoolSuggestedSettlement(
                     from = highestDebtor.member.user,
                     to = highestCreditor.member.user,
                     // Safely scale and shift back to cents
