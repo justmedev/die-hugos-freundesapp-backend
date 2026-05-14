@@ -13,6 +13,7 @@ import kotlin.time.Clock
 
 import domain.repositories.UserRepositoryImpl
 import core.exceptions.UserNotFound
+import testutils.Commands
 import kotlin.test.assertFailsWith
 
 class UserServiceTest : BaseServiceTest() {
@@ -22,15 +23,7 @@ class UserServiceTest : BaseServiceTest() {
     @Test
     fun `create user - success`() {
         runBlocking {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-            val cmd = CreateUserCommand(
-                email = "test@example.com",
-                firstName = "Test",
-                lastName = "User",
-                passwordHash = "hash",
-                birthdate = now,
-                isAdmin = false
-            )
+            val cmd = Commands.User.create()
 
             val user = userService.create(cmd)
 
@@ -43,8 +36,7 @@ class UserServiceTest : BaseServiceTest() {
     @Test
     fun `findById - existing user - returns user`() {
         runBlocking {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-            val cmd = CreateUserCommand("test@example.com", "Test", "User", null, null, "hash", now, false)
+            val cmd = Commands.User.create()
             val created = userService.create(cmd)
 
             val found = userService.findById(created.id)
@@ -66,8 +58,7 @@ class UserServiceTest : BaseServiceTest() {
     @Test
     fun `findByEmail - existing user - returns user`() {
         runBlocking {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-            val cmd = CreateUserCommand("test@example.com", "Test", "User", null, null, "hash", now, false)
+            val cmd = Commands.User.create()
             userService.create(cmd)
 
             val found = userService.findByEmail("test@example.com")

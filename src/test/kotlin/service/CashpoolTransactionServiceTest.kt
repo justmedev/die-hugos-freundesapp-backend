@@ -24,6 +24,7 @@ import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import testutils.Commands
 import kotlin.test.assertFailsWith
 
 class CashpoolTransactionServiceTest : BaseServiceTest() {
@@ -32,14 +33,8 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     private val cashpoolRepo = CashpoolRepositoryImpl()
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
-    private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
     private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo)
-
-    private suspend fun createTestUser(email: String = "test@example.com"): Int {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        return userService.create(CreateUserCommand(email, "F", "L", null, null, "h", now, false)).id
-    }
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
         val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id
@@ -50,7 +45,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - success`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(userId)
             val cmd = CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000)
 
@@ -65,8 +60,8 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - not a member - fails`() {
         runBlocking {
-            val ownerId = createTestUser("owner@ex.com")
-            val otherId = createTestUser("other@ex.com")
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
             val cpId = createTestCashpool(ownerId)
 
             val cmd = CreateCashpoolTransactionCommand(otherId, cpId, "Label", 1000)
@@ -79,7 +74,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - success`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(userId)
             val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000))
 
@@ -94,7 +89,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - not found - fails`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(userId)
 
             val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, 999, "New", 2000)
@@ -107,7 +102,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - returns transactions`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(userId)
             transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000))
             transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T2", 2000))
@@ -120,8 +115,8 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - not a member - fails`() {
         runBlocking {
-            val ownerId = createTestUser("owner@ex.com")
-            val otherId = createTestUser("other@ex.com")
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
             val cpId = createTestCashpool(ownerId)
 
             assertFailsWith<NotaCashpoolMember> {

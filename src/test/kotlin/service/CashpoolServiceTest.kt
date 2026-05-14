@@ -20,6 +20,7 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.UserNotFound
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import testutils.Commands
 
 class CashpoolServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -27,15 +28,10 @@ class CashpoolServiceTest : BaseServiceTest() {
     private val cashpoolRepo = CashpoolRepositoryImpl()
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
 
-    private suspend fun createTestUser(email: String = "test@example.com"): Int {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        return userService.create(CreateUserCommand(email, "F", "L", null, null, "h", now, false)).id
-    }
-
     @Test
     fun `create cashpool - success`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cmd = CreateCashpoolCommand("Title", "Desc", userId)
 
             val cashpool = cashpoolService.create(cmd)
@@ -59,7 +55,7 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `findByIdOnlyIfMember - is member - success`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
 
             val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
@@ -75,8 +71,8 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `findByIdOnlyIfMember - not member - fails`() {
         runBlocking {
-            val ownerId = createTestUser("owner@ex.com")
-            val otherId = createTestUser("other@ex.com")
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
 
             assertFailsWith<NotaCashpoolMember> {
@@ -97,7 +93,7 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `findAll - returns all cashpools`() {
         runBlocking {
-            val userId = createTestUser()
+            val userId = userService.create(Commands.User.create()).id
             cashpoolService.create(CreateCashpoolCommand("T1", "D1", userId))
             cashpoolService.create(CreateCashpoolCommand("T2", "D2", userId))
 

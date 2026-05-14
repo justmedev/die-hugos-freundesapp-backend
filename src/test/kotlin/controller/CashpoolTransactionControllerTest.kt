@@ -1,7 +1,6 @@
 package controller
 
 import domain.models.CashpoolTransaction
-import domain.models.User
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
 import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
@@ -12,13 +11,13 @@ import io.mockk.coEvery
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
+import testutils.Users
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 
 class CashpoolTransactionControllerTest : BaseControllerTest() {
-
     private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user = User(1, "test@example.com", "Test", "User", null, null, "pass", now, false, now)
+    private val user = Users.nonAdminUser
 
     @Test
     fun `post transaction - success`() = withTestApplication(createMockPrincipal(1)) {

@@ -24,7 +24,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthdate = now,
+            birthdate = now.date,
             isAdmin = false
         )
 
@@ -63,7 +63,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthdate = now,
+            birthdate = now.date,
             isAdmin = false
         )
 
@@ -85,7 +85,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthdate = now,
+            birthdate = now.date,
             isAdmin = false
         )
 
@@ -106,7 +106,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "F",
             lastName = "L",
             password = "p",
-            birthdate = now,
+            birthdate = now.date,
             isAdmin = false
         )
 
@@ -129,7 +129,7 @@ class UserControllerTest : BaseControllerTest() {
             email = "updated@example.com",
             firstName = "Updated",
             lastName = "User",
-            birthDate = now
+            birthdate = now.date
         )
 
         coEvery { userService.update(any(), any()) } returns domain.models.User(
@@ -138,7 +138,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = request.firstName,
             lastName = request.lastName,
             password = "hashed_password",
-            birthdate = request.birthDate,
+            birthdate = request.birthdate,
             isAdmin = false,
             createdAt = now
         )
@@ -163,7 +163,7 @@ class UserControllerTest : BaseControllerTest() {
             email = "updated@example.com",
             firstName = "Updated",
             lastName = "User",
-            birthDate = now
+            birthdate = now.date
         )
 
         coEvery { userService.update(any(), any()) } throws core.exceptions.UserNotFound()
@@ -185,7 +185,7 @@ class UserControllerTest : BaseControllerTest() {
             email = "updated@example.com",
             firstName = "Updated",
             lastName = "User",
-            birthDate = now
+            birthdate = now.date
         )
 
         val client = createClient()

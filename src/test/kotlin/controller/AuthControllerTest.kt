@@ -1,7 +1,6 @@
 package controller
 
 import core.exceptions.Unauthorized
-import domain.models.User
 import domain.models.UserTokenPair
 import dto.auth.AuthResponse
 import dto.auth.LoginRequest
@@ -10,21 +9,17 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.mockk.coEvery
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
+import testutils.Users
 import kotlin.test.assertEquals
-import kotlin.time.Clock
 
 class AuthControllerTest : BaseControllerTest() {
-
-    private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user = User(1, "test@example.com", "Test", "User", null, null, "hashed", now, false, now)
+    private val nonAdminUser = Users.nonAdminUser
 
     @Test
     fun `login - success`() = withTestApplication {
         val request = LoginRequest("test@example.com", "password")
-        val tokenPair = UserTokenPair("access", "refresh", user)
+        val tokenPair = UserTokenPair("access", "refresh", nonAdminUser)
 
         coEvery { authService.login(any()) } returns tokenPair
 
@@ -58,7 +53,7 @@ class AuthControllerTest : BaseControllerTest() {
     @Test
     fun `refresh - success`() = withTestApplication {
         val request = RefreshRequest("old_refresh")
-        val tokenPair = UserTokenPair("new_access", "new_refresh", user)
+        val tokenPair = UserTokenPair("new_access", "new_refresh", nonAdminUser)
 
         coEvery { authService.refresh(any()) } returns tokenPair
 

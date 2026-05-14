@@ -21,6 +21,7 @@ import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import testutils.Commands
 import kotlin.test.assertFailsWith
 
 class CashpoolSettlementServiceTest : BaseServiceTest() {
@@ -40,12 +41,11 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
         runBlocking {
             val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
 
-            val userAId = userService.create(CreateUserCommand("a@a.com", "Sarah", "A", null, null, "h", now, false)).id
-            val userBId = userService.create(CreateUserCommand("b@b.com", "Elias", "B", null, null, "h", now, false)).id
-            val userCId = userService.create(CreateUserCommand("c@c.com", "Leon", "C", null, null, "h", now, false)).id
-            val userDId =
-                userService.create(CreateUserCommand("d@d.com", "Donald", "D", null, null, "h", now, false)).id
-            val userEId = userService.create(CreateUserCommand("e@e.com", "Mina", "E", null, null, "h", now, false)).id
+            val userAId = userService.create(Commands.User.create(firstName = "Sarah")).id
+            val userBId = userService.create(Commands.User.create(firstName = "Elias")).id
+            val userCId = userService.create(Commands.User.create(firstName = "Leon")).id
+            val userDId = userService.create(Commands.User.create(firstName = "Donald")).id
+            val userEId = userService.create(Commands.User.create(firstName = "Mina")).id
             val users = listOf(userAId, userBId, userCId, userDId, userEId)
             val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", userAId)).id
 

@@ -1,23 +1,18 @@
 package controller
 
 import domain.models.CashpoolSettlement
-import domain.models.User
 import dto.cashpool_settlement.CashpoolSettlementResponse
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.mockk.coEvery
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
+import testutils.Users
 import kotlin.test.assertEquals
-import kotlin.time.Clock
 
 class CashpoolSettlementControllerTest : BaseControllerTest() {
-
-    private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-    private val user1 = User(1, "u1@ex.com", "U1", "L1", null, null,"p", now, false, now)
-    private val user2 = User(2, "u2@ex.com", "U2", "L2", null, null,"p", now, false, now)
+    private val user1 = Users.nonAdminUser
+    private val user2 = Users.nonAdminUser
 
     @Test
     fun `get settlements - success`() = withTestApplication(createMockPrincipal(1)) {
