@@ -48,10 +48,6 @@ class CashpoolSettlementService(
             .filter { (it.balancePaid - fairShare) > BigDecimal.ZERO }
             .toMutableList()
 
-        println("Total money: $total €, fair share (avg money): $fairShare €")
-        println("Debtors: $debtors")
-        println("Creditors: $creditors")
-
         // 3. Validate math using a tolerance limit instead of strict equality
         val debtSum = debtors.sumOf { fairShare - it.balancePaid }
         val creditSum = creditors.sumOf { it.balancePaid - fairShare }

@@ -77,6 +77,48 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
         }
     }
 
+    @Test
+    fun `calculateSettlements - empty members - returns empty list`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create()).id
+            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", ownerId)).id
+            // No members added (not even owner)
+
+            val result = settlementService.calculateSettlements(cpId)
+            assertEquals(0, result.size)
+        }
+    }
+
+    @Test
+    fun `calculateSettlements - more credit than debt scenario`() {
+        runBlocking {
+            // Setup a scenario where rounding or specific amounts might leave creditors in the while loop
+            // In the provided service logic, debtSum and creditSum are checked for tolerance.
+            // Let's create a 3 member pool where 2 paid and 1 didn't.
+            val u1 = userService.create(Commands.User.create(firstName = "U1", email = "u1@ex.com")).id
+            val u2 = userService.create(Commands.User.create(firstName = "U2", email = "u2@ex.com")).id
+            val u3 = userService.create(Commands.User.create(firstName = "U3", email = "u3@ex.com")).id
+            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", u1)).id
+
+            listOf(u1, u2, u3).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
+
+            // Total 30.00, fair share 10.00
+            createTransaction(cpId, u1, 20_00) // Creditor (+10.00)
+            createTransaction(cpId, u2, 10_01) // Creditor (+0.01) - This might trigger rounding logic
+            createTransaction(cpId, u3, 0)     // Debtor (-10.00 approx)
+            
+            // Total = 30.01. Fair share = 30.01 / 3 = 10.0033... -> 10.00 (HALF_UP)
+            // Debtors: U3 (needs to pay 10.00)
+            // Creditors: U1 (paid 20, share 10 -> due 10), U2 (paid 10.01, share 10 -> due 0.01)
+            // This tests the loop where one debtor might resolve multiple creditors or vice versa.
+
+            val result = settlementService.calculateSettlements(cpId)
+            
+            // Should have 1 settlement (U3 -> U1). U2 remains a creditor by 0.01, which is within tolerance.
+            assertEquals(1, result.size)
+        }
+    }
+
     suspend fun createTransaction(cashpoolId: Int, userId: Int, amountCents: Long) {
         transactionService.create(CreateCashpoolTransactionCommand(userId, cashpoolId, "T1", amountCents))
     }

@@ -1,5 +1,6 @@
 package service
 
+import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
 import domain.commands.CreateCashpoolCommand
@@ -114,6 +115,17 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
 
             assertFailsWith<NotaCashpoolMember> {
                 transactionService.findByCashpoolId(cpId, otherId)
+            }
+        }
+    }
+
+    @Test
+    fun `create transaction - cashpool not found - fails`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cmd = CreateCashpoolTransactionCommand(userId, 999, "Label", 1000)
+            assertFailsWith<CashpoolNotFound> {
+                transactionService.create(cmd)
             }
         }
     }

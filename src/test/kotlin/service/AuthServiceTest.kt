@@ -57,6 +57,23 @@ class AuthServiceTest {
     }
 
     @Test
+    fun `login - admin success`() {
+        runBlocking {
+            val adminUser = Users.adminUser
+            val cmd = LoginCommand(adminUser.email, "password")
+            coEvery { userService.findByEmail(cmd.email) } returns adminUser
+            every { argon2.verify(any<String>(), any<CharArray>()) } returns true
+
+            val result = authService.login(cmd)
+
+            assertNotNull(result)
+            assertEquals(adminUser.id, result.user.id)
+            // JWT decoding to verify claim would be better, but for now we check if it returns a token pair
+            assertNotNull(result.accessToken)
+        }
+    }
+
+    @Test
     fun `login - wrong password - throws Unauthorized`() {
         runBlocking {
             val cmd = LoginCommand("test@example.com", "wrong")
