@@ -25,7 +25,11 @@ fun Application.configureAuthController() {
             tags = listOf(tag)
             request { body<LoginRequest>() }
             response {
-                code(HttpStatusCode.OK) { body<AuthResponse>() }
+                code(HttpStatusCode.OK) {
+                    description = "Successfully authenticated"
+                    body<AuthResponse>()
+                }
+                code(HttpStatusCode.BadRequest) { description = "Invalid request format or missing fields" }
                 code(HttpStatusCode.Unauthorized) { description = "Wrong email or password" }
             }
         }) {
@@ -39,7 +43,10 @@ fun Application.configureAuthController() {
             tags = listOf(tag)
             request { body<RefreshRequest>() }
             response {
-                code(HttpStatusCode.OK) { body<AuthResponse>() }
+                code(HttpStatusCode.OK) {
+                    description = "Successfully refreshed tokens"
+                    body<AuthResponse>()
+                }
                 code(HttpStatusCode.Unauthorized) { description = "Invalid refresh token" }
             }
         }) {

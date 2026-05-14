@@ -31,7 +31,14 @@ fun Application.configureCashpoolTransactionsController() {
                 tags = listOf(tag)
                 request { body<CreateCashpoolTransactionRequest>() }
                 response {
-                    code(HttpStatusCode.Created) { body<CashpoolTransactionResponse>() }
+                    code(HttpStatusCode.Created) {
+                        description = "Transaction successfully created"
+                        body<CashpoolTransactionResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
                 val createRequest = call.receive<CreateCashpoolTransactionRequest>()
@@ -50,9 +57,15 @@ fun Application.configureCashpoolTransactionsController() {
             get<CashpoolResource.Id.Transactions>({
                 description = "Get all cashpool transactions inside a cashpool."
                 tags = listOf(tag)
+                security { addSecurityScheme("jwt") }
                 response {
-                    code(HttpStatusCode.OK) { body<List<CashpoolTransactionResponse>>() }
-                    code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
+                    code(HttpStatusCode.OK) {
+                        description = "List of transactions"
+                        body<List<CashpoolTransactionResponse>>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
                 val transactions = cashpoolTransactionService.findByCashpoolId(
@@ -66,9 +79,17 @@ fun Application.configureCashpoolTransactionsController() {
             put<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Edit an existing cashpool transaction by id."
                 tags = listOf(tag)
+                security { addSecurityScheme("jwt") }
                 request { body<UpdateCashpoolTransactionRequest>() }
                 response {
-                    code(HttpStatusCode.OK) { body<CashpoolTransactionResponse>() }
+                    code(HttpStatusCode.OK) {
+                        description = "Transaction successfully updated"
+                        body<CashpoolTransactionResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool or does not own the transaction" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool or transaction not found" }
                 }
             }) { resource ->
                 val updateRequest = call.receive<UpdateCashpoolTransactionRequest>()
@@ -88,9 +109,12 @@ fun Application.configureCashpoolTransactionsController() {
             delete<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Delete a specific cashpool transaction by id."
                 tags = listOf(tag)
+                security { addSecurityScheme("jwt") }
                 response {
-                    code(HttpStatusCode.NoContent) {}
-                    code(HttpStatusCode.Forbidden) { description = "You are not a member of this cashpool" }
+                    code(HttpStatusCode.NoContent) { description = "Transaction successfully deleted" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool or does not own the transaction" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool or transaction not found" }
                 }
             }) { resource ->
                 cashpoolTransactionService.deleteById(

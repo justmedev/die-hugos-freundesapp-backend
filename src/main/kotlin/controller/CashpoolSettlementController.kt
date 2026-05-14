@@ -23,7 +23,13 @@ fun Application.configureCashpoolSettlementController() {
                     "Get a list of settlement transactions that need to be made by each member to even out the cashpool."
                 tags = listOf(tag)
                 response {
-                    code(HttpStatusCode.OK) { body<List<CashpoolSettlementResponse>>() }
+                    code(HttpStatusCode.OK) {
+                        description = "List of settlements"
+                        body<List<CashpoolSettlementResponse>>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
                 call.respond(

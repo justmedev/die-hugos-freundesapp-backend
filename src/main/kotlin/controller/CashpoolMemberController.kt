@@ -20,10 +20,16 @@ fun Application.configureCashpoolMemberController() {
     routing {
         authenticate {
             post<CashpoolResource.Id.Members>({
-                description = "Join an existing cashpool."
+                description = "Join an existing cashpool by its id."
                 tags = listOf(tag)
                 response {
-                    code(HttpStatusCode.Created) { body<CashpoolMemberResponse>() }
+                    code(HttpStatusCode.Created) {
+                        description = "Successfully joined the cashpool"
+                        body<CashpoolMemberResponse>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User cannot join this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
                 val created =

@@ -28,43 +28,50 @@ fun Application.configureUserController() {
     routing {
         authenticate {
             post<UserResource>({
-                description = "Create a new user."
+                description = "Create a new user. Only accessible by admins."
                 tags = listOf(tag)
                 request { body<CreateUserRequest>() }
                 response {
-                    code(HttpStatusCode.OK) { body<UserResponse>() }
+                    code(HttpStatusCode.Created) {
+                        description = "User successfully created"
+                        body<UserResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                     code(HttpStatusCode.Forbidden) { description = "Only admin accounts can create users" }
+                    code(HttpStatusCode.UnprocessableEntity) { description = "User with this email already exists" }
                 }
             }) {
                 if (call.requireUserRole() != "admin") return@post call.respond(HttpStatusCode.Forbidden)
 
                 val createUserRequest = call.receive<CreateUserRequest>()
-                try {
-                    val entity = authService.register(
-                        RegisterCommand(
-                            createUserRequest.email,
-                            createUserRequest.firstName,
-                            createUserRequest.lastName,
-                            null,
-                            null,
-                            createUserRequest.password,
-                            createUserRequest.birthdate,
-                            createUserRequest.isAdmin,
-                        )
+                val entity = authService.register(
+                    RegisterCommand(
+                        createUserRequest.email,
+                        createUserRequest.firstName,
+                        createUserRequest.lastName,
+                        null,
+                        null,
+                        createUserRequest.password,
+                        createUserRequest.birthdate,
+                        createUserRequest.isAdmin,
                     )
-                    call.respond(HttpStatusCode.OK, UserResponse.from(entity))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    call.respond(HttpStatusCode.Unauthorized)
-                }
+                )
+                call.respond(HttpStatusCode.Created, UserResponse.from(entity))
             }
 
             put<UserResource>({
-                description = "Update an existing user."
+                description = "Update the authenticated user's profile information."
                 tags = listOf(tag)
                 request { body<UpdateUserRequest>() }
                 response {
-                    code(HttpStatusCode.OK) { body<UserResponse>() }
+                    code(HttpStatusCode.OK) {
+                        description = "User successfully updated"
+                        body<UserResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.NotFound) { description = "User not found" }
                 }
             }) {
                 val updateUserRequest = call.receive<UpdateUserRequest>()

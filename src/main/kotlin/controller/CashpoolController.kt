@@ -30,7 +30,12 @@ fun Application.configureCashpoolController() {
                 tags = listOf(tag)
                 request { body<CreateCashpoolRequest>() }
                 response {
-                    code(HttpStatusCode.Created) { body<CashpoolResponse>() }
+                    code(HttpStatusCode.Created) {
+                        description = "Cashpool successfully created"
+                        body<CashpoolResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                 }
             }) {
                 val createRequest = call.receive<CreateCashpoolRequest>()
@@ -47,10 +52,14 @@ fun Application.configureCashpoolController() {
             }
 
             get<CashpoolResource>({
-                description = "Get all cashpools."
+                description = "Get all cashpools the authenticated user is a member of."
                 tags = listOf(tag)
                 response {
-                    code(HttpStatusCode.OK) { body<List<CashpoolResponse>>() }
+                    code(HttpStatusCode.OK) {
+                        description = "List of cashpools"
+                        body<List<CashpoolResponse>>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                 }
             }) {
                 call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it) })
@@ -60,7 +69,13 @@ fun Application.configureCashpoolController() {
                 description = "Get a specific cashpool. This only returns cashpools the user is a member of."
                 tags = listOf(tag)
                 response {
-                    code(HttpStatusCode.OK) { body<CashpoolResponse>() }
+                    code(HttpStatusCode.OK) {
+                        description = "The requested cashpool"
+                        body<CashpoolResponse>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
                 val domain = cashpoolService.findByIdOnlyIfMember(resource.id, call.requireUserId())
