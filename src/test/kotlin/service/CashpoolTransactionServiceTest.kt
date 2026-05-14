@@ -1,31 +1,24 @@
 package service
 
-import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import org.junit.Test
-import service.cashpool.CashpoolService
-import domain.commands.CreateCashpoolCommand
-import service.cashpool_member.CashpoolMemberService
-import domain.commands.CreateCashpoolMemberCommand
-import service.cashpool_transaction.CashpoolTransactionService
-import domain.commands.CreateCashpoolTransactionCommand
-import domain.commands.UpdateCashpoolTransactionCommand
-import domain.commands.CreateUserCommand
-import service.user.UserService
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.time.Clock
-
-import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
+import domain.commands.CreateCashpoolCommand
+import domain.commands.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.commands.UpdateCashpoolTransactionCommand
 import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import service.cashpool.CashpoolService
+import service.cashpool_transaction.CashpoolTransactionService
+import service.user.UserService
 import testutils.Commands
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class CashpoolTransactionServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -121,6 +114,34 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
 
             assertFailsWith<NotaCashpoolMember> {
                 transactionService.findByCashpoolId(cpId, otherId)
+            }
+        }
+    }
+
+    @Test
+    fun `deleteById - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000))
+
+            transactionService.deleteById(cpId, tx.id, userId)
+
+            val txs = transactionService.findByCashpoolId(cpId, userId)
+            assertEquals(0, txs.size)
+        }
+    }
+
+    @Test
+    fun `deleteById - not a member - fails`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
+            val cpId = createTestCashpool(ownerId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "T1", 1000))
+
+            assertFailsWith<NotaCashpoolMember> {
+                transactionService.deleteById(cpId, tx.id, otherId)
             }
         }
     }

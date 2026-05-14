@@ -1,20 +1,17 @@
 package service
 
+import core.exceptions.UserNotFound
+import domain.repositories.UserRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
-import domain.commands.CreateUserCommand
 import service.user.UserService
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.time.Clock
-
-import domain.repositories.UserRepositoryImpl
-import core.exceptions.UserNotFound
 import testutils.Commands
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.time.Clock
 
 class UserServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -73,6 +70,44 @@ class UserServiceTest : BaseServiceTest() {
         runBlocking {
             assertFailsWith<UserNotFound> {
                 userService.findByEmail("notfound@example.com")
+            }
+        }
+    }
+
+    @Test
+    fun `update - success`() {
+        runBlocking {
+            val created = userService.create(Commands.User.create())
+            val updateCmd = domain.commands.UpdateUserCommand(
+                email = "updated@example.com",
+                firstName = "Updated",
+                lastName = "User",
+                accountHolderName = "Holder",
+                accountIBAN = domain.models.valueobjects.IBAN("DE36000000000000000000"),
+                birthdate = created.birthdate
+            )
+
+            val updated = userService.update(created.id, updateCmd)
+
+            assertEquals("updated@example.com", updated.email)
+            assertEquals("Updated", updated.firstName)
+            assertEquals("Holder", updated.accountHolderName)
+        }
+    }
+
+    @Test
+    fun `update - non-existing user - throws UserNotFound`() {
+        runBlocking {
+            val updateCmd = domain.commands.UpdateUserCommand(
+                email = "updated@example.com",
+                firstName = "Updated",
+                lastName = "User",
+                accountHolderName = null,
+                accountIBAN = null,
+                birthdate = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+            )
+            assertFailsWith<UserNotFound> {
+                userService.update(999, updateCmd)
             }
         }
     }

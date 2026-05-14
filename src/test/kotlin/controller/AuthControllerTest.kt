@@ -67,4 +67,19 @@ class AuthControllerTest : BaseControllerTest() {
         val body = response.body<AuthResponse>()
         assertEquals("new_access", body.accessToken)
     }
+
+    @Test
+    fun `refresh - failure`() = withTestApplication {
+        val request = RefreshRequest("invalid")
+
+        coEvery { authService.refresh(any()) } throws Unauthorized()
+
+        val client = createClient()
+        val response = client.post("/auth/refresh") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
 }
