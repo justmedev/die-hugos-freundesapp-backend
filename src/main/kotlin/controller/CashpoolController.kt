@@ -8,6 +8,7 @@ import domain.commands.UpdateCashpoolCommand
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
 import dto.cashpool.UpdateCashpoolRequest
+import io.github.smiley4.ktoropenapi.resources.delete
 import io.github.smiley4.ktoropenapi.resources.get
 import io.github.smiley4.ktoropenapi.resources.post
 import io.github.smiley4.ktoropenapi.resources.put
@@ -105,6 +106,19 @@ fun Application.configureCashpoolController() {
                     UpdateCashpoolCommand(resource.id, updateRequest.title, updateRequest.description)
                 )
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(updated))
+            }
+
+            delete<CashpoolResource.Id>({
+                description = "Delete a specific cashpool. Only the creator of the cashpool can delete it."
+                tags = listOf(tag)
+                response {
+                    code(HttpStatusCode.NoContent) { description = "Cashpool successfully deleted" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not the creator of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
+                }
+            }) { resource ->
+                call.respond(HttpStatusCode.NoContent, cashpoolService.deleteById(resource.id, call.requireUserId()))
             }
         }
     }

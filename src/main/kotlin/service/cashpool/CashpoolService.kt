@@ -40,4 +40,10 @@ class CashpoolService(
         requireOwnershipOrAdmin(cashpool, initiatingUserId)
         return cashpoolRepo.update(cmd) ?: throw CashpoolNotFound()
     }
+
+    suspend fun deleteById(id: Int, userId: Int) {
+        val cashpool = findByIdOnlyIfMember(id, userId)
+        requireOwnershipOrAdmin(cashpool, userId)
+        cashpoolRepo.deleteById(id)
+    }
 }

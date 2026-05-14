@@ -17,8 +17,9 @@ interface CashpoolRepository {
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool
     suspend fun findById(id: Int): Cashpool?
     suspend fun findAll(): List<Cashpool>
-    suspend fun update(cmd: UpdateCashpoolCommand): Cashpool?
     suspend fun isMember(cashpoolId: Int, userId: Int): Boolean
+    suspend fun update(cmd: UpdateCashpoolCommand): Cashpool?
+    suspend fun deleteById(id: Int)
 }
 
 class CashpoolRepositoryImpl : CashpoolRepository {
@@ -45,6 +46,10 @@ class CashpoolRepositoryImpl : CashpoolRepository {
                 description = cmd.description
             }
         })
+    }
+
+    override suspend fun deleteById(id: Int): Unit = suspendTransaction {
+        CashpoolEntity.findById(id)?.delete()
     }
 
     override suspend fun isMember(cashpoolId: Int, userId: Int): Boolean = suspendTransaction {
