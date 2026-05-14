@@ -1,6 +1,7 @@
 package dto.user
 
 import domain.models.User
+import domain.models.valueobjects.IBAN
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
@@ -11,7 +12,7 @@ data class UserResponse(
     val firstName: String,
     val lastName: String,
     val accountHolderName: String?,
-    val accountIBAN: String?,
+    val accountIBAN: IBAN?,
     val birthdate: String,
     val isAdmin: Boolean,
     val createdAt: LocalDateTime,

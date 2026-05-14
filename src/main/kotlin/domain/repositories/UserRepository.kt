@@ -22,7 +22,7 @@ class UserRepositoryImpl : UserRepository {
             firstName = cmd.firstName
             lastName = cmd.lastName
             accountHolderName = cmd.accountHolderName
-            accountIBAN = cmd.accountIBAN
+            accountIBAN = cmd.accountIBAN?.value
             password = cmd.passwordHash
             birthdate = cmd.birthdate
             isAdmin = cmd.isAdmin

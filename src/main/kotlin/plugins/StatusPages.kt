@@ -18,6 +18,10 @@ fun Application.configureStatusPages() {
                     call.respondText(text = "404: ${cause.message}", status = HttpStatusCode.NotFound)
                 }
 
+                is IllegalArgumentException -> {
+                    call.respondText(text = "400: ${cause.message}", status = HttpStatusCode.BadRequest)
+                }
+
                 is DataQualityException -> {
                     call.respondText(text = "422: ${cause.message}", status = HttpStatusCode.UnprocessableEntity)
                 }

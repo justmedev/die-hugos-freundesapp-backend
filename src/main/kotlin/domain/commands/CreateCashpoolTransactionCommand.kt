@@ -6,4 +6,8 @@ data class CreateCashpoolTransactionCommand(
     val cashpoolId: Int,
     val label: String,
     val amountCents: Long,
-)
+) {
+    init {
+        require(label.isNotBlank()) { "Label cannot be blank" }
+    }
+}

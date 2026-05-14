@@ -1,6 +1,8 @@
 package domain.models
 
 import domain.entities.UserEntity
+import domain.models.valueobjects.IBAN
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 
 data class User(
@@ -9,9 +11,9 @@ data class User(
     val firstName: String,
     val lastName: String,
     val accountHolderName: String? = null,
-    val accountIBAN: String? = null,
+    val accountIBAN: IBAN? = null,
     val password: String,
-    val birthdate: LocalDateTime,
+    val birthdate: LocalDate,
     val isAdmin: Boolean,
     val createdAt: LocalDateTime,
 ) {
@@ -23,7 +25,7 @@ data class User(
                 entity.firstName,
                 entity.lastName,
                 entity.accountHolderName,
-                entity.accountIBAN,
+                entity.accountIBAN?.let { IBAN(entity.accountIBAN!!) },
                 entity.password,
                 entity.birthdate,
                 entity.isAdmin,

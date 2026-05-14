@@ -48,7 +48,7 @@ fun Application.configureUserController() {
                             null,
                             null,
                             createUserRequest.password,
-                            createUserRequest.birthDate,
+                            createUserRequest.birthdate,
                             createUserRequest.isAdmin,
                         )
                     )

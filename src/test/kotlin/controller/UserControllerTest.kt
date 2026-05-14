@@ -24,7 +24,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthDate = now,
+            birthdate = now,
             isAdmin = false
         )
 
@@ -34,7 +34,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = request.firstName,
             lastName = request.lastName,
             password = "hashed_password",
-            birthdate = request.birthDate,
+            birthdate = request.birthdate,
             isAdmin = request.isAdmin,
             createdAt = now
         )
@@ -63,7 +63,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthDate = now,
+            birthdate = now,
             isAdmin = false
         )
 
@@ -85,7 +85,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "Test",
             lastName = "User",
             password = "password",
-            birthDate = now,
+            birthdate = now,
             isAdmin = false
         )
 
@@ -106,7 +106,7 @@ class UserControllerTest : BaseControllerTest() {
             firstName = "F",
             lastName = "L",
             password = "p",
-            birthDate = now,
+            birthdate = now,
             isAdmin = false
         )
 

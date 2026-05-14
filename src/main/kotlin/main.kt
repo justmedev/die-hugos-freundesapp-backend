@@ -8,6 +8,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.plugins.di.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
@@ -43,7 +44,7 @@ suspend fun Application.main() {
                 plaintextPassword = adminPassword,
                 firstName = "Diego",
                 lastName = "Hugo",
-                birthdate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+                birthdate = Clock.System.todayIn(TimeZone.UTC),
                 isAdmin = true
             )
         )

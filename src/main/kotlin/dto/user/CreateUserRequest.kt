@@ -1,6 +1,7 @@
 package dto.user
 
-import kotlinx.datetime.LocalDateTime
+import domain.models.valueobjects.IBAN
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -9,8 +10,8 @@ data class CreateUserRequest(
     val firstName: String,
     val lastName: String,
     val accountHolderName: String? = null,
-    val accountIBAN: String? = null,
+    val accountIBAN: IBAN? = null,
     val password: String,
-    val birthDate: LocalDateTime,
+    val birthdate: LocalDate,
     val isAdmin: Boolean = false
 )
