@@ -1,11 +1,13 @@
 package domain.commands
 
+import domain.commands.validations.LoginValidations
+
 data class LoginCommand(
     val email: String,
     val password: String,
 ) {
     init {
-        require(email.contains("@") && email.length >= 3) { "Invalid email format" }
-        require(password.isNotBlank()) { "Password must not be blank" }
+        val validation = LoginValidations.validateLoginCommand(this)
+        if (!validation.isValid) throw IllegalArgumentException(validation.errors.joinToString())
     }
 }

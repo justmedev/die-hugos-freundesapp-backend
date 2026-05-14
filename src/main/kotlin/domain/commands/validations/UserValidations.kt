@@ -6,7 +6,6 @@ import domain.commands.UpdateUserCommand
 import domain.models.valueobjects.IBAN
 import io.konform.validation.Validation
 import io.konform.validation.ValidationBuilder
-import io.konform.validation.constraints.containsPattern
 import io.konform.validation.constraints.maxLength
 import io.konform.validation.constraints.maximum
 import io.konform.validation.constraints.notBlank
@@ -16,12 +15,6 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
 object UserValidations {
-    private val emailValidation: ValidationBuilder<String>.() -> Unit = {
-        notBlank()
-        containsPattern("@")
-        maxLength(254)
-    }
-
     private val nameValidation: ValidationBuilder<String>.() -> Unit = {
         notBlank()
         maxLength(128)
@@ -45,7 +38,7 @@ object UserValidations {
     }
 
     val validateCreateUserCommand = Validation {
-        CreateUserCommand::email { emailValidation() }
+        CreateUserCommand::email { AuthValidations.emailValidation }
         CreateUserCommand::firstName { nameValidation() }
         CreateUserCommand::lastName { nameValidation() }
         CreateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
@@ -58,7 +51,7 @@ object UserValidations {
     }
 
     val validateUpdateUserCommand = Validation {
-        UpdateUserCommand::email { emailValidation() }
+        UpdateUserCommand::email { AuthValidations.emailValidation }
         UpdateUserCommand::firstName { nameValidation() }
         UpdateUserCommand::lastName { nameValidation() }
         UpdateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
@@ -67,13 +60,10 @@ object UserValidations {
     }
 
     val validateRegisterCommand = Validation {
-        RegisterCommand::email { emailValidation() }
+        RegisterCommand::email { AuthValidations.emailValidation }
         RegisterCommand::firstName { nameValidation() }
         RegisterCommand::lastName { nameValidation() }
-        RegisterCommand::plaintextPassword {
-            notBlank()
-            maxLength(128)
-        }
+        RegisterCommand::plaintextPassword { AuthValidations.passwordValidation }
         RegisterCommand::accountHolderName ifPresent { accountHolderNameValidation() }
         RegisterCommand::accountIBAN ifPresent { accountIBANValidation() }
         RegisterCommand::birthdate { birthdateValidation() }

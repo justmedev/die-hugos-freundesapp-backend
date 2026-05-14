@@ -1,5 +1,7 @@
 package domain.commands
 
+import domain.commands.validations.CashpoolTransactionValidations
+
 
 data class UpdateCashpoolTransactionCommand(
     val ownerId: Int,
@@ -9,6 +11,7 @@ data class UpdateCashpoolTransactionCommand(
     val amountCents: Long,
 ) {
     init {
-        require(label.isNotBlank()) { "Label cannot be blank" }
+        val validation = CashpoolTransactionValidations.validateUpdateCashpoolTransactionCommand(this)
+        if (!validation.isValid) throw IllegalArgumentException(validation.errors.joinToString())
     }
 }
