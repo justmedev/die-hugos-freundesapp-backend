@@ -21,6 +21,16 @@ class CashpoolService(
         }
     }
 
+    /**
+     * Validates the cashpool exists and the user is a member of it.
+     */
+    suspend fun requireMembership(cashpoolId: Int, userId: Int) {
+        if (!cashpoolRepo.isMember(cashpoolId, userId)) {
+            cashpoolRepo.findById(cashpoolId) ?: throw CashpoolNotFound()
+            throw NotaCashpoolMember()
+        }
+    }
+
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool {
         userService.findById(cmd.ownerId)
         return cashpoolRepo.create(cmd)

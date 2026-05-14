@@ -29,7 +29,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
-    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo, userService)
+    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolService, userService)
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
         val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id

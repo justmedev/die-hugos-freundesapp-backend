@@ -23,7 +23,7 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
         coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, 1) } returns settlements
 
         val client = createClient()
-        val response = client.get("/cashpools/1/settle") {
+        val response = client.get("/cashpools/1/settle/suggest") {
             header(HttpHeaders.Authorization, "Bearer test")
         }
 
@@ -39,7 +39,7 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
         coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, 1) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
-        val response = client.get("/cashpools/1/settle") {
+        val response = client.get("/cashpools/1/settle/suggest") {
             header(HttpHeaders.Authorization, "Bearer test")
         }
 

@@ -31,7 +31,7 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
     private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
-    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo, userService)
+    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolService, userService)
     private val settlementService =
         CashpoolSuggestedSettlementCalculationService(cashpoolService, transactionService, cashpoolMemberService)
 
