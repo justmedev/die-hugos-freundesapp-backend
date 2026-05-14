@@ -61,10 +61,10 @@ class UserServiceTest : BaseServiceTest() {
             val cmd = Commands.User.create()
             userService.create(cmd)
 
-            val found = userService.findByEmail("test@example.com")
+            val found = userService.findByEmail(cmd.email)
 
             assertNotNull(found)
-            assertEquals("test@example.com", found.email)
+            assertEquals(cmd.email, found.email)
         }
     }
 

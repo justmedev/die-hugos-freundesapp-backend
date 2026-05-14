@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.argon2)
     implementation(libs.ktor.openapi)
     implementation(libs.ktor.swagger)
+    implementation(libs.konform)
 
     implementation(libs.schema.kenerator.core)
     implementation(libs.schema.kenerator.serialization)

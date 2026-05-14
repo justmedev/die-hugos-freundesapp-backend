@@ -1,5 +1,6 @@
 package domain.commands
 
+import domain.commands.validations.UserValidations
 import domain.models.valueobjects.IBAN
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -15,10 +16,7 @@ data class UpdateUserCommand(
     val birthdate: LocalDate,
 ) {
     init {
-        require(email.contains("@") && email.length >= 3) { "Invalid email format" }
-        require(firstName.isNotBlank()) { "First name cannot be blank" }
-        require(lastName.isNotBlank()) { "Last name cannot be blank" }
-        require(birthdate > Clock.System.todayIn(TimeZone.UTC)) { "Birthdate cannot be in the future" }
-        accountHolderName?.let { require(it.isNotBlank()) { "Account holder name cannot be blank if specified" } }
+        val validation = UserValidations.validateUpdateUserCommand(this)
+        if (!validation.isValid) throw IllegalArgumentException(validation.errors.joinToString())
     }
 }
