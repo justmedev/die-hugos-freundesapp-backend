@@ -1,13 +1,12 @@
 package domain.entities
 
 import domain.tables.CashpoolSettlementsTable
-import domain.tables.CashpoolTransactionsTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 
 class CashpoolSettlementEntity(id: EntityID<Int>) : IntEntity(id) {
-    companion object : IntEntityClass<CashpoolSettlementEntity>(CashpoolTransactionsTable)
+    companion object : IntEntityClass<CashpoolSettlementEntity>(CashpoolSettlementsTable)
 
     var from by UserEntity referencedOn CashpoolSettlementsTable.from
     var fromId by CashpoolSettlementsTable.from
@@ -21,5 +20,5 @@ class CashpoolSettlementEntity(id: EntityID<Int>) : IntEntity(id) {
     var amountCents by CashpoolSettlementsTable.amountCents
     var purpose by CashpoolSettlementsTable.purpose
 
-    var createdAt by CashpoolTransactionsTable.createdAt
+    var createdAt by CashpoolSettlementsTable.createdAt
 }

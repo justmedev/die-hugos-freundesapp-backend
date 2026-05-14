@@ -1,13 +1,9 @@
 import domain.commands.RegisterCommand
-import domain.tables.CashpoolMembersTable
-import domain.tables.CashpoolTransactionsTable
-import domain.tables.CashpoolsTable
-import domain.tables.UsersTable
+import domain.tables.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.di.*
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -22,7 +18,13 @@ fun main(args: Array<String>) {
 }
 
 val tables: Array<Table>
-    get() = arrayOf(UsersTable, CashpoolsTable, CashpoolMembersTable, CashpoolTransactionsTable)
+    get() = arrayOf(
+        UsersTable,
+        CashpoolsTable,
+        CashpoolMembersTable,
+        CashpoolTransactionsTable,
+        CashpoolSettlementsTable
+    )
 
 suspend fun Application.main() {
 
