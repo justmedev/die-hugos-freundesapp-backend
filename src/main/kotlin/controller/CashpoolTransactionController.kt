@@ -57,7 +57,6 @@ fun Application.configureCashpoolTransactionsController() {
             get<CashpoolResource.Id.Transactions>({
                 description = "Get all cashpool transactions inside a cashpool."
                 tags = listOf(tag)
-                security { addSecurityScheme("jwt") }
                 response {
                     code(HttpStatusCode.OK) {
                         description = "List of transactions"
@@ -79,7 +78,6 @@ fun Application.configureCashpoolTransactionsController() {
             put<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Edit an existing cashpool transaction by id."
                 tags = listOf(tag)
-                security { addSecurityScheme("jwt") }
                 request { body<UpdateCashpoolTransactionRequest>() }
                 response {
                     code(HttpStatusCode.OK) {
@@ -109,7 +107,6 @@ fun Application.configureCashpoolTransactionsController() {
             delete<CashpoolResource.Id.Transactions.Transaction>({
                 description = "Delete a specific cashpool transaction by id."
                 tags = listOf(tag)
-                security { addSecurityScheme("jwt") }
                 response {
                     code(HttpStatusCode.NoContent) { description = "Transaction successfully deleted" }
                     code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
