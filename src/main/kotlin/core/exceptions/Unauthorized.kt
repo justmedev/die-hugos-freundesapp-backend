@@ -1,3 +1,3 @@
 package core.exceptions
 
-class Unauthorized : Exception("Wrong credentials!")
+class Unauthorized(message: String = "Wrong credentials!") : Exception(message)

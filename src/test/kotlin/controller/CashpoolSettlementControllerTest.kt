@@ -20,7 +20,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
             CashpoolSettlement(user1, user2, 500)
         )
 
-        coEvery { cashpoolSettlementService.calculateSettlements(1) } returns settlements
+        coEvery { cashpoolSettlementService.calculateSettlements(1, 1) } returns settlements
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle") {
@@ -36,7 +36,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
 
     @Test
     fun `get settlements - not found`() = withTestApplication(createMockPrincipal(1)) {
-        coEvery { cashpoolSettlementService.calculateSettlements(1) } throws core.exceptions.CashpoolNotFound()
+        coEvery { cashpoolSettlementService.calculateSettlements(1, 1) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle") {

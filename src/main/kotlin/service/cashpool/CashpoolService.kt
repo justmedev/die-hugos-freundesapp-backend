@@ -20,8 +20,9 @@ class CashpoolService(
     suspend fun findById(id: Int) = cashpoolRepo.findById(id) ?: throw CashpoolNotFound()
 
     suspend fun findByIdOnlyIfMember(id: Int, userId: Int): Cashpool {
+        val cp = findById(id)
         if (!cashpoolRepo.isMember(id, userId)) throw NotaCashpoolMember()
-        return findById(id)
+        return cp
     }
 
     suspend fun findAll(): List<Cashpool> = cashpoolRepo.findAll()

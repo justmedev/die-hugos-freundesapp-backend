@@ -14,12 +14,15 @@ import domain.models.UserTokenPair
 import io.ktor.server.config.*
 import service.user.UserService
 import java.util.*
+import org.slf4j.LoggerFactory
 
 class AuthService(
     private val userService: UserService,
     config: ApplicationConfig,
     val argon2: Argon2
 ) {
+    private val logger = LoggerFactory.getLogger(AuthService::class.java)
+
     val secret = config.property("jwt.secret").getString()
     val issuer = config.property("jwt.issuer").getString()
     val audience = config.property("jwt.audience").getString()
@@ -45,7 +48,9 @@ class AuthService(
             if (user == null) throw Unauthorized()
             return generateTokens(user)
         } catch (e: Exception) {
-            e.printStackTrace()
+            if (e !is Unauthorized) {
+                logger.error("Error during login for user ${cmd.email}", e)
+            }
             throw Unauthorized()
         }
     }
@@ -72,7 +77,7 @@ class AuthService(
             val user = userService.findById(userId)
             return generateTokens(user)
         } catch (e: Exception) {
-            e.printStackTrace()
+            logger.warn("Error during token refresh", e)
             throw Unauthorized()
         }
     }

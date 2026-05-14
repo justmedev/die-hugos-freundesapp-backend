@@ -36,7 +36,7 @@ fun Application.configureDependencyInjection() {
         provide<UserService> { UserService(resolve()) }
         provide<CashpoolService> { CashpoolService(resolve(), resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve(), resolve()) }
-        provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve()) }
+        provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
         provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
     }

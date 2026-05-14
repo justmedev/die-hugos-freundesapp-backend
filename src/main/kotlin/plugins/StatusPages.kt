@@ -49,7 +49,7 @@ fun Application.configureStatusPages() {
 private fun Throwable.unwrapToDomainException(): Throwable {
     var current: Throwable? = this
     while (current != null) {
-        if (current is DataQualityException) {
+        if (current is NotFound || current is NotaCashpoolMember || current is Unauthorized || current is DataQualityException) {
             return current
         }
         current = current.cause

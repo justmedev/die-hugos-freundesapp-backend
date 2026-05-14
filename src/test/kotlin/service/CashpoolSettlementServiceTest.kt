@@ -32,7 +32,7 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
     private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
-    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo)
+    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo, userService)
     private val settlementService =
         CashpoolSettlementService(cashpoolService, transactionService, cashpoolMemberService)
 
@@ -57,7 +57,7 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
             createTransaction(cpId, userDId, -20_00)
             createTransaction(cpId, userEId, 0)
 
-            val result = settlementService.calculateSettlements(cpId)
+            val result = settlementService.calculateSettlements(cpId, userAId)
 
             assertEquals(4, result.size)
 
@@ -71,8 +71,9 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - not found - fails`() {
         runBlocking {
+            val userId = userService.create(Commands.User.create()).id
             assertFailsWith<CashpoolNotFound> {
-                settlementService.calculateSettlements(999)
+                settlementService.calculateSettlements(999, userId)
             }
         }
     }
@@ -82,9 +83,10 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
         runBlocking {
             val ownerId = userService.create(Commands.User.create()).id
             val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", ownerId)).id
-            // No members added (not even owner)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
+            // No OTHER members added
 
-            val result = settlementService.calculateSettlements(cpId)
+            val result = settlementService.calculateSettlements(cpId, ownerId)
             assertEquals(0, result.size)
         }
     }
@@ -112,7 +114,7 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
             // Creditors: U1 (paid 20, share 10 -> due 10), U2 (paid 10.01, share 10 -> due 0.01)
             // This tests the loop where one debtor might resolve multiple creditors or vice versa.
 
-            val result = settlementService.calculateSettlements(cpId)
+            val result = settlementService.calculateSettlements(cpId, u1)
             
             // Should have 1 settlement (U3 -> U1). U2 remains a creditor by 0.01, which is within tolerance.
             assertEquals(1, result.size)

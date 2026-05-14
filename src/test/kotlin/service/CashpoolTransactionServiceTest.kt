@@ -3,6 +3,7 @@ package service
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
+import core.exceptions.Unauthorized
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolTransactionCommand
@@ -28,7 +29,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
-    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo)
+    private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolRepo, userService)
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
         val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id
@@ -145,15 +146,36 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `deleteById - not a member - fails`() {
+    fun `deleteById - not the owner - fails`() {
         runBlocking {
             val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
             val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
             val cpId = createTestCashpool(ownerId)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+
             val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "T1", 1000))
 
-            assertFailsWith<NotaCashpoolMember> {
+            // This should fail because otherId is not the owner of tx
+            assertFailsWith<Unauthorized> {
                 transactionService.deleteById(cpId, tx.id, otherId)
+            }
+        }
+    }
+
+    @Test
+    fun `update transaction - not the owner - fails`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
+            val cpId = createTestCashpool(ownerId)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Old", 1000))
+
+            val updateCmd = UpdateCashpoolTransactionCommand(otherId, cpId, tx.id, "New", 2000)
+            // This should fail because otherId is not the owner of tx
+            assertFailsWith<Unauthorized> {
+                transactionService.update(updateCmd)
             }
         }
     }

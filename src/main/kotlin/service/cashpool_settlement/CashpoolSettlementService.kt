@@ -16,23 +16,21 @@ class CashpoolSettlementService(
     /**
      * Calculate the settlements required to make everybody pay their share of a cashpool.
      */
-    suspend fun calculateSettlements(cashpoolId: Int): List<CashpoolSettlement> {
-        val cashpool = cashpoolService.findById(cashpoolId)
+    suspend fun calculateSettlements(cashpoolId: Int, requestingUserId: Int): List<CashpoolSettlement> {
+        val cashpool = cashpoolService.findByIdOnlyIfMember(cashpoolId, requestingUserId)
         val members = cashpoolMemberService.findByCashpoolId(cashpool.id)
         if (members.isEmpty()) return listOf()
 
-        val settlementMembers = mutableListOf<CashpoolSettlementMember>()
+        // 1. Fetch all transactions and group them by owner to avoid N+1 database calls
+        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpool.id, requestingUserId)
+        val transactionsByOwner = allTransactions.groupBy { it.owner.id }
 
-        // 1. Calculate the total amount of money that each member moved without Double pollution
-        members.forEach { member ->
-            val transactionsByMember =
-                cashpoolTransactionService.findByCashpoolIdAndTransactionOwnerId(cashpool.id, member.user.id)
-
-            val totalPaid = transactionsByMember.sumOf {
+        val settlementMembers = members.map { member ->
+            val totalPaid = transactionsByOwner[member.user.id]?.sumOf {
                 BigDecimal.valueOf(it.amountCents).movePointLeft(2)
-            }
+            } ?: BigDecimal.ZERO
 
-            settlementMembers.add(CashpoolSettlementMember(member, totalPaid))
+            CashpoolSettlementMember(member, totalPaid)
         }
 
         // 2. Calculate the fair share, specifying scale and rounding mode

@@ -1,5 +1,6 @@
 package controller
 
+import core.extensions.requireUserId
 import controller.resources.CashpoolResource
 import dto.cashpool_settlement.CashpoolSettlementResponse
 import io.github.smiley4.ktoropenapi.resources.get
@@ -27,7 +28,7 @@ fun Application.configureCashpoolSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSettlementService.calculateSettlements(resource.parent.id).map {
+                    cashpoolSettlementService.calculateSettlements(resource.parent.id, call.requireUserId()).map {
                         CashpoolSettlementResponse.from(
                             it
                         )
