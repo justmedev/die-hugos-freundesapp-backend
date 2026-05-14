@@ -1,6 +1,7 @@
 package plugins
 
 import core.exceptions.DataQualityException
+import core.exceptions.Forbidden
 import core.exceptions.NotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.Unauthorized
@@ -30,7 +31,7 @@ fun Application.configureStatusPages() {
                     call.respondText(text = "400: ${cause.message}", status = HttpStatusCode.BadRequest)
                 }
 
-                is NotaCashpoolMember -> {
+                is Forbidden -> {
                     call.respondText(text = "403: ${cause.message}", status = HttpStatusCode.Forbidden)
                 }
 
@@ -49,7 +50,7 @@ fun Application.configureStatusPages() {
 private fun Throwable.unwrapToDomainException(): Throwable {
     var current: Throwable? = this
     while (current != null) {
-        if (current is NotFound || current is NotaCashpoolMember || current is Unauthorized || current is DataQualityException) {
+        if (current is NotFound || current is Forbidden || current is Unauthorized || current is DataQualityException) {
             return current
         }
         current = current.cause

@@ -1,17 +1,19 @@
 package service
 
 import core.exceptions.CashpoolNotFound
+import core.exceptions.NotCashpoolOwner
 import core.exceptions.NotaCashpoolMember
-import core.exceptions.Unauthorized
 import core.exceptions.UserNotFound
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.UpdateCashpoolCommand
+import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.UserRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import service.cashpool.CashpoolService
+import service.cashpool_member.CashpoolMemberService
 import service.user.UserService
 import testutils.Commands
 import kotlin.test.assertEquals
@@ -23,6 +25,8 @@ class CashpoolServiceTest : BaseServiceTest() {
     private val userService = UserService(userRepo)
     private val cashpoolRepo = CashpoolRepositoryImpl()
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
+    private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
+    private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
 
     @Test
     fun `create cashpool - success`() {
@@ -45,9 +49,9 @@ class CashpoolServiceTest : BaseServiceTest() {
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
 
             // Need to be a member to update (owner is usually a member, but we need to ensure it for findByIdOnlyIfMember)
-            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
+            val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
             val cashpoolMemberService =
-                service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
+                CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
             cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
 
             val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
@@ -66,13 +70,10 @@ class CashpoolServiceTest : BaseServiceTest() {
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
 
             // Other user is a member but NOT owner
-            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
-            val cashpoolMemberService =
-                service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
             cashpoolMemberService.create(CreateCashpoolMemberCommand(otherId, cashpool.id))
 
             val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
-            assertFailsWith<Unauthorized> {
+            assertFailsWith<NotCashpoolOwner> {
                 cashpoolService.update(otherId, cmd)
             }
         }
@@ -102,9 +103,6 @@ class CashpoolServiceTest : BaseServiceTest() {
         runBlocking {
             val userId = userService.create(Commands.User.create()).id
             val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
-
-            val cashpoolMemberRepo = domain.repositories.CashpoolMemberRepositoryImpl()
-            val cashpoolMemberService = service.cashpool_member.CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
             cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
 
             val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, userId)
@@ -144,6 +142,54 @@ class CashpoolServiceTest : BaseServiceTest() {
 
             val all = cashpoolService.findAll()
             assertEquals(2, all.size)
+        }
+    }
+
+    @Test
+    fun `deleteById - non-existing - fails`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            assertFailsWith<CashpoolNotFound> { cashpoolService.deleteById(1, userId) }
+        }
+    }
+
+    @Test
+    fun `deleteById - not a member - fails`() {
+        runBlocking {
+            val notAMemberId = userService.create(Commands.User.create()).id
+            val ownerId = userService.create(Commands.User.create()).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(ownerId, cashpool.id))
+
+            assertFailsWith<NotaCashpoolMember> { cashpoolService.deleteById(cashpool.id, notAMemberId) }
+        }
+    }
+
+    @Test
+    fun `deleteById - not owner - fails`() {
+        runBlocking {
+            val notOwnerId = userService.create(Commands.User.create()).id
+            val ownerId = userService.create(Commands.User.create()).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(ownerId, cashpool.id))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(notOwnerId, cashpool.id))
+
+            assertFailsWith<NotCashpoolOwner> { cashpoolService.deleteById(cashpool.id, notOwnerId) }
+        }
+    }
+
+    @Test
+    fun `deleteById - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+
+            cashpoolService.deleteById(cashpool.id, userId)
+
+            assertFailsWith<CashpoolNotFound> {
+                cashpoolService.findById(cashpool.id)
+            }
         }
     }
 }

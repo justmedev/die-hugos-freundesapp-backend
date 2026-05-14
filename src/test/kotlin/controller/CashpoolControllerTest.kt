@@ -149,4 +149,16 @@ class CashpoolControllerTest : BaseControllerTest() {
 
         assertEquals(HttpStatusCode.Forbidden, response.status)
     }
+
+    @Test
+    fun `delete cashpool by id - success`() = withTestApplication(createMockPrincipal(1)) {
+        coEvery { cashpoolService.deleteById(1, 1) } returns Unit
+
+        val client = createClient()
+        val response = client.delete("/cashpools/1") {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }
+
+        assertEquals(HttpStatusCode.NoContent, response.status)
+    }
 }
