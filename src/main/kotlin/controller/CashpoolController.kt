@@ -4,10 +4,13 @@ import controller.resources.CashpoolResource
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
+import domain.commands.UpdateCashpoolCommand
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
+import dto.cashpool.UpdateCashpoolRequest
 import io.github.smiley4.ktoropenapi.resources.get
 import io.github.smiley4.ktoropenapi.resources.post
+import io.github.smiley4.ktoropenapi.resources.put
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -80,6 +83,28 @@ fun Application.configureCashpoolController() {
             }) { resource ->
                 val domain = cashpoolService.findByIdOnlyIfMember(resource.id, call.requireUserId())
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
+            }
+
+            put<CashpoolResource.Id>({
+                description = "Update a specific cashpool. Only the creator of the cashpool can update it."
+                tags = listOf(tag)
+                request { body<UpdateCashpoolRequest>() }
+                response {
+                    code(HttpStatusCode.OK) {
+                        description = "Cashpool successfully updated"
+                        body<CashpoolResponse>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not the creator of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
+                }
+            }) { resource ->
+                val updateRequest = call.receive<UpdateCashpoolRequest>()
+                val updated = cashpoolService.update(
+                    call.requireUserId(),
+                    UpdateCashpoolCommand(resource.id, updateRequest.title, updateRequest.description)
+                )
+                call.respond(HttpStatusCode.OK, CashpoolResponse.from(updated))
             }
         }
     }

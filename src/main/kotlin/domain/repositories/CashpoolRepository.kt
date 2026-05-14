@@ -1,20 +1,23 @@
 package domain.repositories
 
+import domain.commands.CreateCashpoolCommand
+import domain.commands.UpdateCashpoolCommand
 import domain.entities.CashpoolEntity
 import domain.models.Cashpool
 import domain.tables.CashpoolMembersTable
+import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import domain.commands.CreateCashpoolCommand
 
 interface CashpoolRepository {
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool
     suspend fun findById(id: Int): Cashpool?
     suspend fun findAll(): List<Cashpool>
+    suspend fun update(cmd: UpdateCashpoolCommand): Cashpool?
     suspend fun isMember(cashpoolId: Int, userId: Int): Boolean
 }
 
@@ -33,6 +36,15 @@ class CashpoolRepositoryImpl : CashpoolRepository {
 
     override suspend fun findAll(): List<Cashpool> = suspendTransaction {
         CashpoolEntity.all().map { Cashpool.from(it)!! }.toList()
+    }
+
+    override suspend fun update(cmd: UpdateCashpoolCommand): Cashpool? = suspendTransaction {
+        Cashpool.from(CashpoolEntity.findByIdAndUpdate(cmd.cashpoolId) {
+            it.apply {
+                title = cmd.title
+                description = cmd.description
+            }
+        })
     }
 
     override suspend fun isMember(cashpoolId: Int, userId: Int): Boolean = suspendTransaction {
