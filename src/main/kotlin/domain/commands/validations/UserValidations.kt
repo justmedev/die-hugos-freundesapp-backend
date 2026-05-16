@@ -38,7 +38,7 @@ object UserValidations {
     }
 
     val validateCreateUserCommand = Validation {
-        CreateUserCommand::email { AuthValidations.emailValidation }
+        CreateUserCommand::email { AuthValidations.emailValidation(this) }
         CreateUserCommand::firstName { nameValidation() }
         CreateUserCommand::lastName { nameValidation() }
         CreateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
@@ -51,7 +51,7 @@ object UserValidations {
     }
 
     val validateUpdateUserCommand = Validation {
-        UpdateUserCommand::email { AuthValidations.emailValidation }
+        UpdateUserCommand::email { AuthValidations.emailValidation(this) }
         UpdateUserCommand::firstName { nameValidation() }
         UpdateUserCommand::lastName { nameValidation() }
         UpdateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
@@ -60,10 +60,10 @@ object UserValidations {
     }
 
     val validateRegisterCommand = Validation {
-        RegisterCommand::email { AuthValidations.emailValidation }
+        RegisterCommand::email { AuthValidations.emailValidation(this) }
         RegisterCommand::firstName { nameValidation() }
         RegisterCommand::lastName { nameValidation() }
-        RegisterCommand::plaintextPassword { AuthValidations.passwordValidation }
+        RegisterCommand::plaintextPassword { AuthValidations.passwordValidation(this) }
         RegisterCommand::accountHolderName ifPresent { accountHolderNameValidation() }
         RegisterCommand::accountIBAN ifPresent { accountIBANValidation() }
         RegisterCommand::birthdate { birthdateValidation() }
