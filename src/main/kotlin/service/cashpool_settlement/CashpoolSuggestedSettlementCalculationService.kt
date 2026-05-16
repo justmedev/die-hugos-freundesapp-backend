@@ -26,7 +26,8 @@ class CashpoolSuggestedSettlementCalculationService(
 
         val settlementMembers = members.map { member ->
             val totalPaid = transactionsByOwner[member.user.id]?.sumOf {
-                BigDecimal.valueOf(it.amountCents).movePointLeft(2)
+                // Negate so expenses become positive contributions to the pool
+                BigDecimal.valueOf(it.amountCents).movePointLeft(2).negate()
             } ?: BigDecimal.ZERO
 
             CashpoolSuggestedSettlementCalculationMember(member, totalPaid)
@@ -36,6 +37,7 @@ class CashpoolSuggestedSettlementCalculationService(
         val total = settlementMembers.sumOf { it.balancePaid }
         // TODO: Support uneven distributions
         val fairShare = total.divide(BigDecimal(members.size), 2, RoundingMode.HALF_UP)
+        println("Total: $total Fair share: $fairShare")
 
         // Identify debtors and creditors safely using compareTo
         val debtors = settlementMembers
@@ -86,10 +88,8 @@ class CashpoolSuggestedSettlementCalculationService(
                 )
             )
 
-            // Use compareTo for zero-difference checks
-            if (highestDebtor.balancePaid.compareTo(fairShare) == 0) debtors.remove(highestDebtor)
-            if (highestCreditor.balancePaid.compareTo(fairShare) == 0) creditors.remove(highestCreditor)
-        }
+            if ((highestDebtor.balancePaid - fairShare).abs() <= tolerance) debtors.remove(highestDebtor)
+            if ((highestCreditor.balancePaid - fairShare).abs() <= tolerance) creditors.remove(highestCreditor)        }
 
         return settlements
     }

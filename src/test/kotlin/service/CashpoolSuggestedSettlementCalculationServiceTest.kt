@@ -50,9 +50,9 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
 
             users.forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
 
-            createTransaction(cpId, userAId, 50_00)
-            createTransaction(cpId, userBId, 80_41)
-            createTransaction(cpId, userCId, 93_65)
+            createTransaction(cpId, userAId, -50_00)
+            createTransaction(cpId, userBId, -80_41)
+            createTransaction(cpId, userCId, -93_65)
             createTransaction(cpId, userDId, -20_00)
             createTransaction(cpId, userEId, 0)
 
@@ -60,10 +60,10 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
 
             assertEquals(4, result.size)
 
-            // donald sends leon 52.84€
-            assertEquals(userDId, result[0].from.id)
+            // mina sends leon 4484€
+            assertEquals(userEId, result[0].from.id)
             assertEquals(userCId, result[0].to.id)
-            assertEquals(52_84, result[0].amountCents)
+            assertEquals(44_84, result[0].amountCents)
         }
     }
 
