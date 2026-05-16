@@ -1,9 +1,6 @@
 package plugins
 
-import core.exceptions.DataQualityException
-import core.exceptions.Forbidden
-import core.exceptions.NotFound
-import core.exceptions.Unauthorized
+import core.exceptions.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -19,6 +16,10 @@ fun Application.configureStatusPages() {
             when (cause.unwrapToDomainException()) {
                 is NotFound -> {
                     call.respondText(text = "404: ${cause.message}", status = HttpStatusCode.NotFound)
+                }
+
+                is Conflict -> {
+                    call.respondText(text = "409: ${cause.message}", status = HttpStatusCode.Conflict)
                 }
 
                 is IllegalArgumentException -> {
@@ -54,7 +55,7 @@ fun Application.configureStatusPages() {
 private fun Throwable.unwrapToDomainException(): Throwable {
     var current: Throwable? = this
     while (current != null) {
-        if (current is NotFound || current is Forbidden || current is Unauthorized || current is DataQualityException) {
+        if (current is NotFound || current is Forbidden || current is Unauthorized || current is Conflict || current is DataQualityException) {
             return current
         }
         current = current.cause
