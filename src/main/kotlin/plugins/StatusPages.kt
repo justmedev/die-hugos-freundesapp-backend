@@ -3,15 +3,17 @@ package plugins
 import core.exceptions.DataQualityException
 import core.exceptions.Forbidden
 import core.exceptions.NotFound
-import core.exceptions.NotaCashpoolMember
 import core.exceptions.Unauthorized
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import org.slf4j.LoggerFactory
 
 fun Application.configureStatusPages() {
+    val logger = LoggerFactory.getLogger(this::class.java)
+
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             when (cause.unwrapToDomainException()) {
@@ -43,6 +45,8 @@ fun Application.configureStatusPages() {
                     call.respondText(text = "500: ${cause.message}", status = HttpStatusCode.InternalServerError)
                 }
             }
+
+            logger.warn("A request threw an error! ${cause.message}", cause)
         }
     }
 }
