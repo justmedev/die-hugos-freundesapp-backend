@@ -60,6 +60,6 @@ class CashpoolTransactionService(
         val transaction = transactionRepo.findById(transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, requestingUserId)
         transactionRepo.deleteById(transactionId)
-        _events.emit(CashpoolTransactionEvent.Deleted(cashpoolId, transactionId))
+        _events.emit(CashpoolTransactionEvent.Deleted(cashpoolId, requestingUserId, transactionId))
     }
 }

@@ -167,7 +167,10 @@ fun Application.configureCashpoolTransactionsController() {
                                         send(
                                             ServerSentEvent(
                                                 data = Json.encodeToString(
-                                                    CashpoolTransactionDeletedEventResponse(event.transactionId)
+                                                    CashpoolTransactionDeletedEventResponse(
+                                                        event.transactionId,
+                                                        event.emittingUserId
+                                                    )
                                                 ), event = "deleted"
                                             )
                                         )

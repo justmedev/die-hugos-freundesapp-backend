@@ -4,5 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CashpoolTransactionDeletedEventResponse(
-    val id: Int,
+    val transactionId: Int,
+    val emittingUserId: Int,
 )

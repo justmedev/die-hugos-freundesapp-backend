@@ -17,6 +17,7 @@ sealed class CashpoolTransactionEvent {
 
     data class Deleted(
         override val cashpoolId: Int,
+        val emittingUserId: Int,
         val transactionId: Int
     ) : CashpoolTransactionEvent()
 }
