@@ -1,16 +1,22 @@
 package controller
 
 import controller.resources.CashpoolResource
+import core.exceptions.CashpoolNotFound
+import core.exceptions.NotaCashpoolMember
+import core.exceptions.Unauthorized
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
+import domain.models.events.CashpoolTransactionEvent
+import dto.cashpool_transaction.CashpoolTransactionDeletedEventResponse
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
 import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
-import io.github.smiley4.ktoropenapi.resources.post
-import io.github.smiley4.ktoropenapi.resources.put
 import io.github.smiley4.ktoropenapi.resources.delete
 import io.github.smiley4.ktoropenapi.resources.get
+import io.github.smiley4.ktoropenapi.resources.post
+import io.github.smiley4.ktoropenapi.resources.put
+import io.github.smiley4.ktoropenapi.route
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -18,11 +24,17 @@ import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sse.*
+import io.ktor.sse.*
+import kotlinx.coroutines.flow.filter
+import kotlinx.serialization.json.Json
+import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
 
 fun Application.configureCashpoolTransactionsController() {
     val tag = "Cashpool Transaction"
     val cashpoolTransactionService: CashpoolTransactionService by dependencies
+    val cashpoolService: CashpoolService by dependencies
 
     routing {
         authenticate {
@@ -121,6 +133,67 @@ fun Application.configureCashpoolTransactionsController() {
                 )
 
                 call.respond(HttpStatusCode.NoContent)
+            }
+
+            route({
+                description = "SSE endpoint for real-time transaction updates."
+                tags = listOf(tag)
+            }) {
+                sse("/cashpools/{id}/transactions/listen") {
+                    try {
+                        val cashpoolId =
+                            call.parameters["id"]?.toIntOrNull() ?: throw CashpoolNotFound()
+                        val userId = call.requireUserId()
+                        cashpoolService.requireMembership(cashpoolId, userId)
+
+                        println("A user (id: $userId) connected to the SSE endpoint for cashpool id: $cashpoolId")
+                        send("Connected to SSE endpoint", "hello")
+
+                        cashpoolTransactionService.events
+                            .filter { it.cashpoolId == cashpoolId }
+                            .collect { event ->
+                                when (event) {
+                                    is CashpoolTransactionEvent.Created -> {
+                                        val dto = CashpoolTransactionResponse.from(event.transaction)
+                                        send(ServerSentEvent(data = Json.encodeToString(dto), event = "created"))
+                                    }
+
+                                    is CashpoolTransactionEvent.Updated -> {
+                                        val dto = CashpoolTransactionResponse.from(event.transaction)
+                                        send(ServerSentEvent(data = Json.encodeToString(dto), event = "updated"))
+                                    }
+
+                                    is CashpoolTransactionEvent.Deleted -> {
+                                        send(
+                                            ServerSentEvent(
+                                                data = Json.encodeToString(
+                                                    CashpoolTransactionDeletedEventResponse(event.transactionId)
+                                                ), event = "deleted"
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                    } catch (e: Exception) {
+                        when (e) {
+                            is Unauthorized -> {
+                                send("User not authorized", "error")
+                            }
+                            is CashpoolNotFound -> {
+                                send("Cashpool not found", "error")
+                            }
+                            is NotaCashpoolMember -> {
+                                send("Not a member of this cashpool", "error")
+                            }
+                            else -> {
+                                e.printStackTrace()
+                                send("An unknown error occurred", "error")
+                            }
+                        }
+                        close()
+                        return@sse
+                    }
+                }
             }
         }
     }

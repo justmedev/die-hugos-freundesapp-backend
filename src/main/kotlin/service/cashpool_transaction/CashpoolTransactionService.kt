@@ -5,7 +5,10 @@ import core.exceptions.Unauthorized
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
 import domain.models.CashpoolTransaction
+import domain.models.events.CashpoolTransactionEvent
 import domain.repositories.CashpoolTransactionRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import service.cashpool.CashpoolService
 import service.user.UserService
 
@@ -14,6 +17,9 @@ class CashpoolTransactionService(
     private val cashpoolService: CashpoolService,
     private val userService: UserService,
 ) {
+    private val _events = MutableSharedFlow<CashpoolTransactionEvent>()
+    val events = _events.asSharedFlow()
+
     private suspend fun requireOwnershipOrAdmin(transaction: CashpoolTransaction, userId: Int) {
         val user = userService.findById(userId)
         if (transaction.owner.id != userId && !user.isAdmin) {
@@ -23,7 +29,10 @@ class CashpoolTransactionService(
 
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction {
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
-        return transactionRepo.create(cmd)
+
+        val created = transactionRepo.create(cmd)
+        _events.emit(CashpoolTransactionEvent.Created(cmd.cashpoolId, created))
+        return created
     }
 
     suspend fun findByCashpoolId(cashpoolId: Int, requestingUserId: Int): List<CashpoolTransaction> {
@@ -40,7 +49,10 @@ class CashpoolTransactionService(
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, cmd.ownerId)
-        return transactionRepo.update(cmd) ?: throw TransactionNotFound()
+
+        val updated = transactionRepo.update(cmd) ?: throw TransactionNotFound()
+        _events.emit(CashpoolTransactionEvent.Updated(cmd.cashpoolId, updated))
+        return updated
     }
 
     suspend fun deleteById(cashpoolId: Int, transactionId: Int, requestingUserId: Int) {
@@ -48,5 +60,6 @@ class CashpoolTransactionService(
         val transaction = transactionRepo.findById(transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, requestingUserId)
         transactionRepo.deleteById(transactionId)
+        _events.emit(CashpoolTransactionEvent.Deleted(cashpoolId, transactionId))
     }
 }
