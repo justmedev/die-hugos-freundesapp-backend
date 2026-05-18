@@ -1,23 +1,64 @@
 package controller
 
 import domain.models.CashpoolTransaction
+import domain.models.events.CashpoolTransactionEvent
 import dto.cashpool_transaction.CashpoolTransactionResponse
 import dto.cashpool_transaction.CreateCashpoolTransactionRequest
 import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
 import io.ktor.client.call.*
+import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.mockk.coEvery
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.Json
 import org.junit.Test
 import testutils.Users
 import kotlin.test.assertEquals
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 
 class CashpoolTransactionControllerTest : BaseControllerTest() {
     private val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
     private val user = Users.nonAdminUser
+
+    @Test
+    fun `sse transactions - success`() = withTestApplication(createMockPrincipal(1)) {
+        val eventsFlow = MutableSharedFlow<CashpoolTransactionEvent>()
+        coEvery { cashpoolTransactionService.events } returns eventsFlow
+        coEvery { cashpoolService.requireMembership(1, 1) } returns Unit
+
+        val client = createClient {
+            install(SSE)
+        }
+
+        client.sse("/cashpools/1/transactions/listen", request = {
+            header(HttpHeaders.Authorization, "Bearer test")
+        }) {
+            val tx = CashpoolTransaction(1, user, "Label", 1000, now)
+            launch {
+                delay(200.milliseconds) // Wait for connection and hello
+                eventsFlow.emit(CashpoolTransactionEvent.Created(1, tx))
+            }
+
+            val events = incoming.take(2).toList()
+
+            val hello = events[0]
+            assertEquals("hello", hello.event)
+            assertEquals("Connected to SSE endpoint", hello.data)
+
+            val created = events[1]
+            assertEquals("created", created.event)
+            val body = Json.decodeFromString<CashpoolTransactionResponse>(created.data ?: "")
+            assertEquals("Label", body.label)
+        }
+    }
 
     @Test
     fun `post transaction - success`() = withTestApplication(createMockPrincipal(1)) {

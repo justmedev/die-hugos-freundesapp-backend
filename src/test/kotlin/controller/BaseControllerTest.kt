@@ -10,6 +10,7 @@ import io.ktor.server.testing.*
 import io.mockk.every
 import io.mockk.mockk
 import plugins.configureResources
+import plugins.configureSSE
 import plugins.configureSerialization
 import plugins.configureStatusPages
 import service.auth.AuthService
@@ -46,6 +47,7 @@ abstract class BaseControllerTest {
         application {
             configureSerialization()
             configureResources()
+            configureSSE()
             configureStatusPages()
             dependencies {
                 provide { userService }
