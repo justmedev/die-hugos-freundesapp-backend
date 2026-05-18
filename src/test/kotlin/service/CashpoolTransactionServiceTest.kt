@@ -8,11 +8,14 @@ import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
+import domain.models.events.CashpoolTransactionEvent
 import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import org.junit.Test
 import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
@@ -177,6 +180,87 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             assertFailsWith<Unauthorized> {
                 transactionService.update(updateCmd)
             }
+        }
+    }
+
+    @Test
+    fun `create transaction - emits created event`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+
+            val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
+            val job = launch {
+                transactionService.events.collect { emittedEvents.add(it) }
+            }
+
+            // Allow collector coroutine to start up and reach the collect() point
+            yield()
+
+            val cmd = CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000)
+            val tx = transactionService.create(cmd)
+
+            // Let the collector coroutine process the emitted event
+            yield()
+            job.cancel()
+
+            assertEquals(1, emittedEvents.size)
+            val event = emittedEvents.first() as CashpoolTransactionEvent.Created
+            assertEquals(cpId, event.cashpoolId)
+            assertEquals(tx.id, event.transaction.id)
+            assertEquals("Label", event.transaction.label)
+        }
+    }
+
+    @Test
+    fun `update transaction - emits updated event`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000))
+
+            val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
+            val job = launch {
+                transactionService.events.collect { emittedEvents.add(it) }
+            }
+            yield()
+
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, "New", 2000)
+            val updated = transactionService.update(updateCmd)
+
+            yield()
+            job.cancel()
+
+            assertEquals(1, emittedEvents.size)
+            val event = emittedEvents.first() as CashpoolTransactionEvent.Updated
+            assertEquals(cpId, event.cashpoolId)
+            assertEquals(updated.id, event.transaction.id)
+            assertEquals("New", event.transaction.label)
+        }
+    }
+
+    @Test
+    fun `deleteById - emits deleted event`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000))
+
+            val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
+            val job = launch {
+                transactionService.events.collect { emittedEvents.add(it) }
+            }
+            yield()
+
+            transactionService.deleteById(cpId, tx.id, userId)
+
+            yield()
+            job.cancel()
+
+            assertEquals(1, emittedEvents.size)
+            val event = emittedEvents.first() as CashpoolTransactionEvent.Deleted
+            assertEquals(cpId, event.cashpoolId)
+            assertEquals(tx.id, event.transactionId)
         }
     }
 }
