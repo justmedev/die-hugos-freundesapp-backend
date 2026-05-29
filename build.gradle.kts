@@ -28,6 +28,7 @@ dependencies {
     implementation(ktorLibs.server.resources)
     implementation(ktorLibs.server.statusPages)
     implementation(ktorLibs.server.sse)
+    implementation(ktorLibs.server.cors)
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)

@@ -152,6 +152,7 @@ fun Application.configureCashpoolTransactionsController() {
                         cashpoolTransactionService.events
                             .filter { it.cashpoolId == cashpoolId }
                             .collect { event ->
+                                println("SSE forwarding a consumed event: $event")
                                 when (event) {
                                     is CashpoolTransactionEvent.Created -> {
                                         val dto = CashpoolTransactionResponse.from(event.transaction)
