@@ -10,6 +10,12 @@ fun Application.configureSecurity() {
     val authService: AuthService by dependencies
 
     authentication {
+        jwt {
+            verifier(authService.jwkProvider, authService.config.issuerUri) {
+                acceptLeeway(3)
+            }
 
+            validate { authService.validateCredential(it) }
+        }
     }
 }
