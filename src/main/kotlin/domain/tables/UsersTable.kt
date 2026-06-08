@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.datetime.datetime
 
 object UsersTable : IntIdTable("users") {
+    val authentikId = varchar("authentik_id", 255).uniqueIndex()
     val email = varchar("email", 254).uniqueIndex()
     val firstName = varchar("first_name", 128)
     val lastName = varchar("last_name", 128)

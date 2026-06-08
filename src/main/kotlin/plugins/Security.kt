@@ -10,14 +10,6 @@ fun Application.configureSecurity() {
     val authService: AuthService by dependencies
 
     authentication {
-        jwt {
-            verifier(authService.accessTokenVerifier)
-            validate { credential ->
-                val subject = credential.payload.subject
-                return@validate if (subject?.toIntOrNull() != null) {
-                    JWTPrincipal(credential.payload)
-                } else null
-            }
-        }
+
     }
 }

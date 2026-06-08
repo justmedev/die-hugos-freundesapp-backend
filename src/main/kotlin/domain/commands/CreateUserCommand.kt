@@ -5,6 +5,7 @@ import domain.models.valueobjects.IBAN
 import kotlinx.datetime.LocalDate
 
 data class CreateUserCommand(
+    val authentikId: String,
     val email: String,
     val firstName: String,
     val lastName: String,

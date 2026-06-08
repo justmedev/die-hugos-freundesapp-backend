@@ -1,7 +1,6 @@
 package domain.commands.validations
 
 import domain.commands.CreateUserCommand
-import domain.commands.RegisterCommand
 import domain.commands.UpdateUserCommand
 import domain.models.valueobjects.IBAN
 import io.konform.validation.Validation
@@ -38,7 +37,6 @@ object UserValidations {
     }
 
     val validateCreateUserCommand = Validation {
-        CreateUserCommand::email { AuthValidations.emailValidation(this) }
         CreateUserCommand::firstName { nameValidation() }
         CreateUserCommand::lastName { nameValidation() }
         CreateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
@@ -51,21 +49,10 @@ object UserValidations {
     }
 
     val validateUpdateUserCommand = Validation {
-        UpdateUserCommand::email { AuthValidations.emailValidation(this) }
         UpdateUserCommand::firstName { nameValidation() }
         UpdateUserCommand::lastName { nameValidation() }
         UpdateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
         UpdateUserCommand::accountIBAN ifPresent { accountIBANValidation() }
         UpdateUserCommand::birthdate { birthdateValidation() }
-    }
-
-    val validateRegisterCommand = Validation {
-        RegisterCommand::email { AuthValidations.emailValidation(this) }
-        RegisterCommand::firstName { nameValidation() }
-        RegisterCommand::lastName { nameValidation() }
-        RegisterCommand::plaintextPassword { AuthValidations.passwordValidation(this) }
-        RegisterCommand::accountHolderName ifPresent { accountHolderNameValidation() }
-        RegisterCommand::accountIBAN ifPresent { accountIBANValidation() }
-        RegisterCommand::birthdate { birthdateValidation() }
     }
 }

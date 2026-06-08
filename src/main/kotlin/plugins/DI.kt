@@ -1,7 +1,5 @@
 package plugins
 
-import de.mkammerer.argon2.Argon2
-import de.mkammerer.argon2.Argon2Factory
 import domain.repositories.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
@@ -18,7 +16,6 @@ fun Application.configureDependencyInjection() {
     val env = environment
     dependencies {
         provide<ApplicationConfig> { env.config }
-        provide<Argon2> { Argon2Factory.create() }
 
         // Repositories
         provide<UserRepository> { UserRepositoryImpl() }
@@ -34,6 +31,6 @@ fun Application.configureDependencyInjection() {
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
         provide<CashpoolSuggestedSettlementCalculationService> { CashpoolSuggestedSettlementCalculationService(resolve(), resolve(), resolve()) }
         provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve()) }
-        provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
+        provide<AuthService> { AuthService(resolve(), resolve()) }
     }
 }

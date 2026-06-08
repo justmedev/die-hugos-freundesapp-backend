@@ -2,9 +2,6 @@ package service
 
 import core.exceptions.Unauthorized
 import de.mkammerer.argon2.Argon2
-import domain.commands.LoginCommand
-import domain.commands.RefreshCommand
-import domain.commands.RegisterCommand
 import io.ktor.server.config.*
 import io.mockk.coEvery
 import io.mockk.coVerify

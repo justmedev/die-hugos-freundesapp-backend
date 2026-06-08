@@ -18,12 +18,12 @@ interface UserRepository {
 class UserRepositoryImpl : UserRepository {
     override suspend fun create(cmd: CreateUserCommand): User = suspendTransaction {
         User.from(UserEntity.new {
+            authentikId = cmd.authentikId
             email = cmd.email
             firstName = cmd.firstName
             lastName = cmd.lastName
             accountHolderName = cmd.accountHolderName
             accountIBAN = cmd.accountIBAN?.value
-            password = cmd.passwordHash
             birthdate = cmd.birthdate
             isAdmin = cmd.isAdmin
         })!!

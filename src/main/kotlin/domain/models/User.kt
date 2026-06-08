@@ -7,12 +7,12 @@ import kotlinx.datetime.LocalDateTime
 
 data class User(
     val id: Int,
+    val authentikId: String,
     val email: String,
     val firstName: String,
     val lastName: String,
     val accountHolderName: String? = null,
     val accountIBAN: IBAN? = null,
-    val password: String,
     val birthdate: LocalDate,
     val isAdmin: Boolean,
     val createdAt: LocalDateTime,
@@ -21,12 +21,12 @@ data class User(
         fun from(entity: UserEntity?) = entity?.let {
             User(
                 entity.id.value,
+                entity.authentikId,
                 entity.email,
                 entity.firstName,
                 entity.lastName,
                 entity.accountHolderName,
                 entity.accountIBAN?.let { IBAN(entity.accountIBAN!!) },
-                entity.password,
                 entity.birthdate,
                 entity.isAdmin,
                 entity.createdAt
