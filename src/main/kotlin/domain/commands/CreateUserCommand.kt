@@ -11,7 +11,6 @@ data class CreateUserCommand(
     val lastName: String,
     val accountHolderName: String? = null,
     val accountIBAN: IBAN? = null,
-    val passwordHash: String,
     val birthdate: LocalDate,
     val isAdmin: Boolean
 ) {

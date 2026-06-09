@@ -12,7 +12,6 @@ object UsersTable : IntIdTable("users") {
     val lastName = varchar("last_name", 128)
     val accountHolderName = varchar("account_holder_name", 255).nullable()
     val accountIBAN = varchar("account_iban", 50).nullable()
-    val password = varchar("password", 128)
     val birthdate = date("birthdate")
     val isAdmin = bool("is_admin").default(false)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)

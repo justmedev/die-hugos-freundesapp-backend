@@ -11,7 +11,6 @@ data class CreateUserRequest(
     val lastName: String,
     val accountHolderName: String? = null,
     val accountIBAN: IBAN? = null,
-    val password: String,
     val birthdate: LocalDate,
     val isAdmin: Boolean = false
 )

@@ -41,10 +41,6 @@ object UserValidations {
         CreateUserCommand::lastName { nameValidation() }
         CreateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
         CreateUserCommand::accountIBAN ifPresent { accountIBANValidation() }
-        CreateUserCommand::passwordHash {
-            notBlank()
-            maxLength(128)
-        }
         CreateUserCommand::birthdate { birthdateValidation() }
     }
 
