@@ -8,7 +8,7 @@ import org.jetbrains.exposed.v1.dao.IntEntityClass
 class UserEntity(id: EntityID<Int>) : IntEntity(id) {
     companion object : IntEntityClass<UserEntity>(UsersTable)
 
-    var authentikId by UsersTable.authentikId
+    var keycloakId by UsersTable.keycloakId
     var email by UsersTable.email
     var firstName by UsersTable.firstName
     var lastName by UsersTable.lastName

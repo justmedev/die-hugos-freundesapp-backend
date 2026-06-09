@@ -12,13 +12,14 @@ interface UserRepository {
     suspend fun create(cmd: CreateUserCommand): User
     suspend fun findById(id: Int): User?
     suspend fun findByEmail(email: String): User?
+    suspend fun findByKeycloakId(keycloakId: String): User?
     suspend fun update(id: Int, cmd: UpdateUserCommand): User?
 }
 
 class UserRepositoryImpl : UserRepository {
     override suspend fun create(cmd: CreateUserCommand): User = suspendTransaction {
         User.from(UserEntity.new {
-            authentikId = cmd.authentikId
+            keycloakId = cmd.keycloakId
             email = cmd.email
             firstName = cmd.firstName
             lastName = cmd.lastName
@@ -35,6 +36,10 @@ class UserRepositoryImpl : UserRepository {
 
     override suspend fun findByEmail(email: String): User? = suspendTransaction {
         UserEntity.find { UsersTable.email eq email }.firstOrNull()?.let { User.from(it) }
+    }
+
+    override suspend fun findByKeycloakId(keycloakId: String): User? = suspendTransaction {
+        UserEntity.find { UsersTable.keycloakId eq keycloakId }.firstOrNull()?.let { User.from(it) }
     }
 
     override suspend fun update(id: Int, cmd: UpdateUserCommand): User? = suspendTransaction {

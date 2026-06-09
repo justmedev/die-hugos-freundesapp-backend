@@ -4,15 +4,17 @@ import io.ktor.server.config.*
 
 data class AuthConfig(
     val base: String,
-    val slug: String,
+    val realm: String,
+    val clientId: String,
 ) {
-    val issuerUri get() = "$base/application/o/$slug/"
-    val jwksUri get() = "$base/application/o/jwks/"
+    val issuerUri get() = "$base/realms/$realm"
+    val jwksUri get() = "$base/realms/$realm/protocol/openid-connect/certs"
 
     companion object {
         fun fromAppConfig(config: ApplicationConfig) = AuthConfig(
             base = config.property("auth.base").getString(),
-            slug = config.property("auth.slug").getString(),
+            realm = config.property("auth.realm").getString(),
+            clientId = config.property("auth.clientId").getString(),
         )
     }
 }

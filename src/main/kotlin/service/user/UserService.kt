@@ -21,5 +21,7 @@ class UserService(
 
     suspend fun findByEmail(email: String) = userRepo.findByEmail(email) ?: throw UserNotFound()
 
+    suspend fun findByKeycloakId(keycloakId: String) = userRepo.findByKeycloakId(keycloakId) ?: throw UserNotFound()
+
     suspend fun update(id: Int, cmd: UpdateUserCommand): User = userRepo.update(id, cmd) ?: throw UserNotFound()
 }

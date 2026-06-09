@@ -7,7 +7,7 @@ import kotlinx.datetime.LocalDateTime
 
 data class User(
     val id: Int,
-    val authentikId: String,
+    val keycloakId: String,
     val email: String,
     val firstName: String,
     val lastName: String,
@@ -21,7 +21,7 @@ data class User(
         fun from(entity: UserEntity?) = entity?.let {
             User(
                 entity.id.value,
-                entity.authentikId,
+                entity.keycloakId,
                 entity.email,
                 entity.firstName,
                 entity.lastName,
