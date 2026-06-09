@@ -2,10 +2,13 @@ package service.auth
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
+import core.exceptions.UserNotFound
+import domain.commands.CreateUserCommand
+import domain.commands.UpdateUserCommand
 import domain.models.AuthConfig
-import io.ktor.server.auth.jwt.JWTCredential
-import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
+import kotlinx.datetime.LocalDate
 import service.user.UserService
 import java.net.URI
 import java.util.concurrent.TimeUnit
@@ -21,11 +24,37 @@ class AuthService(
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
 
-    fun validateCredential(credential: JWTCredential): JWTPrincipal? {
-        println("Validating credential: ${credential.payload.subject}")
+    suspend fun validateCredential(credential: JWTCredential): JWTPrincipal? {
         val keycloakId = credential.payload.subject
-        return if (keycloakId != null) {
-            JWTPrincipal(credential.payload)
-        } else null
+        if (keycloakId != null) {
+            val kcJWT = KeycloakJWT.from(credential)
+
+            try {
+                val user = userService.findByKeycloakId(keycloakId)
+                userService.update(
+                    user.id, UpdateUserCommand(
+                        email = kcJWT.email,
+                        firstName = kcJWT.firstName,
+                        lastName = kcJWT.lastName,
+                        birthdate = LocalDate(2000, 1, 1), // TODO: birthdate
+                    )
+                )
+            } catch (_: UserNotFound) {
+                userService.create(
+                    CreateUserCommand(
+                        keycloakId = kcJWT.keycloakId,
+                        email = kcJWT.email,
+                        firstName = kcJWT.firstName,
+                        lastName = kcJWT.lastName,
+                        birthdate = LocalDate(2000, 1, 1), // TODO: birthdate
+                        isAdmin = false, // TODO: roles
+                    )
+                )
+            }
+
+            return JWTPrincipal(credential.payload)
+        }
+
+        return null
     }
 }
