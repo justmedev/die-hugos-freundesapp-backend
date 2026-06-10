@@ -42,13 +42,13 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get settlements - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `get settlements - success`() = withTestApplication(createMockPrincipal(from)) {
         val settlements = listOf(
             CashpoolSettlement(1, from, to, 10_00, "Label 1", now),
             CashpoolSettlement(2, from, to, 25_00, "Label 2", now)
         )
 
-        coEvery { cashpoolSettlementService.findByCashpoolId(1, 1) } returns settlements
+        coEvery { cashpoolSettlementService.findByCashpoolId(1, from.id) } returns settlements
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle") {

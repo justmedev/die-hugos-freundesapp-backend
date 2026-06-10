@@ -29,7 +29,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     private val user = Users.nonAdminUser
 
     @Test
-    fun `sse transactions - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `sse transactions - success`() = withTestApplication(createMockPrincipal(user)) {
         val eventsFlow = MutableSharedFlow<CashpoolTransactionEvent>()
         coEvery { cashpoolTransactionService.events } returns eventsFlow
         coEvery { cashpoolService.requireMembership(1, 1) } returns Unit
@@ -61,7 +61,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `post transaction - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `post transaction - success`() = withTestApplication(createMockPrincipal(user)) {
         val request = CreateCashpoolTransactionRequest("Label", 1000)
         val created = CashpoolTransaction(1, user, request.label, request.amountCents, now)
 
@@ -80,13 +80,13 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get transactions - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `get transactions - success`() = withTestApplication(createMockPrincipal(user)) {
         val transactions = listOf(
             CashpoolTransaction(1, user, "Label 1", 1000, now),
             CashpoolTransaction(2, user, "Label 2", 2000, now)
         )
 
-        coEvery { cashpoolTransactionService.findByCashpoolId(1, 1) } returns transactions
+        coEvery { cashpoolTransactionService.findByCashpoolId(1, user.id) } returns transactions
 
         val client = createClient()
         val response = client.get("/cashpools/1/transactions") {
@@ -99,7 +99,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `put transaction - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `put transaction - success`() = withTestApplication(createMockPrincipal(user)) {
         val request = UpdateCashpoolTransactionRequest("Updated Label", 2000)
         val updated = CashpoolTransaction(1, user, request.label, request.amountCents, now)
 
@@ -119,7 +119,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `delete transaction - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `delete transaction - success`() = withTestApplication(createMockPrincipal(user)) {
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {
             header(HttpHeaders.Authorization, "Bearer test")
@@ -129,8 +129,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `delete transaction - forbidden if not member`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
-        coEvery { cashpoolTransactionService.deleteById(1, 1, 1) } throws core.exceptions.NotaCashpoolMember()
+    fun `delete transaction - forbidden if not member`() = withTestApplication(createMockPrincipal(user)) {
+        coEvery { cashpoolTransactionService.deleteById(1, 1, user.id) } throws core.exceptions.NotaCashpoolMember()
 
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {
@@ -141,8 +141,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `delete transaction - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
-        coEvery { cashpoolTransactionService.deleteById(1, 1, 1) } throws core.exceptions.TransactionNotFound()
+    fun `delete transaction - not found`() = withTestApplication(createMockPrincipal(user)) {
+        coEvery { cashpoolTransactionService.deleteById(1, 1, user.id) } throws core.exceptions.TransactionNotFound()
 
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {

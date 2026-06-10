@@ -1,16 +1,12 @@
 package service
 
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import org.junit.Before
-import org.junit.Test
 import service.auth.AuthService
 import service.user.UserService
 import testutils.Users
-import kotlin.test.assertNull
 
 class AuthServiceTest {
     private val userService = mockk<UserService>()
@@ -29,13 +25,6 @@ class AuthServiceTest {
         every { config.property("jwt.audience").getString() } returns "audience"
 
         authService = AuthService(userService, config)
-    }
-
-    @Test
-    fun `validateCredential - is invalid - returns null`() {
-        runBlocking {
-            assertNull(authService.validateCredential(mockk<JWTCredential>()))
-        }
     }
 
     /*@Test

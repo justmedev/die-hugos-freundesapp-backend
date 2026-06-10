@@ -15,12 +15,12 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
     private val user2 = Users.nonAdminUser
 
     @Test
-    fun `get settlements - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `get settlements - success`() = withTestApplication(createMockPrincipal(user1)) {
         val settlements = listOf(
             CashpoolSuggestedSettlement(user1, user2, 500)
         )
 
-        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, 1) } returns settlements
+        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, user1.id) } returns settlements
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle/suggest") {
@@ -35,8 +35,8 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get settlements - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
-        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, 1) } throws core.exceptions.CashpoolNotFound()
+    fun `get settlements - not found`() = withTestApplication(createMockPrincipal(user1)) {
+        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, user1.id) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle/suggest") {

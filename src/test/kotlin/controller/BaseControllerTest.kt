@@ -64,8 +64,10 @@ abstract class BaseControllerTest {
                 provide { authService }
             }
             authentication {
-                jwt {
-                    validate { principal }
+                bearer {
+                    authenticate {
+                        principal
+                    }
                 }
             }
             configureControllers()

@@ -22,10 +22,10 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     private val cashpool = Cashpool(1, "Title", "Desc", user, true, now)
 
     @Test
-    fun `post join cashpool - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
+    fun `post join cashpool - success`() = withTestApplication(createMockPrincipal(user)) {
         val member = CashpoolMember(1, user, cashpool, now)
 
-        coEvery { cashpoolMemberService.create(CreateCashpoolMemberCommand(1, 1)) } returns member
+        coEvery { cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, 1)) } returns member
 
         val client = createClient()
         val response = client.post("/cashpools/1/members") {
