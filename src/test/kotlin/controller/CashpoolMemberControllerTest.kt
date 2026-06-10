@@ -22,7 +22,7 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     private val cashpool = Cashpool(1, "Title", "Desc", user, true, now)
 
     @Test
-    fun `post join cashpool - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `post join cashpool - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val member = CashpoolMember(1, user, cashpool, now)
 
         coEvery { cashpoolMemberService.create(CreateCashpoolMemberCommand(1, 1)) } returns member
@@ -39,7 +39,7 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `post join cashpool - not found`() = withTestApplication(createMockPrincipal(1)) {
+    fun `post join cashpool - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         coEvery { cashpoolMemberService.create(any()) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
@@ -51,7 +51,7 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `post join cashpool - invalid cashpoolId`() = withTestApplication(createMockPrincipal(1)) {
+    fun `post join cashpool - invalid cashpoolId`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val client = createClient()
         val response = client.post("/cashpools/invalid/members") {
             header(HttpHeaders.Authorization, "Bearer test")

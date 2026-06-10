@@ -1,5 +1,6 @@
 package controller
 
+import domain.models.User
 import dto.user.CreateUserRequest
 import dto.user.UpdateUserRequest
 import dto.user.UserResponse
@@ -11,95 +12,15 @@ import io.mockk.coEvery
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
+import testutils.Users
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 
 class UserControllerTest : BaseControllerTest() {
+    // TODO: put user needs to pass through keycloak, this would also change these tests.
 
     @Test
-    fun `post user - as admin - success`() = withTestApplication(createMockPrincipal(1, "admin")) {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        val request = CreateUserRequest(
-            email = "test@example.com",
-            firstName = "Test",
-            lastName = "User",
-            password = "password",
-            birthdate = now.date,
-            isAdmin = false
-        )
-
-        coEvery { authService.register(any()) } returns domain.models.User(
-            id = 2,
-            email = request.email,
-            firstName = request.firstName,
-            lastName = request.lastName,
-            password = "hashed_password",
-            birthdate = request.birthdate,
-            isAdmin = request.isAdmin,
-            createdAt = now
-        )
-
-        val client = createClient()
-        val response = client.post("/users") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-            header(HttpHeaders.Authorization, "Bearer test")
-        }
-
-        if (response.status != HttpStatusCode.Created) {
-            println("Response: ${response.status} - ${response.bodyAsText()}")
-        }
-        assertEquals(HttpStatusCode.Created, response.status, "Response status should be OK but was ${response.status}")
-        val body = response.body<UserResponse>()
-        assertEquals(request.email, body.email)
-        assertEquals(2, body.id)
-    }
-
-    @Test
-    fun `post user - as user - forbidden`() = withTestApplication(createMockPrincipal(1, "user")) {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        val request = CreateUserRequest(
-            email = "test@example.com",
-            firstName = "Test",
-            lastName = "User",
-            password = "password",
-            birthdate = now.date,
-            isAdmin = false
-        )
-
-        val client = createClient()
-        val response = client.post("/users") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-            header(HttpHeaders.Authorization, "Bearer test")
-        }
-
-        assertEquals(HttpStatusCode.Forbidden, response.status)
-    }
-
-    @Test
-    fun `post user - no auth - unauthorized`() = withTestApplication {
-        val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        val request = CreateUserRequest(
-            email = "test@example.com",
-            firstName = "Test",
-            lastName = "User",
-            password = "password",
-            birthdate = now.date,
-            isAdmin = false
-        )
-
-        val client = createClient()
-        val response = client.post("/users") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-        }
-
-        assertEquals(HttpStatusCode.Unauthorized, response.status)
-    }
-
-    @Test
-    fun `put user - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `put user - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
         val request = UpdateUserRequest(
             email = "updated@example.com",
@@ -108,12 +29,12 @@ class UserControllerTest : BaseControllerTest() {
             birthdate = now.date
         )
 
-        coEvery { userService.update(any(), any()) } returns domain.models.User(
+        coEvery { userService.update(any(), any()) } returns User(
             id = 1,
+            keycloakId = "",
             email = request.email,
             firstName = request.firstName,
             lastName = request.lastName,
-            password = "hashed_password",
             birthdate = request.birthdate,
             isAdmin = false,
             createdAt = now
@@ -133,7 +54,7 @@ class UserControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `put user - user not found - not found`() = withTestApplication(createMockPrincipal(1)) {
+    fun `put user - user not found - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
         val request = UpdateUserRequest(
             email = "updated@example.com",

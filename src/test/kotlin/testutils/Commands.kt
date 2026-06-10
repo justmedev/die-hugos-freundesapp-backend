@@ -1,8 +1,10 @@
 package testutils
 
 import domain.commands.CreateUserCommand
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import java.util.UUID
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.incrementAndFetch
@@ -19,12 +21,12 @@ object Commands {
             lastName: String = "Mustermann",
             isAdmin: Boolean = false
         ) = CreateUserCommand(
+            UUID.randomUUID().toString(),
             email,
             firstName,
             lastName,
             null,
             null,
-            "h",
             Clock.System.todayIn(TimeZone.UTC),
             isAdmin,
         );

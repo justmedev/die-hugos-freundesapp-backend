@@ -21,7 +21,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     private val owner = Users.nonAdminUser
 
     @Test
-    fun `post cashpool - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `post cashpool - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = CreateCashpoolRequest("Title", "Description")
         val created = Cashpool(1, request.title, request.description, owner, true, now)
 
@@ -41,7 +41,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `put cashpool - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `put cashpool - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = UpdateCashpoolRequest("New Title", "New Description")
         val updated = Cashpool(1, request.title, request.description, owner, true, now)
 
@@ -60,7 +60,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `put cashpool - unauthorized`() = withTestApplication(createMockPrincipal(1)) {
+    fun `put cashpool - unauthorized`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = UpdateCashpoolRequest("New Title", "New Description")
 
         coEvery { cashpoolService.update(1, any()) } throws core.exceptions.Unauthorized("Forbidden")
@@ -76,7 +76,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `put cashpool - not a member`() = withTestApplication(createMockPrincipal(1)) {
+    fun `put cashpool - not a member`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = UpdateCashpoolRequest("New Title", "New Description")
 
         coEvery { cashpoolService.update(1, any()) } throws core.exceptions.NotaCashpoolMember()
@@ -92,7 +92,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get cashpools - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `get cashpools - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val cashpools = listOf(
             Cashpool(1, "Title 1", "Desc 1", owner, true, now),
             Cashpool(2, "Title 2", "Desc 2", owner, true, now)
@@ -111,7 +111,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get cashpool by id - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `get cashpool by id - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val cashpool = Cashpool(1, "Title", "Desc", owner, true, now)
 
         coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } returns cashpool
@@ -127,7 +127,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get cashpool by id - not found`() = withTestApplication(createMockPrincipal(1)) {
+    fun `get cashpool by id - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
@@ -139,7 +139,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get cashpool by id - forbidden`() = withTestApplication(createMockPrincipal(1)) {
+    fun `get cashpool by id - forbidden`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         coEvery { cashpoolService.findByIdOnlyIfMember(1, 1) } throws core.exceptions.NotaCashpoolMember()
 
         val client = createClient()
@@ -151,7 +151,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `delete cashpool by id - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `delete cashpool by id - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         coEvery { cashpoolService.deleteById(1, 1) } returns Unit
 
         val client = createClient()

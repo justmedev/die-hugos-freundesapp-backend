@@ -20,7 +20,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
     private val to = Users.nonAdminUser
 
     @Test
-    fun `post settlement - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `post settlement - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = CreateCashpoolSettlementRequest(from.id, to.id, 10_00, "Label")
         val created = CashpoolSettlement(1, from, to, request.amountCents, request.purpose, now)
 
@@ -42,7 +42,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
     }
 
     @Test
-    fun `get settlements - success`() = withTestApplication(createMockPrincipal(1)) {
+    fun `get settlements - success`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val settlements = listOf(
             CashpoolSettlement(1, from, to, 10_00, "Label 1", now),
             CashpoolSettlement(2, from, to, 25_00, "Label 2", now)
