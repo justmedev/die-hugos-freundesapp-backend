@@ -9,6 +9,7 @@ import java.math.RoundingMode
 
 class CashpoolSuggestedSettlementCalculationService(
     val cashpoolService: CashpoolService,
+    val cashpoolSettlementService: CashpoolSettlementService,
     val cashpoolTransactionService: CashpoolTransactionService,
     val cashpoolMemberService: CashpoolMemberService,
 ) {
@@ -24,11 +25,20 @@ class CashpoolSuggestedSettlementCalculationService(
         val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpool.id, requestingUserId)
         val transactionsByOwner = allTransactions.groupBy { it.owner.id }
 
+        val settlements = cashpoolSettlementService.findByCashpoolId(cashpool.id, requestingUserId)
         val settlementMembers = members.map { member ->
-            val totalPaid = transactionsByOwner[member.user.id]?.sumOf {
+            // positive -> owed, negative -> credited
+            var totalPaid = transactionsByOwner[member.user.id]?.sumOf {
                 // Negate so expenses become positive contributions to the pool
                 BigDecimal.valueOf(it.amountCents).movePointLeft(2).negate()
             } ?: BigDecimal.ZERO
+
+            settlements.filter { it.from.id == member.user.id }.forEach {
+                totalPaid += BigDecimal.valueOf(it.amountCents).movePointLeft(2)
+            }
+            settlements.filter { it.to.id == member.user.id }.forEach {
+                totalPaid -= BigDecimal.valueOf(it.amountCents).movePointLeft(2)
+            }
 
             CashpoolSuggestedSettlementCalculationMember(member, totalPaid)
         }
@@ -58,7 +68,7 @@ class CashpoolSuggestedSettlementCalculationService(
             throw IllegalStateException("Debtors total ($debtSum) and creditors total ($creditSum) mismatch beyond tolerance!")
         }
 
-        val settlements = mutableListOf<CashpoolSuggestedSettlement>()
+        val suggestedSettlements = mutableListOf<CashpoolSuggestedSettlement>()
 
         // 4. Resolve debts
         while (debtors.isNotEmpty() && creditors.isNotEmpty()) {
@@ -79,7 +89,7 @@ class CashpoolSuggestedSettlementCalculationService(
             highestDebtor.balancePaid += amount
             highestCreditor.balancePaid -= amount
 
-            settlements.add(
+            suggestedSettlements.add(
                 CashpoolSuggestedSettlement(
                     from = highestDebtor.member.user,
                     to = highestCreditor.member.user,
@@ -91,6 +101,6 @@ class CashpoolSuggestedSettlementCalculationService(
             if ((highestDebtor.balancePaid - fairShare).abs() <= tolerance) debtors.remove(highestDebtor)
             if ((highestCreditor.balancePaid - fairShare).abs() <= tolerance) creditors.remove(highestCreditor)        }
 
-        return settlements
+        return suggestedSettlements
     }
 }
