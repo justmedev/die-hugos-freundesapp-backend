@@ -32,7 +32,7 @@ fun Application.configureDependencyInjection() {
         provide<CashpoolService> { CashpoolService(resolve(), resolve()) }
         provide<CashpoolMemberService> { CashpoolMemberService(resolve(), resolve(), resolve()) }
         provide<CashpoolTransactionService> { CashpoolTransactionService(resolve(), resolve(), resolve()) }
-        provide<CashpoolSuggestedSettlementCalculationService> { CashpoolSuggestedSettlementCalculationService(resolve(), resolve(), resolve()) }
+        provide<CashpoolSuggestedSettlementCalculationService> { CashpoolSuggestedSettlementCalculationService(resolve(), resolve(), resolve(), resolve()) }
         provide<CashpoolSettlementService> { CashpoolSettlementService(resolve(), resolve()) }
         provide<AuthService> { AuthService(resolve(), resolve(), resolve()) }
     }
