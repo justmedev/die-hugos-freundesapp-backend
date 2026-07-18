@@ -1,11 +1,12 @@
 package plugins
 
 import io.ktor.server.application.*
+import io.ktor.server.config.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import java.sql.Connection
 
 fun Application.configureExposed() {
-    connectToPostgres(embeddedH2 = true)
+    connectToDatabase()
 }
 
 /**
@@ -29,16 +30,22 @@ fun Application.configureExposed() {
  * @return [Connection] that represent connection to the database. Please, don't forget to close this connection when
  * your application shuts down by calling [Connection.close]
  * */
-fun Application.connectToPostgres(embeddedH2: Boolean): Database {
-    return if (embeddedH2) {
-        log.info("Using embedded H2 database")
-        Database.connect("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", driver = "org.h2.Driver", user = "root", password = "")
-    } else {
-        val url = environment.config.property("postgres.url").getString()
-        val user = environment.config.property("postgres.user").getString()
-        val password = environment.config.property("postgres.password").getString()
+fun Application.connectToDatabase(): Database {
+    val isPostgresActive = environment.config.property("postgres.active").getAs<Boolean>()
+    val url = environment.config.property("postgres.url").getString()
+    val user = environment.config.property("postgres.user").getString()
+    val password = environment.config.property("postgres.password").getString()
 
-        log.info("Connecting to postgres database at $url")
-        Database.connect(url, driver = "org.postgresql.Driver", user = user, password = password)
+    if (!isPostgresActive) {
+        log.info("Using embedded H2 database")
+        return Database.connect(
+            "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1",
+            driver = "org.h2.Driver",
+            user = "root",
+            password = ""
+        )
     }
+
+    log.info("Connecting to postgres database at $url")
+    return Database.connect(url, driver = "org.postgresql.Driver", user = user, password = password)
 }
