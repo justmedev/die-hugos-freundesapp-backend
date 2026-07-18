@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CashpoolSettlementResponse(
+    val id: Int,
     val from: UserResponse,
     val to: UserResponse,
     val amountCents: Long,
@@ -15,6 +16,7 @@ data class CashpoolSettlementResponse(
 ) {
     companion object {
         fun from(domain: CashpoolSettlement) = CashpoolSettlementResponse(
+            id = domain.id,
             UserResponse.from(domain.from),
             UserResponse.from(domain.to),
             domain.amountCents,
