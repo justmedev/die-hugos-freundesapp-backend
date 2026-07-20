@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 class CashpoolResource {
 
     @Serializable
-    @Resource("{id}")
+    @Resource("{cashpoolId}")
     class CashpoolId(val parent: CashpoolResource = CashpoolResource(), val cashpoolId: Int) {
 
         @Serializable
