@@ -60,11 +60,10 @@ fun Application.configureCashpoolSuggestedSettlementController() {
                 }
             }) { resource ->
                 call.respond(
-                    HttpStatusCode.OK,
-                    cashpoolSuggestedSettlementCalculationService.calculateUserSettlementSummary(
-                        resource.parent.parent.parent.cashpoolId,
-                        call.requireUserId(),
-                        call.requireUserId()
+                    HttpStatusCode.OK, CashpoolUserSettlementSummaryResponse.from(
+                        cashpoolSuggestedSettlementCalculationService.calculateUserSettlementSummary(
+                            resource.parent.parent.parent.cashpoolId, call.requireUserId(), call.requireUserId()
+                        )
                     )
                 )
             }
