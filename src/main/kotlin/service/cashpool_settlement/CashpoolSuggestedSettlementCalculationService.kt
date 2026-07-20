@@ -1,9 +1,12 @@
 package service.cashpool_settlement
 
+import core.exceptions.Forbidden
 import domain.models.CashpoolSuggestedSettlement
+import domain.models.CashpoolUserSettlementSummary
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
 import service.cashpool_transaction.CashpoolTransactionService
+import service.user.UserService
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -12,6 +15,7 @@ class CashpoolSuggestedSettlementCalculationService(
     val cashpoolSettlementService: CashpoolSettlementService,
     val cashpoolTransactionService: CashpoolTransactionService,
     val cashpoolMemberService: CashpoolMemberService,
+    val userService: UserService,
 ) {
     /**
      * Calculate the settlements required to make everybody pay their share of a cashpool.
@@ -102,5 +106,32 @@ class CashpoolSuggestedSettlementCalculationService(
             if ((highestCreditor.balancePaid - fairShare).abs() <= tolerance) creditors.remove(highestCreditor)        }
 
         return suggestedSettlements
+    }
+
+    /**
+     * Calculate the summary which includes netUserBalance (how much a given user owes or is owed in total) and totalOpenCashpoolBalance (the amount of money a cashpool is worth - all executed settlements)
+     */
+    suspend fun calculateUserSettlementSummary(
+        cashpoolId: Int,
+        userId: Int,
+        requestingUserId: Int
+    ): CashpoolUserSettlementSummary {
+        val requestingUser = userService.findById(requestingUserId)
+
+        if (userId != requestingUser.id && !requestingUser.isAdmin) throw Forbidden("You are only allowed to access your own summary!");
+
+        val allSettlements = calculateSettlements(cashpoolId, requestingUserId)
+        val netUserBalance = allSettlements.sumOf { settlement ->
+            var addend = 0L
+            if (settlement.from.id == userId) addend -= settlement.amountCents // We owe, so negative
+            if (settlement.to.id == userId) addend += settlement.amountCents // We receive, so positive
+            addend
+        }
+        val totalOpenCashpoolBalance = allSettlements.sumOf { it.amountCents }
+
+        return CashpoolUserSettlementSummary(
+            netUserBalance,
+            totalOpenCashpoolBalance,
+        )
     }
 }

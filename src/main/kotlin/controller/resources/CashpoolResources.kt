@@ -9,11 +9,11 @@ class CashpoolResource {
 
     @Serializable
     @Resource("{id}")
-    class Id(val parent: CashpoolResource = CashpoolResource(), val id: Int) {
+    class CashpoolId(val parent: CashpoolResource = CashpoolResource(), val cashpoolId: Int) {
 
         @Serializable
         @Resource("transactions")
-        class Transactions(val parent: Id) {
+        class Transactions(val parent: CashpoolId) {
 
             @Serializable
             @Resource("{transactionId}")
@@ -22,14 +22,18 @@ class CashpoolResource {
 
         @Serializable
         @Resource("members")
-        class Members(val parent: Id)
+        class Members(val parent: CashpoolId)
 
         @Serializable
         @Resource("settle")
-        class Settle(val parent: Id) {
+        class Settle(val parent: CashpoolId) {
             @Serializable
             @Resource("suggest")
-            class Suggest(val parent: Settle)
+            class Suggest(val parent: Settle) {
+                @Serializable
+                @Resource("me")
+                class Me(val parent: Suggest)
+            }
         }
     }
 }

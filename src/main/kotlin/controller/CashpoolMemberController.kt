@@ -19,7 +19,7 @@ fun Application.configureCashpoolMemberController() {
 
     routing {
         authenticate {
-            post<CashpoolResource.Id.Members>({
+            post<CashpoolResource.CashpoolId.Members>({
                 description = "Join an existing cashpool by its id."
                 tags = listOf(tag)
                 response {
@@ -33,7 +33,7 @@ fun Application.configureCashpoolMemberController() {
                 }
             }) { resource ->
                 val created =
-                    cashpoolMemberService.create(CreateCashpoolMemberCommand(call.requireUserId(), resource.parent.id))
+                    cashpoolMemberService.create(CreateCashpoolMemberCommand(call.requireUserId(), resource.parent.cashpoolId))
 
                 call.respond(HttpStatusCode.Created, CashpoolMemberResponse.from(created))
             }

@@ -38,7 +38,7 @@ fun Application.configureCashpoolTransactionsController() {
 
     routing {
         authenticate {
-            post<CashpoolResource.Id.Transactions>({
+            post<CashpoolResource.CashpoolId.Transactions>({
                 description = "Create a new cashpool transaction inside of a cashpool."
                 tags = listOf(tag)
                 request { body<CreateCashpoolTransactionRequest>() }
@@ -57,7 +57,7 @@ fun Application.configureCashpoolTransactionsController() {
                 val created = cashpoolTransactionService.create(
                     CreateCashpoolTransactionCommand(
                         call.requireUserId(),
-                        resource.parent.id,
+                        resource.parent.cashpoolId,
                         createRequest.label,
                         createRequest.amountCents
                     )
@@ -66,7 +66,7 @@ fun Application.configureCashpoolTransactionsController() {
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
             }
 
-            get<CashpoolResource.Id.Transactions>({
+            get<CashpoolResource.CashpoolId.Transactions>({
                 description = "Get all cashpool transactions inside a cashpool."
                 tags = listOf(tag)
                 response {
@@ -80,14 +80,14 @@ fun Application.configureCashpoolTransactionsController() {
                 }
             }) { resource ->
                 val transactions = cashpoolTransactionService.findByCashpoolId(
-                    cashpoolId = resource.parent.id,
+                    cashpoolId = resource.parent.cashpoolId,
                     requestingUserId = call.requireUserId()
                 )
 
                 call.respond(HttpStatusCode.OK, transactions.map { CashpoolTransactionResponse.from(it) })
             }
 
-            put<CashpoolResource.Id.Transactions.Transaction>({
+            put<CashpoolResource.CashpoolId.Transactions.Transaction>({
                 description = "Edit an existing cashpool transaction by id."
                 tags = listOf(tag)
                 request { body<UpdateCashpoolTransactionRequest>() }
@@ -106,7 +106,7 @@ fun Application.configureCashpoolTransactionsController() {
                 val updated = cashpoolTransactionService.update(
                     UpdateCashpoolTransactionCommand(
                         call.requireUserId(),
-                        resource.parent.parent.id,
+                        resource.parent.parent.cashpoolId,
                         resource.transactionId,
                         updateRequest.label,
                         updateRequest.amountCents
@@ -116,7 +116,7 @@ fun Application.configureCashpoolTransactionsController() {
                 call.respond(HttpStatusCode.OK, CashpoolTransactionResponse.from(updated))
             }
 
-            delete<CashpoolResource.Id.Transactions.Transaction>({
+            delete<CashpoolResource.CashpoolId.Transactions.Transaction>({
                 description = "Delete a specific cashpool transaction by id."
                 tags = listOf(tag)
                 response {
@@ -127,7 +127,7 @@ fun Application.configureCashpoolTransactionsController() {
                 }
             }) { resource ->
                 cashpoolTransactionService.deleteById(
-                    cashpoolId = resource.parent.parent.id,
+                    cashpoolId = resource.parent.parent.cashpoolId,
                     requestingUserId = call.requireUserId(),
                     transactionId = resource.transactionId
                 )

@@ -69,7 +69,7 @@ fun Application.configureCashpoolController() {
                 call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it) })
             }
 
-            get<CashpoolResource.Id>({
+            get<CashpoolResource.CashpoolId>({
                 description = "Get a specific cashpool. This only returns cashpools the user is a member of."
                 tags = listOf(tag)
                 response {
@@ -82,11 +82,11 @@ fun Application.configureCashpoolController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
-                val domain = cashpoolService.findByIdOnlyIfMember(resource.id, call.requireUserId())
+                val domain = cashpoolService.findByIdOnlyIfMember(resource.cashpoolId, call.requireUserId())
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
             }
 
-            put<CashpoolResource.Id>({
+            put<CashpoolResource.CashpoolId>({
                 description = "Update a specific cashpool. Only the creator of the cashpool can update it."
                 tags = listOf(tag)
                 request { body<UpdateCashpoolRequest>() }
@@ -103,12 +103,12 @@ fun Application.configureCashpoolController() {
                 val updateRequest = call.receive<UpdateCashpoolRequest>()
                 val updated = cashpoolService.update(
                     call.requireUserId(),
-                    UpdateCashpoolCommand(resource.id, updateRequest.title, updateRequest.description)
+                    UpdateCashpoolCommand(resource.cashpoolId, updateRequest.title, updateRequest.description)
                 )
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(updated))
             }
 
-            delete<CashpoolResource.Id>({
+            delete<CashpoolResource.CashpoolId>({
                 description = "Delete a specific cashpool. Only the creator of the cashpool can delete it."
                 tags = listOf(tag)
                 response {
@@ -118,7 +118,7 @@ fun Application.configureCashpoolController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
-                call.respond(HttpStatusCode.NoContent, cashpoolService.deleteById(resource.id, call.requireUserId()))
+                call.respond(HttpStatusCode.NoContent, cashpoolService.deleteById(resource.cashpoolId, call.requireUserId()))
             }
         }
     }

@@ -1,8 +1,9 @@
 package controller
 
-import core.extensions.requireUserId
 import controller.resources.CashpoolResource
+import core.extensions.requireUserId
 import dto.cashpool_settlement.CashpoolSuggestedSettlementResponse
+import dto.cashpool_settlement.CashpoolUserSettlementSummaryResponse
 import io.github.smiley4.ktoropenapi.resources.get
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -18,7 +19,7 @@ fun Application.configureCashpoolSuggestedSettlementController() {
 
     routing {
         authenticate {
-            get<CashpoolResource.Id.Settle.Suggest>({
+            get<CashpoolResource.CashpoolId.Settle.Suggest>({
                 description =
                     "Get a list of settlement transactions that need to be made by each member to even out the cashpool (referred to as 'suggested settlements')."
                 tags = listOf(tag)
@@ -34,11 +35,38 @@ fun Application.configureCashpoolSuggestedSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSuggestedSettlementCalculationService.calculateSettlements(resource.parent.parent.id, call.requireUserId()).map {
+                    cashpoolSuggestedSettlementCalculationService.calculateSettlements(
+                        resource.parent.parent.cashpoolId,
+                        call.requireUserId()
+                    ).map {
                         CashpoolSuggestedSettlementResponse.from(
                             it
                         )
                     })
+            }
+
+            get<CashpoolResource.CashpoolId.Settle.Suggest.Me>({
+                description =
+                    "Get a summary of a user's cashpool contributions including the total cashpool worth and the users standing (how much they owe or are owed; a negative net balance means the user owes)."
+                tags = listOf(tag)
+                response {
+                    code(HttpStatusCode.OK) {
+                        description = "The summary including total cashpool worth and user net balance/standing."
+                        body<CashpoolUserSettlementSummaryResponse>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
+                }
+            }) { resource ->
+                call.respond(
+                    HttpStatusCode.OK,
+                    cashpoolSuggestedSettlementCalculationService.calculateUserSettlementSummary(
+                        resource.parent.parent.parent.cashpoolId,
+                        call.requireUserId(),
+                        call.requireUserId()
+                    )
+                )
             }
         }
     }

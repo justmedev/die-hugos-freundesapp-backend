@@ -23,7 +23,7 @@ fun Application.configureCashpoolSettlementController() {
 
     routing {
         authenticate {
-            post<CashpoolResource.Id.Settle>({
+            post<CashpoolResource.CashpoolId.Settle>({
                 description = "Create a new cashpool settlement transaction."
                 tags = listOf(tag)
                 request { body<CreateCashpoolSettlementRequest>() }
@@ -42,7 +42,7 @@ fun Application.configureCashpoolSettlementController() {
                     CreateCashpoolSettlementCommand(
                         createRequest.fromId,
                         createRequest.toId,
-                        resource.parent.id,
+                        resource.parent.cashpoolId,
                         createRequest.purpose,
                         createRequest.amountCents
                     )
@@ -50,7 +50,7 @@ fun Application.configureCashpoolSettlementController() {
                 call.respond(HttpStatusCode.Created, CashpoolSettlementResponse.from(created))
             }
 
-            get<CashpoolResource.Id.Settle>({
+            get<CashpoolResource.CashpoolId.Settle>({
                 description =
                     "Get a list of settlement transactions by cashpool id that have already been made. This is not the same as 'suggested settlements'!"
                 tags = listOf(tag)
@@ -66,7 +66,7 @@ fun Application.configureCashpoolSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSettlementService.findByCashpoolId(resource.parent.id, call.requireUserId()).map {
+                    cashpoolSettlementService.findByCashpoolId(resource.parent.cashpoolId, call.requireUserId()).map {
                         CashpoolSettlementResponse.from(it)
                     })
             }
