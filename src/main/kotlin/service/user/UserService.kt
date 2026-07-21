@@ -4,6 +4,7 @@ import core.exceptions.UserEmailAlreadyTaken
 import core.exceptions.UserNotFound
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
+import domain.commands.UpdateUserNameAndEmailCommand
 import domain.models.User
 import domain.repositories.UserRepository
 

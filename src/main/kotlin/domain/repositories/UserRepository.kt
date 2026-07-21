@@ -2,6 +2,7 @@ package domain.repositories
 
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
+import domain.commands.UpdateUserNameAndEmailCommand
 import domain.entities.UserEntity
 import domain.models.User
 import domain.tables.UsersTable
@@ -45,12 +46,12 @@ class UserRepositoryImpl : UserRepository {
     override suspend fun update(id: Int, cmd: UpdateUserCommand): User? = suspendTransaction {
         return@suspendTransaction User.from(UserEntity.findByIdAndUpdate(id) {
             it.apply {
-                email = cmd.email
-                firstName = cmd.firstName
-                lastName = cmd.lastName
-                accountHolderName = cmd.accountHolderName
-                accountIBAN = cmd.accountIBAN?.value
-                birthdate = cmd.birthdate
+                if (cmd.email.update) email = cmd.email.value!!
+                if (cmd.firstName.update) firstName = cmd.firstName.value!!
+                if (cmd.lastName.update) lastName = cmd.lastName.value!!
+                if (cmd.accountHolderName.update) accountHolderName = cmd.accountHolderName.value!!
+                if (cmd.accountIBAN.update) accountIBAN = cmd.accountIBAN.value?.value
+                if (cmd.birthdate.update) birthdate = cmd.birthdate.value!!
             }
         })
     }

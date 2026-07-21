@@ -1,19 +1,17 @@
 package domain.commands
 
+import core.utils.UpdateProperty
 import domain.commands.validations.UserValidations
 import domain.models.valueobjects.IBAN
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
-import kotlin.time.Clock
 
 data class UpdateUserCommand(
-    val email: String,
-    val firstName: String,
-    val lastName: String,
-    val accountHolderName: String? = null,
-    val accountIBAN: IBAN? = null,
-    val birthdate: LocalDate,
+    val email: UpdateProperty<String> = UpdateProperty(),
+    val firstName: UpdateProperty<String> = UpdateProperty(),
+    val lastName: UpdateProperty<String> = UpdateProperty(),
+    val accountHolderName: UpdateProperty<String?> = UpdateProperty(),
+    val accountIBAN: UpdateProperty<IBAN?> = UpdateProperty(),
+    val birthdate: UpdateProperty<LocalDate> = UpdateProperty(),
 ) {
     init {
         val validation = UserValidations.validateUpdateUserCommand(this)
