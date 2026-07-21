@@ -1,0 +1,18 @@
+services:
+  diehugos_backend:
+    image: diehugos_backend:latest
+    environment:
+      POSTGRES_ACTIVE: true
+      POSTGRES_URL: "jdbc:postgresql://postgresql/die_hugos_java"
+    command: "java -XX:+UseZGC -XX:+ZGenerational -cp lib/*:app.jar io.ktor.server.netty.EngineMain"
+    ports:
+      - "8000:8000"
+    networks:
+      - postgresql
+      - proxy
+
+networks:
+  postgresql:
+    external: true
+  proxy: # I use nginx proxy manager as a proxy that maps the internal docker network to human-readable domain names
+    external: true

@@ -14,6 +14,7 @@ application {
 kotlin {
     jvmToolchain(25)
 }
+
 dependencies {
     implementation(ktorLibs.serialization.kotlinx.json)
     implementation(ktorLibs.server.auth)
@@ -29,6 +30,7 @@ dependencies {
     implementation(ktorLibs.server.statusPages)
     implementation(ktorLibs.server.sse)
     implementation(ktorLibs.server.cors)
+
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)
@@ -45,7 +47,6 @@ dependencies {
     implementation(libs.schema.kenerator.core)
     implementation(libs.schema.kenerator.serialization)
     implementation(libs.schema.kenerator.swagger)
-
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
