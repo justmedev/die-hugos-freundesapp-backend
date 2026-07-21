@@ -128,9 +128,10 @@ class CashpoolSuggestedSettlementCalculationService(
             if (settlement.to.id == userId) addend += settlement.amountCents // We receive, so positive
             addend
         }
+        val alreadySettledSettlements = cashpoolSettlementService.findByCashpoolId(cashpoolId, requestingUserId)
         val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpoolId, requestingUserId)
         val totalOpenCashpoolBalance =
-            allTransactions.sumOf { it.amountCents } - allSettlements.sumOf { it.amountCents }
+            allTransactions.sumOf { it.amountCents } - alreadySettledSettlements.sumOf { it.amountCents }
 
         return CashpoolUserSettlementSummary(
             netUserBalance,
