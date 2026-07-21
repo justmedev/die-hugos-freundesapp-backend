@@ -7,6 +7,7 @@ import domain.models.CashpoolTransaction
 import domain.tables.CashpoolTransactionsTable
 import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
@@ -36,7 +37,9 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
     }
 
     override suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolTransaction> = suspendTransaction {
-        CashpoolTransactionEntity.find { CashpoolTransactionsTable.cashpool eq cashpoolId }
+        CashpoolTransactionEntity.find { CashpoolTransactionsTable.cashpool eq cashpoolId }.orderBy(
+            CashpoolTransactionsTable.createdAt to SortOrder.DESC
+        )
             .map { CashpoolTransaction.from(it)!! }
     }
 
