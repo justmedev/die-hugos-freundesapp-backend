@@ -13,6 +13,7 @@ out/
 .gitignore
 
 # Secrets and local configs
-local.conf
+**/local.conf
 *.env
 .env
+**/.env
