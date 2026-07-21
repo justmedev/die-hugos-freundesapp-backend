@@ -3,6 +3,7 @@ package service.auth
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import core.exceptions.UserNotFound
+import core.utils.UpdateProperty
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
 import domain.models.AuthConfig
@@ -33,10 +34,9 @@ class AuthService(
                 val user = userService.findByKeycloakId(keycloakId)
                 userService.update(
                     user.id, UpdateUserCommand(
-                        email = kcJWT.email,
-                        firstName = kcJWT.firstName,
-                        lastName = kcJWT.lastName,
-                        birthdate = LocalDate(2000, 1, 1), // TODO: birthdate
+                        email = UpdateProperty(kcJWT.email, true),
+                        firstName = UpdateProperty(kcJWT.firstName, true),
+                        lastName = UpdateProperty(kcJWT.lastName, true),
                     )
                 )
             } catch (_: UserNotFound) {

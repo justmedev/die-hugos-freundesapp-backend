@@ -1,5 +1,6 @@
 package domain.commands.validations
 
+import core.extensions.optionalUpdate
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
 import domain.models.valueobjects.IBAN
@@ -45,10 +46,10 @@ object UserValidations {
     }
 
     val validateUpdateUserCommand = Validation {
-        UpdateUserCommand::firstName { nameValidation() }
-        UpdateUserCommand::lastName { nameValidation() }
-        UpdateUserCommand::accountHolderName ifPresent { accountHolderNameValidation() }
-        UpdateUserCommand::accountIBAN ifPresent { accountIBANValidation() }
-        UpdateUserCommand::birthdate { birthdateValidation() }
+        UpdateUserCommand::firstName { optionalUpdate { nameValidation() } }
+        UpdateUserCommand::lastName { optionalUpdate { nameValidation() } }
+        UpdateUserCommand::accountHolderName { optionalUpdate { accountHolderNameValidation() } }
+        UpdateUserCommand::accountIBAN { optionalUpdate { accountIBANValidation() } }
+        UpdateUserCommand::birthdate { optionalUpdate { birthdateValidation() } }
     }
 }

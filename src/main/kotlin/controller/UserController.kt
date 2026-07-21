@@ -2,12 +2,16 @@ package controller
 
 import controller.resources.UserResource
 import core.extensions.requireUser
+import domain.commands.UpdateUserCommand
+import dto.user.UpdateUserRequest
 import dto.user.UserResponse
 import io.github.smiley4.ktoropenapi.resources.get
+import io.github.smiley4.ktoropenapi.resources.patch
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.di.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import service.user.UserService
@@ -32,8 +36,35 @@ fun Application.configureUserController() {
                 val user = call.requireUser(userService)
                 call.respond(HttpStatusCode.OK, UserResponse.from(user))
             }
-            // TODO: create and update
-            // We could either do this here or do it via keycloak and then just get the updated info via webhooks.
+
+            patch<UserResource.Me>({
+                description =
+                    "Update the authenticated user. Only the bank account related data and the birthdate are updatable for now."
+                tags = listOf(tag)
+                response {
+                    code(HttpStatusCode.OK) {
+                        description = "The updated user"
+                        body<UserResponse>()
+                    }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                }
+            }) {
+                // TODO: Update first and last name + email through keycloak
+                val user = call.requireUser(userService)
+                val updateRequest = call.receive<UpdateUserRequest>()
+
+                call.respond(
+                    HttpStatusCode.OK, UserResponse.from(
+                        userService.update(
+                            user.id, UpdateUserCommand(
+                                accountHolderName = updateRequest.accountHolderName,
+                                accountIBAN = updateRequest.accountIBAN,
+                                birthdate = updateRequest.birthdate,
+                            )
+                        )
+                    )
+                )
+            }
         }
     }
 }
