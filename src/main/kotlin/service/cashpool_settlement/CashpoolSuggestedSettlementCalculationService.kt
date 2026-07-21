@@ -103,7 +103,8 @@ class CashpoolSuggestedSettlementCalculationService(
             )
 
             if ((highestDebtor.balancePaid - fairShare).abs() <= tolerance) debtors.remove(highestDebtor)
-            if ((highestCreditor.balancePaid - fairShare).abs() <= tolerance) creditors.remove(highestCreditor)        }
+            if ((highestCreditor.balancePaid - fairShare).abs() <= tolerance) creditors.remove(highestCreditor)
+        }
 
         return suggestedSettlements
     }
@@ -127,7 +128,9 @@ class CashpoolSuggestedSettlementCalculationService(
             if (settlement.to.id == userId) addend += settlement.amountCents // We receive, so positive
             addend
         }
-        val totalOpenCashpoolBalance = allSettlements.sumOf { it.amountCents }
+        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpoolId, requestingUserId)
+        val totalOpenCashpoolBalance =
+            allTransactions.sumOf { it.amountCents } - allSettlements.sumOf { it.amountCents }
 
         return CashpoolUserSettlementSummary(
             netUserBalance,
