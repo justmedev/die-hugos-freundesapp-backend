@@ -2,6 +2,7 @@ package domain.repositories
 
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
+import domain.commands.UpdateUserNameAndEmailCommand
 import domain.entities.UserEntity
 import domain.models.User
 import domain.tables.UsersTable
