@@ -18,8 +18,10 @@ import kotlin.time.Clock
 import core.exceptions.CashpoolNotFound
 import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
+import domain.repositories.CashpoolSettlementRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import service.cashpool_settlement.CashpoolSettlementService
 import testutils.Commands
 import kotlin.test.assertFailsWith
 
@@ -27,13 +29,15 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
     private val userService = UserService(userRepo)
     private val cashpoolRepo = CashpoolRepositoryImpl()
+    private val cashpoolSettlementRepo = CashpoolSettlementRepositoryImpl()
     private val cashpoolService = CashpoolService(userService, cashpoolRepo)
+    private val cashpoolSettlementService = CashpoolSettlementService(cashpoolSettlementRepo, cashpoolService)
     private val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
     private val cashpoolMemberService = CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
     private val transactionRepo = CashpoolTransactionRepositoryImpl()
     private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolService, userService)
     private val settlementService =
-        CashpoolSuggestedSettlementCalculationService(cashpoolService, transactionService, cashpoolMemberService)
+        CashpoolSuggestedSettlementCalculationService(cashpoolService, cashpoolSettlementService, transactionService, cashpoolMemberService, userService)
 
     @Test
     fun `calculateSettlements - success`() {

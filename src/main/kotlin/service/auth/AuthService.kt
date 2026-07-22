@@ -6,7 +6,6 @@ import core.exceptions.UserNotFound
 import core.utils.UpdateProperty
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
-import domain.commands.UpdateUserNameAndEmailCommand
 import domain.models.AuthConfig
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*

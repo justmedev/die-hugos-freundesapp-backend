@@ -3,7 +3,8 @@ package controller
 import controller.resources.UserResource
 import core.extensions.requireUser
 import domain.commands.UpdateUserCommand
-import dto.user.UpdateUserRequest
+import dto.user.ExternalUpdateUserRequest
+import dto.user.InternalUpdateUserRequest
 import dto.user.UserResponse
 import io.github.smiley4.ktoropenapi.resources.get
 import io.github.smiley4.ktoropenapi.resources.patch
@@ -39,8 +40,9 @@ fun Application.configureUserController() {
 
             patch<UserResource.Me>({
                 description =
-                    "Update the authenticated user. Only the bank account related data and the birthdate are updatable for now."
+                    "Update the authenticated user. A partial UpdateUserRequest object is allowed and will only update the fields that are included."
                 tags = listOf(tag)
+                request { body<ExternalUpdateUserRequest>() }
                 response {
                     code(HttpStatusCode.OK) {
                         description = "The updated user"
@@ -51,7 +53,7 @@ fun Application.configureUserController() {
             }) {
                 // TODO: Update first and last name + email through keycloak
                 val user = call.requireUser(userService)
-                val updateRequest = call.receive<UpdateUserRequest>()
+                val updateRequest = call.receive<InternalUpdateUserRequest>()
 
                 call.respond(
                     HttpStatusCode.OK, UserResponse.from(

@@ -6,11 +6,11 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UpdateUserRequest(
-    val email: UpdateProperty<String>,
-    val firstName: UpdateProperty<String>,
-    val lastName: UpdateProperty<String>,
+data class InternalUpdateUserRequest(
+    val email: UpdateProperty<String> = UpdateProperty(),
+    val firstName: UpdateProperty<String> = UpdateProperty(),
+    val lastName: UpdateProperty<String> = UpdateProperty(),
     val accountHolderName: UpdateProperty<String?> = UpdateProperty(),
     val accountIBAN: UpdateProperty<IBAN?> = UpdateProperty(),
-    val birthdate: UpdateProperty<LocalDate>,
+    val birthdate: UpdateProperty<LocalDate> = UpdateProperty(),
 )

@@ -1,6 +1,9 @@
 package service
 
 import core.exceptions.UserNotFound
+import core.utils.UpdateProperty
+import domain.commands.UpdateUserCommand
+import domain.models.valueobjects.IBAN
 import domain.repositories.UserRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
@@ -78,33 +81,34 @@ class UserServiceTest : BaseServiceTest() {
     fun `update - success`() {
         runBlocking {
             val created = userService.create(Commands.User.create())
-            val updateCmd = domain.commands.UpdateUserCommand(
-                email = "updated@example.com",
-                firstName = "Updated",
-                lastName = "User",
-                accountHolderName = "Holder",
-                accountIBAN = domain.models.valueobjects.IBAN("DE36000000000000000000"),
-                birthdate = created.birthdate
+            val updateCmd = UpdateUserCommand(
+                email = UpdateProperty("updated@example.com"),
+                firstName = UpdateProperty("Updated"),
+                lastName = UpdateProperty(), // Don't update this
+                accountHolderName = UpdateProperty(null),
+                accountIBAN = UpdateProperty(IBAN("DE36000000000000000000")),
+                birthdate = UpdateProperty(created.birthdate)
             )
 
             val updated = userService.update(created.id, updateCmd)
 
             assertEquals("updated@example.com", updated.email)
             assertEquals("Updated", updated.firstName)
-            assertEquals("Holder", updated.accountHolderName)
+            assertEquals("Mustermann", updated.lastName)
+            assertEquals(null, updated.accountHolderName)
         }
     }
 
     @Test
     fun `update - non-existing user - throws UserNotFound`() {
         runBlocking {
-            val updateCmd = domain.commands.UpdateUserCommand(
-                email = "updated@example.com",
-                firstName = "Updated",
-                lastName = "User",
-                accountHolderName = null,
-                accountIBAN = null,
-                birthdate = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+            val updateCmd = UpdateUserCommand(
+                email = UpdateProperty("updated@example.com"),
+                firstName = UpdateProperty("firstName"),
+                lastName = UpdateProperty(), // Don't update this
+                accountHolderName = UpdateProperty(null),
+                accountIBAN = UpdateProperty(IBAN("DE36000000000000000000")),
+                birthdate = UpdateProperty()
             )
             assertFailsWith<UserNotFound> {
                 userService.update(999, updateCmd)

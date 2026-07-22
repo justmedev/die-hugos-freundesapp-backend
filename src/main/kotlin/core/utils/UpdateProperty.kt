@@ -1,13 +1,19 @@
 package core.utils
 
+import core.serialization.UpdatePropertySerializer
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class UpdateProperty <out T>(val value: T?, val update: Boolean) {
+@Serializable(with = UpdatePropertySerializer::class)
+data class UpdateProperty<out T>(val value: T?, val update: Boolean) {
     /**
-     * A property that can be updated with [value].
+     * Do not update this property.
      */
     constructor() : this(null, false)
+
+    /**
+     * Update the property with the given value.
+     */
+    constructor(value: T) : this(value, true)
 
     val valueIfUpdated: T?
         get() = if (update) value else null

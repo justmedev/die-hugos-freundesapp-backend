@@ -2,7 +2,6 @@ package domain.repositories
 
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
-import domain.commands.UpdateUserNameAndEmailCommand
 import domain.entities.UserEntity
 import domain.models.User
 import domain.tables.UsersTable
@@ -49,7 +48,7 @@ class UserRepositoryImpl : UserRepository {
                 if (cmd.email.update) email = cmd.email.value!!
                 if (cmd.firstName.update) firstName = cmd.firstName.value!!
                 if (cmd.lastName.update) lastName = cmd.lastName.value!!
-                if (cmd.accountHolderName.update) accountHolderName = cmd.accountHolderName.value!!
+                if (cmd.accountHolderName.update) accountHolderName = cmd.accountHolderName.value
                 if (cmd.accountIBAN.update) accountIBAN = cmd.accountIBAN.value?.value
                 if (cmd.birthdate.update) birthdate = cmd.birthdate.value!!
             }
