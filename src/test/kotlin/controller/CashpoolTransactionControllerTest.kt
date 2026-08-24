@@ -42,7 +42,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         client.sse("/cashpools/1/transactions/listen", request = {
             header(HttpHeaders.Authorization, "Bearer test")
         }) {
-            val tx = CashpoolTransaction(1, user, "Label", 1000, now)
+            val tx = CashpoolTransaction(1, user, "Label", null, 1000, now)
             launch {
                 delay(200.milliseconds) // Wait for connection and hello
                 eventsFlow.emit(CashpoolTransactionEvent.Created(1, tx))
@@ -64,7 +64,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     @Test
     fun `post transaction - success`() = withTestApplication(createMockPrincipal(user)) {
         val request = CreateCashpoolTransactionRequest("Label", 1000)
-        val created = CashpoolTransaction(1, user, request.label, request.amountCents, now)
+        val created = CashpoolTransaction(1, user, request.label, null, request.amountCents, now)
 
         coEvery { cashpoolTransactionService.create(any()) } returns created
 
@@ -83,8 +83,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     @Test
     fun `get transactions - success`() = withTestApplication(createMockPrincipal(user)) {
         val transactions = listOf(
-            CashpoolTransaction(1, user, "Label 1", 1000, now),
-            CashpoolTransaction(2, user, "Label 2", 2000, now)
+            CashpoolTransaction(1, user, "Label 1", null, 1000, now),
+            CashpoolTransaction(2, user, "Label 2", null, 2000, now)
         )
 
         coEvery { cashpoolTransactionService.findByCashpoolId(1, user.id) } returns transactions
@@ -102,7 +102,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
     @Test
     fun `put transaction - success`() = withTestApplication(createMockPrincipal(user)) {
         val request = UpdateCashpoolTransactionRequest(UpdateProperty("Updated Label"), UpdateProperty(2000L))
-        val updated = CashpoolTransaction(1, user, request.label.value!!, request.amountCents.value!!, now)
+        val updated = CashpoolTransaction(1, user, request.label.value!!, null, request.amountCents.value!!, now)
 
         coEvery { cashpoolTransactionService.update(any()) } returns updated
 
