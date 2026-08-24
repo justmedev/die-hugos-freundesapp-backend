@@ -91,7 +91,7 @@ fun Application.configureCashpoolTransactionsController() {
                 multipartData.forEachPart { part ->
                     when (part) {
                         is PartData.FileItem -> filePart = part
-                        else -> {}
+                        else -> part.dispose()
                     }
                 }
                 if (filePart == null) throw BadRequestException("No file part found")
@@ -105,7 +105,7 @@ fun Application.configureCashpoolTransactionsController() {
                         filePart.provider(),
                     )
                 )
-
+                filePart.dispose()
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(updated))
             }
 

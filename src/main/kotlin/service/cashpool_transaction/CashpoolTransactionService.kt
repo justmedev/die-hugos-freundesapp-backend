@@ -48,11 +48,12 @@ class CashpoolTransactionService(
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, cmd.requestingUserId)
 
-        val attachedImageUUID = UUID.randomUUID()
+        val attachedImageUUID = transaction.attachedImageUUID ?: UUID.randomUUID()
         val file = File("uploads/$attachedImageUUID")
+        file.parentFile.mkdirs()
         cmd.imageProvider.copyAndClose(file.writeChannel())
 
-        return transactionRepo.update(
+        val updated = transactionRepo.update(
             UpdateCashpoolTransactionCommand(
                 cmd.requestingUserId,
                 cmd.cashpoolId,
@@ -60,6 +61,8 @@ class CashpoolTransactionService(
                 attachedImageUUID = UpdateProperty(attachedImageUUID)
             )
         ) ?: throw TransactionNotFound()
+        _events.emit(CashpoolTransactionEvent.Updated(cmd.cashpoolId, updated))
+        return updated
     }
 
     suspend fun findByCashpoolId(cashpoolId: Int, requestingUserId: Int): List<CashpoolTransaction> {
@@ -80,7 +83,7 @@ class CashpoolTransactionService(
         requireOwnershipOrAdmin(transaction, cmd.ownerId)
 
         val updated = transactionRepo.update(cmd) ?: throw TransactionNotFound()
-        if (updated.attachedImageUUID != null) {
+        if (transaction.attachedImageUUID != null && transaction.attachedImageUUID != updated.attachedImageUUID) {
             runCatching { File("uploads/${transaction.attachedImageUUID}").delete() }
         }
         _events.emit(CashpoolTransactionEvent.Updated(cmd.cashpoolId, updated))
