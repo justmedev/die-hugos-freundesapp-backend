@@ -9,6 +9,7 @@ data class CashpoolTransaction(
     val owner: User,
     val label: String,
     val attachedImageUUID: UUID?,
+    val excludedUsers: List<Int>,
     val amountCents: Long,
     val createdAt: LocalDateTime,
 ) {
@@ -19,6 +20,7 @@ data class CashpoolTransaction(
                 User.from(entity.owner)!!,
                 entity.label,
                 entity.attachedImageUUID,
+                entity.excludedUsers,
                 entity.amountCents,
                 entity.createdAt
             )

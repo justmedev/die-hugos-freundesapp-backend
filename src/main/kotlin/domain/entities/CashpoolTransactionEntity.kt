@@ -17,6 +17,7 @@ class CashpoolTransactionEntity(id: EntityID<Int>) : IntEntity(id) {
     var amountCents by CashpoolTransactionsTable.amountCents
     var label by CashpoolTransactionsTable.label
     var attachedImageUUID by CashpoolTransactionsTable.attachedImageUUID
+    var excludedUsers by CashpoolTransactionsTable.excludedUsers
 
     var createdAt by CashpoolTransactionsTable.createdAt
 }

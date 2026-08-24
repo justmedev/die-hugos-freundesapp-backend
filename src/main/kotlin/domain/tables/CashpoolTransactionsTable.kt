@@ -12,5 +12,6 @@ object CashpoolTransactionsTable : IntIdTable("cashpool_transactions") {
     var amountCents = long("amount_cents")
     var label = varchar("label", 255)
     var attachedImageUUID = javaUUID("attached_image_uuid").nullable()
+    var excludedUsers = array<Int>("excluded_users").default(emptyList())
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
 }
