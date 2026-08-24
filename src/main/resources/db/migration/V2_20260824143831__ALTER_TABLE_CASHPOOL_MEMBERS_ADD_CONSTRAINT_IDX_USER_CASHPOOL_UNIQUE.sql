@@ -1,0 +1,1 @@
+ALTER TABLE cashpool_members ADD CONSTRAINT idx_user_cashpool_unique UNIQUE (user_id, cashpool_id);

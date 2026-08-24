@@ -1,7 +1,11 @@
+import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
+
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(ktorLibs.plugins.ktor)
+    alias(libs.plugins.exposed)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dotenv)
 }
 
 group = "at.ilja_busch"
@@ -13,6 +17,16 @@ application {
 
 kotlin {
     jvmToolchain(25)
+}
+
+exposed {
+    migrations {
+        tablesPackage.set("domain.tables")
+        databaseUrl.set(env.POSTGRES_URL.value)
+        databaseUser.set(env.POSTGRES_USER.value)
+        databasePassword.set(env.POSTGRES_PASSWORD.value)
+        fileVersionFormat = VersionFormat.MAJOR_TIMESTAMP
+    }
 }
 
 dependencies {
