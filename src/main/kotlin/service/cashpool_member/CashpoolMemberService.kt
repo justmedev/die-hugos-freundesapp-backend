@@ -2,12 +2,14 @@ package service.cashpool_member
 
 import core.exceptions.CashpoolMemberNotFound
 import core.exceptions.CashpoolNotFound
+import core.exceptions.Conflict
 import core.exceptions.UserNotFound
 import domain.commands.CreateCashpoolMemberCommand
 import domain.models.CashpoolMember
 import domain.repositories.CashpoolMemberRepository
 import domain.repositories.CashpoolRepository
 import domain.repositories.UserRepository
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 
 class CashpoolMemberService(
     private val cashpoolMemberRepo: CashpoolMemberRepository,
@@ -18,7 +20,14 @@ class CashpoolMemberService(
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
         userRepo.findById(cmd.userId) ?: throw UserNotFound()
         cashpoolRepo.findById(cmd.cashpoolId) ?: throw CashpoolNotFound()
-        return cashpoolMemberRepo.create(cmd)
+        return try {
+            cashpoolMemberRepo.create(cmd)
+        } catch (e: ExposedSQLException) {
+            if (e.message?.contains("Unique index or primary key violation") == true) {
+                throw Conflict("User is already a member of this cashpool.")
+            }
+            throw e;
+        }
     }
 
     suspend fun findById(id: Int) = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()

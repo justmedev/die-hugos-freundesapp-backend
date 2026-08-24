@@ -20,6 +20,7 @@ import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.UserRepositoryImpl
 import core.exceptions.CashpoolNotFound
+import core.exceptions.Conflict
 import core.exceptions.UserNotFound
 import kotlinx.datetime.todayIn
 import testutils.Commands
@@ -69,6 +70,19 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
             val userId = userService.create(Commands.User.create()).id
             assertFailsWith<CashpoolNotFound> {
                 cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, 999))
+            }
+        }
+    }
+
+    @Test
+    fun `create member - conflict already a member - fails`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cashpoolId = createTestCashpool(userId)
+
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))
+            assertFailsWith<Conflict> {
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpoolId))
             }
         }
     }

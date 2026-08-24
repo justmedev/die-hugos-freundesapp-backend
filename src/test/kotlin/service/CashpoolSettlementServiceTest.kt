@@ -41,7 +41,6 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
             val toId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(fromId)
 
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(fromId, cpId))
             cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toId, cpId))
 
             val cmd = CreateCashpoolSettlementCommand(fromId, toId, cpId, "Purpose", 10_00)
@@ -90,7 +89,6 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
 
             cashpoolMemberRepo.create(CreateCashpoolMemberCommand(fromId, cpId))
             cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toId, cpId))
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
             settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T1", 1000))
             settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T2", 2000))
 

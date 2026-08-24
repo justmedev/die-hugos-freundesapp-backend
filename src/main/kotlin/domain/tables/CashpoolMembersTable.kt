@@ -9,4 +9,8 @@ object CashpoolMembersTable : IntIdTable("cashpool_members") {
     var user = reference("user_id", UsersTable, onDelete = ReferenceOption.CASCADE)
     var cashpool = reference("cashpool_id", CashpoolsTable, onDelete = ReferenceOption.CASCADE)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
+
+    init {
+        uniqueIndex("idx_user_cashpool_unique", user, cashpool)
+    }
 }
