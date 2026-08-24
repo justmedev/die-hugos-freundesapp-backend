@@ -55,6 +55,7 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
             it.apply {
                 if (cmd.label.update) label = cmd.label.value!!
                 if (cmd.amountCents.update) amountCents = cmd.amountCents.value!!
+                if (cmd.attachedImageUUID.update) attachedImageUUID = cmd.attachedImageUUID.value
             }.let { entity -> CashpoolTransaction.from(entity)!! }
         }
     }

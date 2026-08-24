@@ -5,6 +5,7 @@ import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
 import core.exceptions.Unauthorized
 import core.utils.UpdateProperty
+import domain.commands.AttachImageCashpoolTransactionCommand
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolTransactionCommand
@@ -14,6 +15,7 @@ import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolTransactionRepositoryImpl
 import domain.repositories.UserRepositoryImpl
+import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
@@ -22,6 +24,7 @@ import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 import testutils.Commands
+import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -277,6 +280,123 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             val event = emittedEvents.first() as CashpoolTransactionEvent.Deleted
             assertEquals(cpId, event.cashpoolId)
             assertEquals(tx.id, event.transactionId)
+        }
+    }
+
+    @Test
+    fun `attachImage - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000))
+
+            val imageContent = "test-image-content".toByteArray()
+            val provider = ByteReadChannel(imageContent)
+            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider)
+
+            val updated = transactionService.attachImage(cmd)
+
+            assertNotNull(updated.attachedImageUUID)
+            val imageFile = File("uploads/${updated.attachedImageUUID}")
+            kotlin.test.assertTrue(imageFile.exists())
+
+            imageFile.delete()
+        }
+    }
+
+    @Test
+    fun `attachImage - emits updated event`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000))
+
+            val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
+            val job = launch {
+                transactionService.events.collect { emittedEvents.add(it) }
+            }
+            yield()
+
+            val provider = ByteReadChannel("image-bytes".toByteArray())
+            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider)
+            val updated = transactionService.attachImage(cmd)
+
+            yield()
+            job.cancel()
+
+            File("uploads/${updated.attachedImageUUID}").delete()
+
+            assertEquals(1, emittedEvents.size)
+            val event = emittedEvents.first() as CashpoolTransactionEvent.Updated
+            assertEquals(cpId, event.cashpoolId)
+            assertEquals(updated.id, event.transaction.id)
+            assertEquals(updated.attachedImageUUID, event.transaction.attachedImageUUID)
+        }
+    }
+
+    @Test
+    fun `attachImage - not a member - fails`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
+            val cpId = createTestCashpool(ownerId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Label", 1000))
+
+            val provider = ByteReadChannel("image-bytes".toByteArray())
+            val cmd = AttachImageCashpoolTransactionCommand(otherId, cpId, tx.id, provider)
+            assertFailsWith<NotaCashpoolMember> {
+                transactionService.attachImage(cmd)
+            }
+        }
+    }
+
+    @Test
+    fun `attachImage - transaction not found - fails`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+
+            val provider = ByteReadChannel("image-bytes".toByteArray())
+            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, 999, provider)
+            assertFailsWith<TransactionNotFound> {
+                transactionService.attachImage(cmd)
+            }
+        }
+    }
+
+    @Test
+    fun `attachImage - not the owner - fails`() {
+        runBlocking {
+            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
+            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
+            val cpId = createTestCashpool(ownerId)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Label", 1000))
+
+            val provider = ByteReadChannel("image-bytes".toByteArray())
+            val cmd = AttachImageCashpoolTransactionCommand(otherId, cpId, tx.id, provider)
+            assertFailsWith<Unauthorized> {
+                transactionService.attachImage(cmd)
+            }
+        }
+    }
+
+    @Test
+    fun `deleteById - deletes attached image file if present`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000))
+
+            val provider = ByteReadChannel("image-bytes".toByteArray())
+            val updated = transactionService.attachImage(AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider))
+            val imageFile = File("uploads/${updated.attachedImageUUID}")
+            kotlin.test.assertTrue(imageFile.exists())
+
+            transactionService.deleteById(cpId, tx.id, userId)
+
+            kotlin.test.assertFalse(imageFile.exists())
         }
     }
 }

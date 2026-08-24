@@ -5,6 +5,7 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.Unauthorized
 import core.extensions.requireUserId
+import domain.commands.AttachImageCashpoolTransactionCommand
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
 import domain.models.events.CashpoolTransactionEvent
@@ -18,8 +19,10 @@ import io.github.smiley4.ktoropenapi.resources.post
 import io.github.smiley4.ktoropenapi.resources.put
 import io.github.smiley4.ktoropenapi.route
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -64,6 +67,55 @@ fun Application.configureCashpoolTransactionsController() {
                 )
 
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
+            }
+
+            post<CashpoolResource.CashpoolId.Transactions.Transaction.Upload>({
+                description = "Attach an image to an existing transaction."
+                tags = listOf(tag)
+                request {
+                    multipartBody {
+                        mediaTypes(ContentType.MultiPart.FormData)
+                        part<ByteArray>("file") {
+                            mediaTypes(
+                                ContentType.Image.JPEG,
+                            )
+                        }
+                    }
+                }
+                response {
+                    code(HttpStatusCode.Created) {
+                        description = "Image attached successfully"
+                        body<CashpoolTransactionResponse>()
+                    }
+                    code(HttpStatusCode.BadRequest) { description = "Invalid request data" }
+                    code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
+                    code(HttpStatusCode.Forbidden) { description = "User is not the owner of this transaction" }
+                    code(HttpStatusCode.NotFound) { description = "Cashpool/Transaction not found" }
+                }
+            }) { resource ->
+                // 15 MiB
+                val multipartData = call.receiveMultipart(formFieldLimit = 1024 * 1024 * 15)
+
+                var filePart: PartData.FileItem? = null
+                multipartData.forEachPart { part ->
+                    when (part) {
+                        is PartData.FileItem -> filePart = part
+                        else -> part.dispose()
+                    }
+                }
+                if (filePart == null) throw BadRequestException("No file part found")
+                if (filePart.contentType != ContentType.Image.JPEG) throw BadRequestException("File must be a JPEG")
+
+                val updated = cashpoolTransactionService.attachImage(
+                    AttachImageCashpoolTransactionCommand(
+                        call.requireUserId(),
+                        resource.transaction.parent.parent.cashpoolId,
+                        resource.transaction.transactionId,
+                        filePart.provider(),
+                    )
+                )
+                filePart.dispose()
+                call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(updated))
             }
 
             get<CashpoolResource.CashpoolId.Transactions>({

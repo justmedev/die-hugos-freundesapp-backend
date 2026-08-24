@@ -9,6 +9,7 @@ data class CashpoolTransactionResponse(
     val id: Int,
     val owner: UserResponse,
     val label: String,
+    val attachedImageURL: String? = null,
     val amountCents: Long,
     val createdAt: String,
 ) {
@@ -17,6 +18,7 @@ data class CashpoolTransactionResponse(
             domain.id,
             UserResponse.from(domain.owner),
             domain.label,
+            if (domain.attachedImageUUID == null) null else "/uploads/${domain.attachedImageUUID}",
             domain.amountCents,
             domain.createdAt.toString(),
         )
