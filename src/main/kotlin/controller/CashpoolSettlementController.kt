@@ -57,7 +57,7 @@ fun Application.configureCashpoolSettlementController() {
                 response {
                     code(HttpStatusCode.OK) {
                         description = "List of settlements"
-                        body<List<CashpoolSuggestedSettlementResponse>>()
+                        body<List<CashpoolSettlementResponse>>()
                     }
                     code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                     code(HttpStatusCode.Forbidden) { description = "User is not a member of this cashpool" }
