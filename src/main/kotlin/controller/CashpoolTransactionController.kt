@@ -72,7 +72,16 @@ fun Application.configureCashpoolTransactionsController() {
             post<CashpoolResource.CashpoolId.Transactions.Transaction.Upload>({
                 description = "Attach an image to an existing transaction."
                 tags = listOf(tag)
-                request { body<CreateCashpoolTransactionRequest>() }
+                request {
+                    multipartBody {
+                        mediaTypes(ContentType.MultiPart.FormData)
+                        part<ByteArray>("file") {
+                            mediaTypes(
+                                ContentType.Image.JPEG,
+                            )
+                        }
+                    }
+                }
                 response {
                     code(HttpStatusCode.Created) {
                         description = "Image attached successfully"

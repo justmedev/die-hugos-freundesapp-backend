@@ -9,6 +9,7 @@ import dto.cashpool_transaction.UpdateCashpoolTransactionRequest
 import io.ktor.client.call.*
 import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.http.*
 import io.mockk.coEvery
 import kotlinx.coroutines.delay
@@ -21,6 +22,7 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.json.Json
 import org.junit.Test
 import testutils.Users
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
@@ -151,5 +153,91 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         }
 
         assertEquals(HttpStatusCode.NotFound, response.status)
+    }
+
+    @Test
+    fun `upload image - success`() = withTestApplication(createMockPrincipal(user)) {
+        val imageUuid = UUID.randomUUID()
+        val updatedTx = CashpoolTransaction(1, user, "Label", imageUuid, 1000, now)
+
+        coEvery { cashpoolTransactionService.attachImage(any()) } returns updatedTx
+
+        val client = createClient()
+        val response = client.post("/cashpools/1/transactions/1/upload") {
+            header(HttpHeaders.Authorization, "Bearer test")
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", "fake-image-bytes".toByteArray(), Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                            append(HttpHeaders.ContentDisposition, "filename=\"test.jpg\"")
+                        })
+                    }
+                )
+            )
+        }
+
+        assertEquals(HttpStatusCode.Created, response.status)
+        val body = response.body<CashpoolTransactionResponse>()
+        assertEquals("/uploads/$imageUuid", body.attachedImageURL)
+    }
+
+    @Test
+    fun `upload image - invalid content type - returns bad request`() = withTestApplication(createMockPrincipal(user)) {
+        val client = createClient()
+        val response = client.post("/cashpools/1/transactions/1/upload") {
+            header(HttpHeaders.Authorization, "Bearer test")
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", "hello text".toByteArray(), Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.Text.Plain.toString())
+                            append(HttpHeaders.ContentDisposition, "filename=\"test.txt\"")
+                        })
+                    }
+                )
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `upload image - missing file part - returns bad request`() = withTestApplication(createMockPrincipal(user)) {
+        val client = createClient()
+        val response = client.post("/cashpools/1/transactions/1/upload") {
+            header(HttpHeaders.Authorization, "Bearer test")
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("description", "no file here")
+                    }
+                )
+            )
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, response.status)
+    }
+
+    @Test
+    fun `upload image - unauthorized if not owner`() = withTestApplication(createMockPrincipal(user)) {
+        coEvery { cashpoolTransactionService.attachImage(any()) } throws core.exceptions.Unauthorized("Not owner")
+
+        val client = createClient()
+        val response = client.post("/cashpools/1/transactions/1/upload") {
+            header(HttpHeaders.Authorization, "Bearer test")
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", "fake-image-bytes".toByteArray(), Headers.build {
+                            append(HttpHeaders.ContentType, ContentType.Image.JPEG.toString())
+                            append(HttpHeaders.ContentDisposition, "filename=\"test.jpg\"")
+                        })
+                    }
+                )
+            )
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
 }
