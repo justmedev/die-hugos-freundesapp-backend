@@ -17,7 +17,11 @@ class CashpoolResource {
 
             @Serializable
             @Resource("{transactionId}")
-            class Transaction(val parent: Transactions, val transactionId: Int)
+            class Transaction(val parent: Transactions, val transactionId: Int) {
+                @Serializable
+                @Resource("upload")
+                class Upload(val transaction: Transaction)
+            }
         }
 
         @Serializable
