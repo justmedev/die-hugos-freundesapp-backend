@@ -8,6 +8,7 @@ data class CreateCashpoolTransactionCommand(
     val cashpoolId: Int,
     val label: String,
     val amountCents: Long,
+    val excludedUsers: List<Int>,
 ) {
     init {
         val validation = CashpoolTransactionValidations.validateCreateCashpoolTransactionCommand(this)

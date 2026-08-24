@@ -7,4 +7,5 @@ import kotlinx.serialization.Serializable
 data class UpdateCashpoolTransactionRequest(
     val label: UpdateProperty<String> = UpdateProperty(),
     val amountCents: UpdateProperty<Long> = UpdateProperty(),
+    val excludedUsers: UpdateProperty<List<Int>> = UpdateProperty(),
 )

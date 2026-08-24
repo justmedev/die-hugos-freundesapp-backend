@@ -1,29 +1,24 @@
 package service
 
+import core.exceptions.CashpoolNotFound
+import domain.commands.CreateCashpoolCommand
+import domain.commands.CreateCashpoolMemberCommand
+import domain.commands.CreateCashpoolTransactionCommand
+import domain.repositories.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.cashpool.CashpoolService
-import domain.commands.CreateCashpoolCommand
 import service.cashpool_member.CashpoolMemberService
-import domain.commands.CreateCashpoolMemberCommand
+import service.cashpool_settlement.CashpoolSettlementService
 import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationService
 import service.cashpool_transaction.CashpoolTransactionService
-import domain.commands.CreateCashpoolTransactionCommand
 import service.user.UserService
-import kotlin.test.assertEquals
-import kotlin.time.Clock
-
-import core.exceptions.CashpoolNotFound
-import domain.repositories.CashpoolMemberRepositoryImpl
-import domain.repositories.CashpoolRepositoryImpl
-import domain.repositories.CashpoolSettlementRepositoryImpl
-import domain.repositories.CashpoolTransactionRepositoryImpl
-import domain.repositories.UserRepositoryImpl
-import service.cashpool_settlement.CashpoolSettlementService
 import testutils.Commands
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Clock
 
 class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -124,7 +119,20 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
         }
     }
 
-    suspend fun createTransaction(cashpoolId: Int, userId: Int, amountCents: Long) {
-        transactionService.create(CreateCashpoolTransactionCommand(userId, cashpoolId, "T1", amountCents))
+    suspend fun createTransaction(
+        cashpoolId: Int,
+        userId: Int,
+        amountCents: Long,
+        excludedUsers: List<Int> = emptyList()
+    ) {
+        transactionService.create(
+            CreateCashpoolTransactionCommand(
+                userId,
+                cashpoolId,
+                "T1",
+                amountCents,
+                excludedUsers
+            )
+        )
     }
 }

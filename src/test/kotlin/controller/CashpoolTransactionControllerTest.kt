@@ -65,8 +65,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `post transaction - success`() = withTestApplication(createMockPrincipal(user)) {
-        val request = CreateCashpoolTransactionRequest("Label", 1000)
-        val created = CashpoolTransaction(1, user, request.label, null, emptyList(), request.amountCents, now)
+        val request = CreateCashpoolTransactionRequest("Label", 1000, listOf(1,2,3))
+        val created = CashpoolTransaction(1, user, request.label, null, listOf(1,2,3), request.amountCents, now)
 
         coEvery { cashpoolTransactionService.create(any()) } returns created
 

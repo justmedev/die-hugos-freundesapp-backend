@@ -62,7 +62,8 @@ fun Application.configureCashpoolTransactionsController() {
                         call.requireUserId(),
                         resource.parent.cashpoolId,
                         createRequest.label,
-                        createRequest.amountCents
+                        createRequest.amountCents,
+                        createRequest.excludedUsers,
                     )
                 )
 

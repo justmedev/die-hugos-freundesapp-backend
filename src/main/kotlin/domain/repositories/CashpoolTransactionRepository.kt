@@ -29,6 +29,7 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
             this.cashpoolId = EntityID(cmd.cashpoolId, CashpoolsTable)
             this.label = cmd.label
             this.amountCents = cmd.amountCents
+            this.excludedUsers = cmd.excludedUsers
         }.let { CashpoolTransaction.from(it)!! }
     }
 
@@ -56,6 +57,7 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
                 if (cmd.label.update) label = cmd.label.value!!
                 if (cmd.amountCents.update) amountCents = cmd.amountCents.value!!
                 if (cmd.attachedImageUUID.update) attachedImageUUID = cmd.attachedImageUUID.value
+                if (cmd.excludedUsers.update) excludedUsers = cmd.excludedUsers.value!!
             }.let { entity -> CashpoolTransaction.from(entity)!! }
         }
     }

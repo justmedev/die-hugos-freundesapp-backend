@@ -11,6 +11,7 @@ data class UpdateCashpoolTransactionCommand(
     val label: UpdateProperty<String> = UpdateProperty(),
     val amountCents: UpdateProperty<Long> = UpdateProperty(),
     val attachedImageUUID: UpdateProperty<UUID?> = UpdateProperty(),
+    val excludedUsers: UpdateProperty<List<Int>> = UpdateProperty(),
 ) {
     init {
         val validation = CashpoolTransactionValidations.validateUpdateCashpoolTransactionCommand(this)
