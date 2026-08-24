@@ -4,6 +4,7 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
 import core.exceptions.Unauthorized
+import core.utils.UpdateProperty
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolTransactionCommand
@@ -76,11 +77,26 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             val cpId = createTestCashpool(userId)
             val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000))
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, "New", 2000)
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
             val updated = transactionService.update(updateCmd)
 
             assertEquals("New", updated.label)
             assertEquals(2000, updated.amountCents)
+        }
+    }
+
+    @Test
+    fun `update transaction - partial update - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cpId = createTestCashpool(userId)
+            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000))
+
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, label = UpdateProperty("New Only"))
+            val updated = transactionService.update(updateCmd)
+
+            assertEquals("New Only", updated.label)
+            assertEquals(1000, updated.amountCents)
         }
     }
 
@@ -90,7 +106,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             val userId = userService.create(Commands.User.create()).id
             val cpId = createTestCashpool(userId)
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, 999, "New", 2000)
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, 999, UpdateProperty("New"), UpdateProperty(2000L))
             assertFailsWith<TransactionNotFound> {
                 transactionService.update(updateCmd)
             }
@@ -175,7 +191,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
 
             val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Old", 1000))
 
-            val updateCmd = UpdateCashpoolTransactionCommand(otherId, cpId, tx.id, "New", 2000)
+            val updateCmd = UpdateCashpoolTransactionCommand(otherId, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
             // This should fail because otherId is not the owner of tx
             assertFailsWith<Unauthorized> {
                 transactionService.update(updateCmd)
@@ -225,7 +241,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             }
             yield()
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, "New", 2000)
+            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
             val updated = transactionService.update(updateCmd)
 
             yield()

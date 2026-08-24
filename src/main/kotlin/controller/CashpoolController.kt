@@ -103,7 +103,12 @@ fun Application.configureCashpoolController() {
                 val updateRequest = call.receive<UpdateCashpoolRequest>()
                 val updated = cashpoolService.update(
                     call.requireUserId(),
-                    UpdateCashpoolCommand(resource.cashpoolId, updateRequest.title, updateRequest.description)
+                    UpdateCashpoolCommand(
+                        cashpoolId = resource.cashpoolId,
+                        title = updateRequest.title,
+                        description = updateRequest.description,
+                        isOpened = updateRequest.isOpened
+                    )
                 )
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(updated))
             }

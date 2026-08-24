@@ -2,6 +2,7 @@ package controller
 
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
+import core.utils.UpdateProperty
 import domain.models.Cashpool
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
@@ -44,8 +45,8 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `put cashpool - success`() = withTestApplication(createMockPrincipal(owner)) {
-        val request = UpdateCashpoolRequest("New Title", "New Description")
-        val updated = Cashpool(1, request.title, request.description, owner, true, now)
+        val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
+        val updated = Cashpool(1, request.title.value!!, request.description.value!!, owner, true, now)
 
         coEvery { cashpoolService.update(owner.id, any()) } returns updated
 
@@ -58,12 +59,12 @@ class CashpoolControllerTest : BaseControllerTest() {
 
         assertEquals(HttpStatusCode.OK, response.status)
         val body = response.body<CashpoolResponse>()
-        assertEquals(request.title, body.title)
+        assertEquals(request.title.value, body.title)
     }
 
     @Test
     fun `put cashpool - unauthorized`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
-        val request = UpdateCashpoolRequest("New Title", "New Description")
+        val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
 
         coEvery { cashpoolService.update(any(), any()) } throws core.exceptions.Unauthorized("Forbidden")
 
@@ -79,7 +80,7 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `put cashpool - not a member`() = withTestApplication(createMockPrincipal(owner)) {
-        val request = UpdateCashpoolRequest("New Title", "New Description")
+        val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
 
         coEvery { cashpoolService.update(any(), any()) } throws NotaCashpoolMember()
 

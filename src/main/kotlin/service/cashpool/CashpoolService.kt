@@ -1,6 +1,7 @@
 package service.cashpool
 
 import core.exceptions.CashpoolNotFound
+import core.exceptions.Forbidden
 import core.exceptions.NotCashpoolOwner
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.Unauthorized
@@ -28,6 +29,13 @@ class CashpoolService(
         if (!cashpoolRepo.isMember(cashpoolId, userId)) {
             cashpoolRepo.findById(cashpoolId) ?: throw CashpoolNotFound()
             throw NotaCashpoolMember()
+        }
+    }
+
+    /// Requires the cashpool to be opened (isOpened = true)
+    suspend fun requireOpened(cashpoolId: Int) {
+        if (!cashpoolRepo.findById(cashpoolId)!!.isOpened) {
+            throw Forbidden("This cashpool is not opened.")
         }
     }
 

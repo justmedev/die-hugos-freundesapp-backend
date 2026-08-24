@@ -42,8 +42,9 @@ class CashpoolRepositoryImpl : CashpoolRepository {
     override suspend fun update(cmd: UpdateCashpoolCommand): Cashpool? = suspendTransaction {
         Cashpool.from(CashpoolEntity.findByIdAndUpdate(cmd.cashpoolId) {
             it.apply {
-                title = cmd.title
-                description = cmd.description
+                if (cmd.title.update) title = cmd.title.value!!
+                if (cmd.description.update) description = cmd.description.value!!
+                if (cmd.isOpened.update) isOpened = cmd.isOpened.value!!
             }
         })
     }

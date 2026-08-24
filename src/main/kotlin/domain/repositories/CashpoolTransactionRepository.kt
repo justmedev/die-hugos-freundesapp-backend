@@ -53,8 +53,8 @@ class CashpoolTransactionRepositoryImpl : CashpoolTransactionRepository {
     override suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction? = suspendTransaction {
         CashpoolTransactionEntity.findById(cmd.transactionId)?.let {
             it.apply {
-                label = cmd.label
-                amountCents = cmd.amountCents
+                if (cmd.label.update) label = cmd.label.value!!
+                if (cmd.amountCents.update) amountCents = cmd.amountCents.value!!
             }.let { entity -> CashpoolTransaction.from(entity)!! }
         }
     }

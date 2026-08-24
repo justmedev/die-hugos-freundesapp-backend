@@ -1,5 +1,6 @@
 package controller
 
+import core.utils.UpdateProperty
 import domain.models.CashpoolTransaction
 import domain.models.events.CashpoolTransactionEvent
 import dto.cashpool_transaction.CashpoolTransactionResponse
@@ -100,8 +101,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `put transaction - success`() = withTestApplication(createMockPrincipal(user)) {
-        val request = UpdateCashpoolTransactionRequest("Updated Label", 2000)
-        val updated = CashpoolTransaction(1, user, request.label, request.amountCents, now)
+        val request = UpdateCashpoolTransactionRequest(UpdateProperty("Updated Label"), UpdateProperty(2000L))
+        val updated = CashpoolTransaction(1, user, request.label.value!!, request.amountCents.value!!, now)
 
         coEvery { cashpoolTransactionService.update(any()) } returns updated
 
@@ -114,8 +115,8 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
         assertEquals(HttpStatusCode.OK, response.status)
         val body = response.body<CashpoolTransactionResponse>()
-        assertEquals(request.label, body.label)
-        assertEquals(request.amountCents, body.amountCents)
+        assertEquals(request.label.value, body.label)
+        assertEquals(request.amountCents.value, body.amountCents)
     }
 
     @Test

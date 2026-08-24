@@ -29,6 +29,7 @@ class CashpoolTransactionService(
 
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction {
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
+        cashpoolService.requireOpened(cmd.cashpoolId)
 
         val created = transactionRepo.create(cmd)
         _events.emit(CashpoolTransactionEvent.Created(cmd.cashpoolId, created))
@@ -47,6 +48,8 @@ class CashpoolTransactionService(
 
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
+        cashpoolService.requireOpened(cmd.cashpoolId)
+
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, cmd.ownerId)
 
@@ -57,6 +60,8 @@ class CashpoolTransactionService(
 
     suspend fun deleteById(cashpoolId: Int, transactionId: Int, requestingUserId: Int) {
         cashpoolService.requireMembership(cashpoolId, requestingUserId)
+        cashpoolService.requireOpened(cashpoolId)
+
         val transaction = transactionRepo.findById(transactionId) ?: throw TransactionNotFound()
         requireOwnershipOrAdmin(transaction, requestingUserId)
         transactionRepo.deleteById(transactionId)

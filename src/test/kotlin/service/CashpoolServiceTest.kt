@@ -4,6 +4,7 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.NotCashpoolOwner
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.UserNotFound
+import core.utils.UpdateProperty
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.UpdateCashpoolCommand
@@ -54,11 +55,26 @@ class CashpoolServiceTest : BaseServiceTest() {
                 CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
             cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
 
-            val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
+            val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
             val updated = cashpoolService.update(userId, cmd)
 
             assertEquals("New Title", updated.title)
             assertEquals("New Desc", updated.description)
+        }
+    }
+
+    @Test
+    fun `update cashpool - partial update - success`() {
+        runBlocking {
+            val userId = userService.create(Commands.User.create()).id
+            val cashpool = cashpoolService.create(CreateCashpoolCommand("Original Title", "Original Desc", userId))
+            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+
+            val cmd = UpdateCashpoolCommand(cashpool.id, title = UpdateProperty("Updated Title"))
+            val updated = cashpoolService.update(userId, cmd)
+
+            assertEquals("Updated Title", updated.title)
+            assertEquals("Original Desc", updated.description)
         }
     }
 
@@ -72,7 +88,7 @@ class CashpoolServiceTest : BaseServiceTest() {
             // Other user is a member but NOT owner
             cashpoolMemberService.create(CreateCashpoolMemberCommand(otherId, cashpool.id))
 
-            val cmd = UpdateCashpoolCommand(cashpool.id, "New Title", "New Desc")
+            val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
             assertFailsWith<NotCashpoolOwner> {
                 cashpoolService.update(otherId, cmd)
             }
@@ -83,7 +99,7 @@ class CashpoolServiceTest : BaseServiceTest() {
     fun `update cashpool - invalid command - fails`() {
         runBlocking {
             assertFailsWith<IllegalArgumentException> {
-                UpdateCashpoolCommand(1, "", "")
+                UpdateCashpoolCommand(1, UpdateProperty(""), UpdateProperty(""))
             }
         }
     }

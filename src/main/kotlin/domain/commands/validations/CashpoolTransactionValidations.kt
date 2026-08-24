@@ -1,5 +1,6 @@
 package domain.commands.validations
 
+import core.extensions.optionalUpdate
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
 import io.konform.validation.Validation
@@ -18,6 +19,6 @@ object CashpoolTransactionValidations {
     }
 
     val validateUpdateCashpoolTransactionCommand = Validation {
-        UpdateCashpoolTransactionCommand::label { labelValidation() }
+        UpdateCashpoolTransactionCommand::label { optionalUpdate { labelValidation() } }
     }
 }
