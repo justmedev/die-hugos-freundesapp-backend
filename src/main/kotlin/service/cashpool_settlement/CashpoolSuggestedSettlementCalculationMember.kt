@@ -6,8 +6,9 @@ import java.math.BigDecimal
 data class CashpoolSuggestedSettlementCalculationMember(
     val member: CashpoolMember,
     var balancePaid: BigDecimal,
+    var totalExcluded: BigDecimal,
 ) {
     override fun toString(): String {
-        return "CashpoolSuggestedSettlementCalculationMember(\"${member.user.firstName} ${member.user.lastName}\", $balancePaid €)"
+        return "CashpoolSuggestedSettlementCalculationMember(\"${member.user.firstName} ${member.user.lastName}\", $balancePaid €, excluded = $totalExcluded €)"
     }
 }

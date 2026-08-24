@@ -44,26 +44,36 @@ class CashpoolSuggestedSettlementCalculationService(
                 totalPaid -= BigDecimal.valueOf(it.amountCents).movePointLeft(2)
             }
 
-            CashpoolSuggestedSettlementCalculationMember(member, totalPaid)
+            CashpoolSuggestedSettlementCalculationMember(member, totalPaid, BigDecimal.ZERO)
         }
 
         // 2. Calculate the fair share, specifying scale and rounding mode
+        // Each transaction has an array excludedUsers that contains the ids of users that should be ignored for the given
+        // transaction. Example: Sarah (vegetarian) should be ignored for a flesh purchase
         val total = settlementMembers.sumOf { it.balancePaid }
         // TODO: Support uneven distributions
         val fairShare = total.divide(BigDecimal(members.size), 2, RoundingMode.HALF_UP)
         println("Total: $total Fair share: $fairShare")
+        allTransactions.forEach { transaction ->
+            if (transaction.excludedUsers.isEmpty()) return@forEach
+            transaction.excludedUsers.forEach { excludedUserId ->
+                settlementMembers.find { it.member.user.id == excludedUserId }?.let { member ->
+                    member.totalExcluded += BigDecimal.valueOf(transaction.amountCents).movePointLeft(2)
+                }
+            }
+        }
 
         // Identify debtors and creditors safely using compareTo
         val debtors = settlementMembers
-            .filter { (it.balancePaid - fairShare) < BigDecimal.ZERO }
+            .filter { (it.balancePaid - fairShare - it.totalExcluded) < BigDecimal.ZERO }
             .toMutableList()
         val creditors = settlementMembers
-            .filter { (it.balancePaid - fairShare) > BigDecimal.ZERO }
+            .filter { (it.balancePaid - fairShare - it.totalExcluded) > BigDecimal.ZERO }
             .toMutableList()
 
         // 3. Validate math using a tolerance limit instead of strict equality
-        val debtSum = debtors.sumOf { fairShare - it.balancePaid }
-        val creditSum = creditors.sumOf { it.balancePaid - fairShare }
+        val debtSum = debtors.sumOf { fairShare - it.balancePaid - it.totalExcluded }
+        val creditSum = creditors.sumOf { it.balancePaid - fairShare - it.totalExcluded }
 
         // Allow for a rounding drift of up to 1 cent per member
         val tolerance = BigDecimal("0.01").multiply(BigDecimal(members.size))
