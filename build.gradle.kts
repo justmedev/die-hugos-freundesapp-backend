@@ -1,6 +1,8 @@
 import org.jetbrains.exposed.v1.plugin.core.migration.VersionFormat
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    alias(libs.plugins.versionCatalogeUpdate)
     alias(libs.plugins.kotlin.jvm)
     alias(ktorLibs.plugins.ktor)
     alias(libs.plugins.exposed)
