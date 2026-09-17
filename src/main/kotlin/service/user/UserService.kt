@@ -4,6 +4,7 @@ import core.exceptions.UserEmailAlreadyTaken
 import core.exceptions.UserNotFound
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
+import domain.contexts.ServiceContext
 import domain.models.User
 import domain.repositories.UserRepository
 
@@ -23,5 +24,6 @@ class UserService(
 
     suspend fun findByKeycloakId(keycloakId: String) = userRepo.findByKeycloakId(keycloakId) ?: throw UserNotFound()
 
+    context(ctx: ServiceContext)
     suspend fun update(id: Int, cmd: UpdateUserCommand): User = userRepo.update(id, cmd) ?: throw UserNotFound()
 }

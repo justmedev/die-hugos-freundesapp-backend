@@ -1,6 +1,7 @@
 package service.cashpool_settlement
 
 import core.exceptions.Forbidden
+import domain.contexts.ServiceContext
 import domain.models.CashpoolSuggestedSettlement
 import domain.models.CashpoolUserSettlementSummary
 import service.cashpool.CashpoolService
@@ -20,16 +21,17 @@ class CashpoolSuggestedSettlementCalculationService(
     /**
      * Calculate the settlements required to make everybody pay their share of a cashpool.
      */
-    suspend fun calculateSettlements(cashpoolId: Int, requestingUserId: Int): List<CashpoolSuggestedSettlement> {
-        val cashpool = cashpoolService.findByIdOnlyIfMember(cashpoolId, requestingUserId)
+    context(ctx: ServiceContext)
+    suspend fun calculateSettlements(cashpoolId: Int): List<CashpoolSuggestedSettlement> {
+        val cashpool = cashpoolService.findByIdOnlyIfMember(cashpoolId, ctx.user.id)
         val members = cashpoolMemberService.findByCashpoolId(cashpool.id)
         if (members.isEmpty()) return listOf()
 
         // 1. Fetch all transactions and group them by owner to avoid N+1 database calls
-        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpool.id, requestingUserId)
+        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpool.id)
         val transactionsByOwner = allTransactions.groupBy { it.owner.id }
 
-        val settlements = cashpoolSettlementService.findByCashpoolId(cashpool.id, requestingUserId)
+        val settlements = cashpoolSettlementService.findByCashpoolId(cashpool.id)
         val settlementMembers = members.map { member ->
             // positive -> owed, negative -> credited
             var totalPaid = transactionsByOwner[member.user.id]?.sumOf {
@@ -122,24 +124,24 @@ class CashpoolSuggestedSettlementCalculationService(
     /**
      * Calculate the summary which includes netUserBalance (how much a given user owes or is owed in total) and totalOpenCashpoolBalance (the amount of money a cashpool is worth - all executed settlements)
      */
+    context(ctx: ServiceContext)
     suspend fun calculateUserSettlementSummary(
         cashpoolId: Int,
         userId: Int,
-        requestingUserId: Int
     ): CashpoolUserSettlementSummary {
-        val requestingUser = userService.findById(requestingUserId)
+        val requestingUser = userService.findById(ctx.user.id)
 
         if (userId != requestingUser.id && !requestingUser.isAdmin) throw Forbidden("You are only allowed to access your own summary!");
 
-        val allSettlements = calculateSettlements(cashpoolId, requestingUserId)
+        val allSettlements = calculateSettlements(cashpoolId)
         val netUserBalance = allSettlements.sumOf { settlement ->
             var addend = 0L
             if (settlement.from.id == userId) addend -= settlement.amountCents // We owe, so negative
             if (settlement.to.id == userId) addend += settlement.amountCents // We receive, so positive
             addend
         }
-        val alreadySettledSettlements = cashpoolSettlementService.findByCashpoolId(cashpoolId, requestingUserId)
-        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpoolId, requestingUserId)
+        val alreadySettledSettlements = cashpoolSettlementService.findByCashpoolId(cashpoolId)
+        val allTransactions = cashpoolTransactionService.findByCashpoolId(cashpoolId)
         val totalOpenCashpoolBalance =
             allTransactions.sumOf { it.amountCents } - alreadySettledSettlements.sumOf { it.amountCents }
 

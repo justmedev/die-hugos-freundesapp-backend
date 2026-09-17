@@ -4,6 +4,7 @@ import controller.resources.CashpoolResource
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.Unauthorized
+import core.extensions.requireCtx
 import core.extensions.requireUserId
 import domain.commands.AttachImageCashpoolTransactionCommand
 import domain.commands.CreateCashpoolTransactionCommand
@@ -22,7 +23,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.di.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -57,15 +58,17 @@ fun Application.configureCashpoolTransactionsController() {
                 }
             }) { resource ->
                 val createRequest = call.receive<CreateCashpoolTransactionRequest>()
-                val created = cashpoolTransactionService.create(
-                    CreateCashpoolTransactionCommand(
-                        call.requireUserId(),
-                        resource.parent.cashpoolId,
-                        createRequest.label,
-                        createRequest.amountCents,
-                        createRequest.excludedUsers,
+                val created = context(call.requireCtx()) {
+                    cashpoolTransactionService.create(
+                        CreateCashpoolTransactionCommand(
+                            call.requireUserId(),
+                            resource.parent.cashpoolId,
+                            createRequest.label,
+                            createRequest.amountCents,
+                            createRequest.excludedUsers,
+                        )
                     )
-                )
+                }
 
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(created))
             }
@@ -107,14 +110,15 @@ fun Application.configureCashpoolTransactionsController() {
                 if (filePart == null) throw BadRequestException("No file part found")
                 if (filePart.contentType != ContentType.Image.JPEG) throw BadRequestException("File must be a JPEG")
 
-                val updated = cashpoolTransactionService.attachImage(
-                    AttachImageCashpoolTransactionCommand(
-                        call.requireUserId(),
-                        resource.transaction.parent.parent.cashpoolId,
-                        resource.transaction.transactionId,
-                        filePart.provider(),
+                val updated = context(call.requireCtx()) {
+                    cashpoolTransactionService.attachImage(
+                        AttachImageCashpoolTransactionCommand(
+                            resource.transaction.parent.parent.cashpoolId,
+                            resource.transaction.transactionId,
+                            filePart.provider(),
+                        )
                     )
-                )
+                }
                 filePart.dispose()
                 call.respond(HttpStatusCode.Created, CashpoolTransactionResponse.from(updated))
             }
@@ -132,10 +136,11 @@ fun Application.configureCashpoolTransactionsController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
-                val transactions = cashpoolTransactionService.findByCashpoolId(
-                    cashpoolId = resource.parent.cashpoolId,
-                    requestingUserId = call.requireUserId()
-                )
+                val transactions = context(call.requireCtx()) {
+                    cashpoolTransactionService.findByCashpoolId(
+                        cashpoolId = resource.parent.cashpoolId,
+                    )
+                }
 
                 call.respond(HttpStatusCode.OK, transactions.map { CashpoolTransactionResponse.from(it) })
             }
@@ -179,11 +184,12 @@ fun Application.configureCashpoolTransactionsController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool or transaction not found" }
                 }
             }) { resource ->
-                cashpoolTransactionService.deleteById(
-                    cashpoolId = resource.parent.parent.cashpoolId,
-                    requestingUserId = call.requireUserId(),
-                    transactionId = resource.transactionId
-                )
+                context(call.requireCtx()) {
+                    cashpoolTransactionService.deleteById(
+                        cashpoolId = resource.parent.parent.cashpoolId,
+                        transactionId = resource.transactionId
+                    )
+                }
 
                 call.respond(HttpStatusCode.NoContent)
             }
@@ -197,7 +203,12 @@ fun Application.configureCashpoolTransactionsController() {
                         val cashpoolId =
                             call.parameters["id"]?.toIntOrNull() ?: throw CashpoolNotFound()
                         val userId = call.requireUserId()
-                        cashpoolService.requireMembership(cashpoolId, userId)
+                        context(call.requireCtx()) {
+                            cashpoolService.requireMembership(
+                                cashpoolId,
+                                userId
+                            )
+                        }
 
                         println("A user (id: $userId) connected to the SSE endpoint for cashpool id: $cashpoolId")
                         send("Connected to SSE endpoint", "hello")

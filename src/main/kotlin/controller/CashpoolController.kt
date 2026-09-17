@@ -1,6 +1,8 @@
 package controller
 
 import controller.resources.CashpoolResource
+import core.exceptions.Unauthorized
+import core.extensions.requireCtx
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
@@ -43,16 +45,18 @@ fun Application.configureCashpoolController() {
                 }
             }) {
                 val createRequest = call.receive<CreateCashpoolRequest>()
-                val created = cashpoolService.create(
-                    CreateCashpoolCommand(
-                        createRequest.title,
-                        createRequest.description,
-                        call.requireUserId()
-                    )
-                )
-                cashpoolMemberService.create(CreateCashpoolMemberCommand(call.requireUserId(), created.id))
 
-                call.respond(HttpStatusCode.Created, CashpoolResponse.from(created))
+                context(call.requireCtx()) {
+                    val created = cashpoolService.create(
+                        CreateCashpoolCommand(
+                            createRequest.title, createRequest.description, call.requireUserId()
+                        )
+                    )
+                    cashpoolMemberService.create(CreateCashpoolMemberCommand(call.requireUserId(), created.id))
+
+                    call.respond(HttpStatusCode.Created, CashpoolResponse.from(created))
+                }
+                throw Unauthorized()
             }
 
             get<CashpoolResource>({
@@ -66,7 +70,9 @@ fun Application.configureCashpoolController() {
                     code(HttpStatusCode.Unauthorized) { description = "Missing or invalid token" }
                 }
             }) {
-                call.respond(HttpStatusCode.OK, cashpoolService.findAll().map { CashpoolResponse.from(it) })
+                call.respond(
+                    HttpStatusCode.OK,
+                    context(call.requireCtx()) { cashpoolService.findAll() }.map { CashpoolResponse.from(it) })
             }
 
             get<CashpoolResource.CashpoolId>({
@@ -82,7 +88,12 @@ fun Application.configureCashpoolController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
-                val domain = cashpoolService.findByIdOnlyIfMember(resource.cashpoolId, call.requireUserId())
+                val domain = context(call.requireCtx()) {
+                    cashpoolService.findByIdOnlyIfMember(
+                        resource.cashpoolId,
+                        call.requireUserId()
+                    )
+                }
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
             }
 
@@ -101,15 +112,16 @@ fun Application.configureCashpoolController() {
                 }
             }) { resource ->
                 val updateRequest = call.receive<UpdateCashpoolRequest>()
-                val updated = cashpoolService.update(
-                    call.requireUserId(),
-                    UpdateCashpoolCommand(
-                        cashpoolId = resource.cashpoolId,
-                        title = updateRequest.title,
-                        description = updateRequest.description,
-                        isOpened = updateRequest.isOpened
+                val updated = context(call.requireCtx()) {
+                    cashpoolService.update(
+                        UpdateCashpoolCommand(
+                            cashpoolId = resource.cashpoolId,
+                            title = updateRequest.title,
+                            description = updateRequest.description,
+                            isOpened = updateRequest.isOpened
+                        )
                     )
-                )
+                }
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(updated))
             }
 
@@ -123,7 +135,14 @@ fun Application.configureCashpoolController() {
                     code(HttpStatusCode.NotFound) { description = "Cashpool not found" }
                 }
             }) { resource ->
-                call.respond(HttpStatusCode.NoContent, cashpoolService.deleteById(resource.cashpoolId, call.requireUserId()))
+                call.respond(
+                    HttpStatusCode.NoContent,
+                    context(call.requireCtx()) {
+                        cashpoolService.deleteById(
+                            resource.cashpoolId,
+                            call.requireUserId()
+                        )
+                    })
             }
         }
     }

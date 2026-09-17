@@ -5,6 +5,7 @@ import core.exceptions.CashpoolNotFound
 import core.exceptions.Conflict
 import core.exceptions.UserNotFound
 import domain.commands.CreateCashpoolMemberCommand
+import domain.contexts.ServiceContext
 import domain.models.CashpoolMember
 import domain.repositories.CashpoolMemberRepository
 import domain.repositories.CashpoolRepository
@@ -16,7 +17,7 @@ class CashpoolMemberService(
     private val userRepo: UserRepository,
     private val cashpoolRepo: CashpoolRepository,
 ) {
-    // TODO: Handle duplicates
+    context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
         userRepo.findById(cmd.userId) ?: throw UserNotFound()
         cashpoolRepo.findById(cmd.cashpoolId) ?: throw CashpoolNotFound()
@@ -30,9 +31,12 @@ class CashpoolMemberService(
         }
     }
 
+    context(ctx: ServiceContext)
     suspend fun findById(id: Int) = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()
 
+    context(ctx: ServiceContext)
     suspend fun findByCashpoolId(cashpoolId: Int) = cashpoolMemberRepo.findByCashpoolId(cashpoolId)
 
+    context(ctx: ServiceContext)
     suspend fun findAll() = cashpoolMemberRepo.findAll()
 }
