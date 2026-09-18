@@ -1,6 +1,7 @@
 package controller
 
 import controller.resources.CashpoolResource
+import core.extensions.requireCtx
 import core.extensions.requireUserId
 import dto.cashpool_settlement.CashpoolSuggestedSettlementResponse
 import dto.cashpool_settlement.CashpoolUserSettlementSummaryResponse
@@ -35,10 +36,11 @@ fun Application.configureCashpoolSuggestedSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSuggestedSettlementCalculationService.calculateSettlements(
-                        resource.parent.parent.cashpoolId,
-                        call.requireUserId()
-                    ).map {
+                    context(call.requireCtx()) {
+                        cashpoolSuggestedSettlementCalculationService.calculateSettlements(
+                            resource.parent.parent.cashpoolId,
+                        )
+                    }.map {
                         CashpoolSuggestedSettlementResponse.from(
                             it
                         )
@@ -61,9 +63,11 @@ fun Application.configureCashpoolSuggestedSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK, CashpoolUserSettlementSummaryResponse.from(
-                        cashpoolSuggestedSettlementCalculationService.calculateUserSettlementSummary(
-                            resource.parent.parent.parent.cashpoolId, call.requireUserId(), call.requireUserId()
-                        )
+                        context(call.requireCtx()) {
+                            cashpoolSuggestedSettlementCalculationService.calculateUserSettlementSummary(
+                                resource.parent.parent.parent.cashpoolId, call.requireUserId()
+                            )
+                        }
                     )
                 )
             }

@@ -6,6 +6,7 @@ import core.exceptions.UserNotFound
 import core.utils.UpdateProperty
 import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
+import domain.contexts.ServiceContext
 import domain.models.AuthConfig
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
@@ -32,13 +33,15 @@ class AuthService(
 
             try {
                 val user = userService.findByKeycloakId(keycloakId)
-                userService.update(
-                    user.id, UpdateUserCommand(
-                        email = UpdateProperty(kcJWT.email, true),
-                        firstName = UpdateProperty(kcJWT.firstName, true),
-                        lastName = UpdateProperty(kcJWT.lastName, true),
+                context(ServiceContext(user)) {
+                    userService.update(
+                        user.id, UpdateUserCommand(
+                            email = UpdateProperty(kcJWT.email, true),
+                            firstName = UpdateProperty(kcJWT.firstName, true),
+                            lastName = UpdateProperty(kcJWT.lastName, true),
+                        )
                     )
-                )
+                }
             } catch (_: UserNotFound) {
                 userService.create(
                     CreateUserCommand(

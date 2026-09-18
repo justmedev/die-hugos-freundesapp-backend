@@ -1,8 +1,10 @@
 package controller
 
 import controller.resources.CashpoolResource
+import core.extensions.requireCtx
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolSettlementCommand
+import domain.contexts.ServiceContext
 import dto.cashpool_settlement.CashpoolSettlementResponse
 import dto.cashpool_settlement.CashpoolSuggestedSettlementResponse
 import dto.cashpool_settlement.CreateCashpoolSettlementRequest
@@ -38,15 +40,17 @@ fun Application.configureCashpoolSettlementController() {
                 }
             }) { resource ->
                 val createRequest = call.receive<CreateCashpoolSettlementRequest>()
-                val created = cashpoolSettlementService.create(
-                    CreateCashpoolSettlementCommand(
-                        createRequest.fromId,
-                        createRequest.toId,
-                        resource.parent.cashpoolId,
-                        createRequest.purpose,
-                        createRequest.amountCents
+                val created = context(call.requireCtx()) {
+                    cashpoolSettlementService.create(
+                        CreateCashpoolSettlementCommand(
+                            createRequest.fromId,
+                            createRequest.toId,
+                            resource.parent.cashpoolId,
+                            createRequest.purpose,
+                            createRequest.amountCents
+                        )
                     )
-                )
+                }
                 call.respond(HttpStatusCode.Created, CashpoolSettlementResponse.from(created))
             }
 
@@ -66,7 +70,11 @@ fun Application.configureCashpoolSettlementController() {
             }) { resource ->
                 call.respond(
                     HttpStatusCode.OK,
-                    cashpoolSettlementService.findByCashpoolId(resource.parent.cashpoolId, call.requireUserId()).map {
+                    context(call.requireCtx()) {
+                        cashpoolSettlementService.findByCashpoolId(
+                            resource.parent.cashpoolId,
+                        )
+                    }.map {
                         CashpoolSettlementResponse.from(it)
                     })
             }

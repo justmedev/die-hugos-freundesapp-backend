@@ -1,8 +1,10 @@
 package controller
 
 import controller.resources.UserResource
+import core.extensions.requireCtx
 import core.extensions.requireUser
 import domain.commands.UpdateUserCommand
+import domain.contexts.ServiceContext
 import dto.user.ExternalUpdateUserRequest
 import dto.user.InternalUpdateUserRequest
 import dto.user.UserResponse
@@ -57,13 +59,15 @@ fun Application.configureUserController() {
 
                 call.respond(
                     HttpStatusCode.OK, UserResponse.from(
-                        userService.update(
-                            user.id, UpdateUserCommand(
-                                accountHolderName = updateRequest.accountHolderName,
-                                accountIBAN = updateRequest.accountIBAN,
-                                birthdate = updateRequest.birthdate,
+                        context(call.requireCtx()) {
+                            userService.update(
+                                user.id, UpdateUserCommand(
+                                    accountHolderName = updateRequest.accountHolderName,
+                                    accountIBAN = updateRequest.accountIBAN,
+                                    birthdate = updateRequest.birthdate,
+                                )
                             )
-                        )
+                        }
                     )
                 )
             }

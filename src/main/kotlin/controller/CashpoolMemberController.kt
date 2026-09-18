@@ -1,6 +1,7 @@
 package controller
 
 import controller.resources.CashpoolResource
+import core.extensions.requireCtx
 import core.extensions.requireUserId
 import domain.commands.CreateCashpoolMemberCommand
 import dto.cashpool_member.CashpoolMemberResponse
@@ -33,7 +34,11 @@ fun Application.configureCashpoolMemberController() {
                 }
             }) { resource ->
                 val created =
-                    cashpoolMemberService.create(CreateCashpoolMemberCommand(call.requireUserId(), resource.parent.cashpoolId))
+                    context(call.requireCtx()) {
+                        cashpoolMemberService.create(
+                            CreateCashpoolMemberCommand(call.requireUserId(), resource.parent.cashpoolId)
+                        )
+                    }
 
                 call.respond(HttpStatusCode.Created, CashpoolMemberResponse.from(created))
             }
