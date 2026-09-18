@@ -11,6 +11,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.user.UserService
 import testutils.Commands
+import testutils.Contexts
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -90,7 +91,7 @@ class UserServiceTest : BaseServiceTest() {
                 birthdate = UpdateProperty(created.birthdate)
             )
 
-            val updated = userService.update(created.id, updateCmd)
+            val updated = context(Contexts.of(created)) { userService.update(created.id, updateCmd) }
 
             assertEquals("updated@example.com", updated.email)
             assertEquals("Updated", updated.firstName)
@@ -111,7 +112,7 @@ class UserServiceTest : BaseServiceTest() {
                 birthdate = UpdateProperty()
             )
             assertFailsWith<UserNotFound> {
-                userService.update(999, updateCmd)
+                context(Contexts.default) { userService.update(999, updateCmd) }
             }
         }
     }

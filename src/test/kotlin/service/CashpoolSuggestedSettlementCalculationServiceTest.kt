@@ -6,21 +6,19 @@ import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.repositories.*
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
 import service.cashpool_settlement.CashpoolSettlementService
 import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationService
+import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationMember
 import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 import testutils.Commands
-import service.cashpool_settlement.CashpoolSuggestedSettlementCalculationMember
+import testutils.Contexts
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
 
 class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -39,31 +37,29 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - success`() {
         runBlocking {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+            val userA = userService.create(Commands.User.create(firstName = "Sarah"))
+            val userB = userService.create(Commands.User.create(firstName = "Elias"))
+            val userC = userService.create(Commands.User.create(firstName = "Leon"))
+            val userD = userService.create(Commands.User.create(firstName = "Donald"))
+            val userE = userService.create(Commands.User.create(firstName = "Mina"))
+            val users = listOf(userA, userB, userC, userD, userE)
+            val cpId = context(Contexts.of(userA)) { cashpoolService.create(CreateCashpoolCommand("T", "D", userA.id)).id }
 
-            val userAId = userService.create(Commands.User.create(firstName = "Sarah")).id
-            val userBId = userService.create(Commands.User.create(firstName = "Elias")).id
-            val userCId = userService.create(Commands.User.create(firstName = "Leon")).id
-            val userDId = userService.create(Commands.User.create(firstName = "Donald")).id
-            val userEId = userService.create(Commands.User.create(firstName = "Mina")).id
-            val users = listOf(userAId, userBId, userCId, userDId, userEId)
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", userAId)).id
+            users.forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it.id, cpId)) }
 
-            users.forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
+            createTransaction(cpId, userA.id, -50_00)
+            createTransaction(cpId, userB.id, -80_41)
+            createTransaction(cpId, userC.id, -93_65)
+            createTransaction(cpId, userD.id, -20_00)
+            createTransaction(cpId, userE.id, 0)
 
-            createTransaction(cpId, userAId, -50_00)
-            createTransaction(cpId, userBId, -80_41)
-            createTransaction(cpId, userCId, -93_65)
-            createTransaction(cpId, userDId, -20_00)
-            createTransaction(cpId, userEId, 0)
-
-            val result = settlementService.calculateSettlements(cpId, userAId)
+            val result = context(Contexts.of(userA)) { settlementService.calculateSettlements(cpId) }
 
             assertEquals(4, result.size)
 
             // mina sends leon 4484€
-            assertEquals(userEId, result[0].from.id)
-            assertEquals(userCId, result[0].to.id)
+            assertEquals(userE.id, result[0].from.id)
+            assertEquals(userC.id, result[0].to.id)
             assertEquals(44_84, result[0].amountCents)
         }
     }
@@ -71,9 +67,11 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - not found - fails`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
+            val user = userService.create(Commands.User.create())
             assertFailsWith<CashpoolNotFound> {
-                settlementService.calculateSettlements(999, userId)
+                context(Contexts.of(user)) {
+                    settlementService.calculateSettlements(999)
+                }
             }
         }
     }
@@ -81,12 +79,12 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - empty members - returns empty list`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create()).id
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", ownerId)).id
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
+            val owner = userService.create(Commands.User.create())
+            val cpId = context(Contexts.of(owner)) { cashpoolService.create(CreateCashpoolCommand("T", "D", owner.id)).id }
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(owner.id, cpId))
             // No OTHER members added
 
-            val result = settlementService.calculateSettlements(cpId, ownerId)
+            val result = context(Contexts.of(owner)) { settlementService.calculateSettlements(cpId) }
             assertEquals(0, result.size)
         }
     }
@@ -94,29 +92,19 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - more credit than debt scenario`() {
         runBlocking {
-            // Setup a scenario where rounding or specific amounts might leave creditors in the while loop
-            // In the provided service logic, debtSum and creditSum are checked for tolerance.
-            // Let's create a 3 member pool where 2 paid and 1 didn't.
-            val u1 = userService.create(Commands.User.create(firstName = "U1", email = "u1@ex.com")).id
-            val u2 = userService.create(Commands.User.create(firstName = "U2", email = "u2@ex.com")).id
-            val u3 = userService.create(Commands.User.create(firstName = "U3", email = "u3@ex.com")).id
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", u1)).id
+            val u1 = userService.create(Commands.User.create(firstName = "U1", email = "u1@ex.com"))
+            val u2 = userService.create(Commands.User.create(firstName = "U2", email = "u2@ex.com"))
+            val u3 = userService.create(Commands.User.create(firstName = "U3", email = "u3@ex.com"))
+            val cpId = context(Contexts.of(u1)) { cashpoolService.create(CreateCashpoolCommand("T", "D", u1.id)).id }
 
-            listOf(u1, u2, u3).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
+            listOf(u1.id, u2.id, u3.id).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
 
-            // Total 30.00, fair share 10.00
-            createTransaction(cpId, u1, 20_00) // Creditor (+10.00)
-            createTransaction(cpId, u2, 10_01) // Creditor (+0.01) - This might trigger rounding logic
-            createTransaction(cpId, u3, 0)     // Debtor (-10.00 approx)
-            
-            // Total = 30.01. Fair share = 30.01 / 3 = 10.0033... -> 10.00 (HALF_UP)
-            // Debtors: U3 (needs to pay 10.00)
-            // Creditors: U1 (paid 20, share 10 -> due 10), U2 (paid 10.01, share 10 -> due 0.01)
-            // This tests the loop where one debtor might resolve multiple creditors or vice versa.
+            createTransaction(cpId, u1.id, 20_00) // Creditor (+10.00)
+            createTransaction(cpId, u2.id, 10_01) // Creditor (+0.01)
+            createTransaction(cpId, u3.id, 0)     // Debtor (-10.00 approx)
 
-            val result = settlementService.calculateSettlements(cpId, u1)
-            
-            // Should have 1 settlement (U3 -> U1). U2 remains a creditor by 0.01, which is within tolerance.
+            val result = context(Contexts.of(u1)) { settlementService.calculateSettlements(cpId) }
+
             assertEquals(1, result.size)
         }
     }
@@ -124,19 +112,17 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - with excluded users`() {
         runBlocking {
-            val userAId = userService.create(Commands.User.create(firstName = "Sarah")).id
-            val userBId = userService.create(Commands.User.create(firstName = "Elias")).id
-            val userCId = userService.create(Commands.User.create(firstName = "Leon")).id
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", userAId)).id
+            val userA = userService.create(Commands.User.create(firstName = "Sarah"))
+            val userB = userService.create(Commands.User.create(firstName = "Elias"))
+            val userC = userService.create(Commands.User.create(firstName = "Leon"))
+            val cpId = context(Contexts.of(userA)) { cashpoolService.create(CreateCashpoolCommand("T", "D", userA.id)).id }
 
-            listOf(userAId, userBId, userCId).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
+            listOf(userA.id, userB.id, userC.id).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
 
-            // Sarah pays 60 EUR (-60_00) with Leon excluded
-            createTransaction(cpId, userAId, -60_00, excludedUsers = listOf(userCId))
-            // Elias pays -60 EUR (60_00) with Sarah excluded
-            createTransaction(cpId, userBId, 60_00, excludedUsers = listOf(userAId))
+            createTransaction(cpId, userA.id, -60_00, excludedUsers = listOf(userC.id))
+            createTransaction(cpId, userB.id, 60_00, excludedUsers = listOf(userA.id))
 
-            val result = settlementService.calculateSettlements(cpId, userAId)
+            val result = context(Contexts.of(userA)) { settlementService.calculateSettlements(cpId) }
             assertNotNull(result)
         }
     }
@@ -144,19 +130,18 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     @Test
     fun `calculateSettlements - excluded user not in settlement members - safely skips`() {
         runBlocking {
-            val userAId = userService.create(Commands.User.create(firstName = "Sarah")).id
-            val userBId = userService.create(Commands.User.create(firstName = "Elias")).id
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", userAId)).id
+            val userA = userService.create(Commands.User.create(firstName = "Sarah"))
+            val userB = userService.create(Commands.User.create(firstName = "Elias"))
+            val cpId = context(Contexts.of(userA)) { cashpoolService.create(CreateCashpoolCommand("T", "D", userA.id)).id }
 
-            listOf(userAId, userBId).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
+            listOf(userA.id, userB.id).forEach { cashpoolMemberRepo.create(CreateCashpoolMemberCommand(it, cpId)) }
 
-            // Excluded user ID 9999 is not a member of the cashpool
-            createTransaction(cpId, userAId, -50_00, excludedUsers = listOf(9999))
+            createTransaction(cpId, userA.id, -50_00, excludedUsers = listOf(9999))
 
-            val result = settlementService.calculateSettlements(cpId, userAId)
+            val result = context(Contexts.of(userA)) { settlementService.calculateSettlements(cpId) }
             assertEquals(1, result.size)
-            assertEquals(userBId, result[0].from.id)
-            assertEquals(userAId, result[0].to.id)
+            assertEquals(userB.id, result[0].from.id)
+            assertEquals(userA.id, result[0].to.id)
             assertEquals(25_00, result[0].amountCents)
         }
     }
@@ -165,7 +150,7 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
     fun `CashpoolSuggestedSettlementCalculationMember toString formatting`() {
         runBlocking {
             val user = userService.create(Commands.User.create(firstName = "John", lastName = "Doe"))
-            val cpId = cashpoolService.create(CreateCashpoolCommand("T", "D", user.id)).id
+            val cpId = context(Contexts.of(user)) { cashpoolService.create(CreateCashpoolCommand("T", "D", user.id)).id }
             val member = cashpoolMemberRepo.create(CreateCashpoolMemberCommand(user.id, cpId))
             val calcMember = CashpoolSuggestedSettlementCalculationMember(
                 member = member,
@@ -179,20 +164,22 @@ class CashpoolSuggestedSettlementCalculationServiceTest : BaseServiceTest() {
         }
     }
 
-    suspend fun createTransaction(
+    private suspend fun createTransaction(
         cashpoolId: Int,
         userId: Int,
         amountCents: Long,
         excludedUsers: List<Int> = emptyList()
     ) {
-        transactionService.create(
-            CreateCashpoolTransactionCommand(
-                userId,
-                cashpoolId,
-                "T1",
-                amountCents,
-                excludedUsers
+        context(Contexts.of(userId)) {
+            transactionService.create(
+                CreateCashpoolTransactionCommand(
+                    userId,
+                    cashpoolId,
+                    "T1",
+                    amountCents,
+                    excludedUsers
+                )
             )
-        )
+        }
     }
 }

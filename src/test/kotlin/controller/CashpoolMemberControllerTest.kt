@@ -1,5 +1,6 @@
 package controller
 
+import domain.contexts.ServiceContext
 import domain.models.Cashpool
 import domain.models.CashpoolMember
 import dto.cashpool_member.CashpoolMemberResponse
@@ -25,7 +26,7 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
     fun `post join cashpool - success`() = withTestApplication(createMockPrincipal(user)) {
         val member = CashpoolMember(1, user, cashpool, now)
 
-        coEvery { cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, 1)) } returns member
+        coEvery { with(any<ServiceContext>()) { cashpoolMemberService.create(any()) } } returns member
 
         val client = createClient()
         val response = client.post("/cashpools/1/members") {
@@ -40,7 +41,7 @@ class CashpoolMemberControllerTest : BaseControllerTest() {
 
     @Test
     fun `post join cashpool - not found`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
-        coEvery { cashpoolMemberService.create(any()) } throws core.exceptions.CashpoolNotFound()
+        coEvery { with(any<ServiceContext>()) { cashpoolMemberService.create(any()) } } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
         val response = client.post("/cashpools/1/members") {

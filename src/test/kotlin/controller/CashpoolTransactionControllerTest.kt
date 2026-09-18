@@ -1,6 +1,7 @@
 package controller
 
 import core.utils.UpdateProperty
+import domain.contexts.ServiceContext
 import domain.models.CashpoolTransaction
 import domain.models.events.CashpoolTransactionEvent
 import dto.cashpool_transaction.CashpoolTransactionResponse
@@ -68,7 +69,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         val request = CreateCashpoolTransactionRequest("Label", 1000, listOf(1,2,3))
         val created = CashpoolTransaction(1, user, request.label, null, listOf(1,2,3), request.amountCents, now)
 
-        coEvery { cashpoolTransactionService.create(any()) } returns created
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.create(any()) } } returns created
 
         val client = createClient()
         val response = client.post("/cashpools/1/transactions") {
@@ -89,7 +90,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
             CashpoolTransaction(2, user, "Label 2", null, emptyList(), 2000, now)
         )
 
-        coEvery { cashpoolTransactionService.findByCashpoolId(1, user.id) } returns transactions
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.findByCashpoolId(1) } } returns transactions
 
         val client = createClient()
         val response = client.get("/cashpools/1/transactions") {
@@ -134,7 +135,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `delete transaction - forbidden if not member`() = withTestApplication(createMockPrincipal(user)) {
-        coEvery { cashpoolTransactionService.deleteById(1, 1, user.id) } throws core.exceptions.NotaCashpoolMember()
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.deleteById(1, 1) } } throws core.exceptions.NotaCashpoolMember()
 
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {
@@ -146,7 +147,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `delete transaction - not found`() = withTestApplication(createMockPrincipal(user)) {
-        coEvery { cashpoolTransactionService.deleteById(1, 1, user.id) } throws core.exceptions.TransactionNotFound()
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.deleteById(1, 1) } } throws core.exceptions.TransactionNotFound()
 
         val client = createClient()
         val response = client.delete("/cashpools/1/transactions/1") {
@@ -161,7 +162,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         val imageUuid = UUID.randomUUID()
         val updatedTx = CashpoolTransaction(1, user, "Label", imageUuid, emptyList(), 1000, now)
 
-        coEvery { cashpoolTransactionService.attachImage(any()) } returns updatedTx
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.attachImage(any()) } } returns updatedTx
 
         val client = createClient()
         val response = client.post("/cashpools/1/transactions/1/upload") {
@@ -222,7 +223,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
 
     @Test
     fun `upload image - unauthorized if not owner`() = withTestApplication(createMockPrincipal(user)) {
-        coEvery { cashpoolTransactionService.attachImage(any()) } throws core.exceptions.Unauthorized("Not owner")
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.attachImage(any()) } } throws core.exceptions.Unauthorized("Not owner")
 
         val client = createClient()
         val response = client.post("/cashpools/1/transactions/1/upload") {

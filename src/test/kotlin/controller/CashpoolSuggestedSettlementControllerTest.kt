@@ -1,5 +1,6 @@
 package controller
 
+import domain.contexts.ServiceContext
 import domain.models.CashpoolSuggestedSettlement
 import dto.cashpool_settlement.CashpoolSuggestedSettlementResponse
 import io.ktor.client.call.*
@@ -20,7 +21,7 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
             CashpoolSuggestedSettlement(user1, user2, 500)
         )
 
-        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, user1.id) } returns settlements
+        coEvery { with(any<ServiceContext>()) { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1) } } returns settlements
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle/suggest") {
@@ -36,7 +37,7 @@ class CashpoolSuggestedSettlementControllerTest : BaseControllerTest() {
 
     @Test
     fun `get settlements - not found`() = withTestApplication(createMockPrincipal(user1)) {
-        coEvery { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1, user1.id) } throws core.exceptions.CashpoolNotFound()
+        coEvery { with(any<ServiceContext>()) { cashpoolSuggestedSettlementCalculationService.calculateSettlements(1) } } throws core.exceptions.CashpoolNotFound()
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle/suggest") {

@@ -15,6 +15,7 @@ import service.cashpool.CashpoolService
 import service.cashpool_settlement.CashpoolSettlementService
 import service.user.UserService
 import testutils.Commands
+import testutils.Contexts
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -29,7 +30,7 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     private val settlementService = CashpoolSettlementService(settlementRepo, cashpoolService)
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
-        val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id
+        val cpId = context(Contexts.of(ownerId)) { cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id }
         cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
         return cpId
     }
@@ -37,14 +38,14 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - success`() {
         runBlocking {
-            val fromId = userService.create(Commands.User.create()).id
-            val toId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(fromId)
+            val fromUser = userService.create(Commands.User.create())
+            val toUser = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(fromUser.id)
 
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toId, cpId))
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toUser.id, cpId))
 
-            val cmd = CreateCashpoolSettlementCommand(fromId, toId, cpId, "Purpose", 10_00)
-            val settlement = settlementService.create(cmd)
+            val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, cpId, "Purpose", 10_00)
+            val settlement = context(Contexts.of(fromUser)) { settlementService.create(cmd) }
 
             assertNotNull(settlement)
             assertEquals("Purpose", settlement.purpose)
@@ -55,14 +56,14 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - not a member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val fromId = userService.create(Commands.User.create()).id
-            val toId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(ownerId)
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val fromUser = userService.create(Commands.User.create())
+            val toUser = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(owner.id)
 
-            val cmd = CreateCashpoolSettlementCommand(fromId, toId, cpId, "Purpose", 10_00)
+            val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, cpId, "Purpose", 10_00)
             assertFailsWith<NotaCashpoolMember> {
-                settlementService.create(cmd)
+                context(Contexts.of(fromUser)) { settlementService.create(cmd) }
             }
         }
     }
@@ -70,11 +71,11 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - cashpool not found - fails`() {
         runBlocking {
-            val fromId = userService.create(Commands.User.create()).id
-            val toId = userService.create(Commands.User.create()).id
-            val cmd = CreateCashpoolSettlementCommand(fromId, toId, -1, "Purpose", 10_00)
+            val fromUser = userService.create(Commands.User.create())
+            val toUser = userService.create(Commands.User.create())
+            val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, -1, "Purpose", 10_00)
             assertFailsWith<CashpoolNotFound> {
-                settlementService.create(cmd)
+                context(Contexts.of(fromUser)) { settlementService.create(cmd) }
             }
         }
     }
@@ -82,45 +83,32 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - returns settlements`() {
         runBlocking {
-            val fromId = userService.create(Commands.User.create()).id
-            val toId = userService.create(Commands.User.create()).id
-            val ownerId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(ownerId)
+            val fromUser = userService.create(Commands.User.create())
+            val toUser = userService.create(Commands.User.create())
+            val owner = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(owner.id)
 
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(fromId, cpId))
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toId, cpId))
-            settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T1", 1000))
-            settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T2", 2000))
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(fromUser.id, cpId))
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toUser.id, cpId))
+            context(Contexts.of(fromUser)) {
+                settlementService.create(CreateCashpoolSettlementCommand(fromUser.id, toUser.id, cpId, "T1", 1000))
+                settlementService.create(CreateCashpoolSettlementCommand(fromUser.id, toUser.id, cpId, "T2", 2000))
+            }
 
-            val settlements = settlementService.findByCashpoolId(cpId, ownerId)
+            val settlements = context(Contexts.of(owner)) { settlementService.findByCashpoolId(cpId) }
             assertEquals(2, settlements.size)
         }
     }
 
-    // @Test
-    // fun `findByCashpoolId - user not found - fails`() {
-    //     runBlocking {
-    //         val fromId = userService.create(Commands.User.create()).id
-    //         val toId = userService.create(Commands.User.create()).id
-    //         val cpId = createTestCashpool(1000)
-    //         settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T1", 1000))
-    //         settlementService.create(CreateCashpoolSettlementCommand(fromId, toId, cpId, "T2", 2000))
-//
-    //         assertFailsWith<UserNotFound> {
-    //             settlementService.findByCashpoolId(cpId, 1000)
-    //         }
-    //     }
-    // }
-
     @Test
     fun `findByCashpoolId - not a member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
 
             assertFailsWith<NotaCashpoolMember> {
-                settlementService.findByCashpoolId(cpId, otherId)
+                context(Contexts.of(other)) { settlementService.findByCashpoolId(cpId) }
             }
         }
     }
