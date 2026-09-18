@@ -1,18 +1,20 @@
 package domain.policies
 
-import domain.commands.CreateCashpoolSettlementCommand
+import core.exceptions.Forbidden
+import core.exceptions.NotaCashpoolMember
 import domain.contexts.ServiceContext
-import domain.models.CashpoolMember
 
 object CashpoolSuggestedSettlementPolicy {
 
     context(ctx: ServiceContext)
-    fun canCalculateSettlement(isMember: Boolean): Boolean {
-        return ctx.calledInternallyOrByAdmin || isMember
+    fun canCalculateSettlement(isMember: Boolean) {
+        if (ctx.calledInternallyOrByAdmin) return
+        if (!isMember) throw NotaCashpoolMember()
     }
 
     context(ctx: ServiceContext)
-    fun canView(isMember: Boolean): Boolean {
-        return ctx.calledInternallyOrByAdmin || isMember
+    fun canCalculateUserSettlementSummary(forUserId: Int) {
+        if (ctx.calledInternallyOrByAdmin) return
+        if (forUserId != ctx.user.id) throw Forbidden("You are only allowed to access your own summary!");
     }
 }

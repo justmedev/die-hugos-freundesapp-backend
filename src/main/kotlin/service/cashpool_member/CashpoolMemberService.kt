@@ -20,9 +20,8 @@ class CashpoolMemberService(
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
         userRepo.findById(cmd.userId) ?: throw UserNotFound()
         cashpoolRepo.findById(cmd.cashpoolId) ?: throw CashpoolNotFound()
-        if (!CashpoolMemberPolicy.canCreate(cmd)) {
-            throw Forbidden("User ${ctx.user.id} cannot create cashpool membership for user ${cmd.userId}")
-        }
+        CashpoolMemberPolicy.canCreate(cmd)
+
         return try {
             cashpoolMemberRepo.create(cmd)
         } catch (e: ExposedSQLException) {
@@ -36,20 +35,20 @@ class CashpoolMemberService(
     context(ctx: ServiceContext)
     suspend fun findById(id: Int): CashpoolMember {
         val cashpoolMember = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()
-        if (!CashpoolMemberPolicy.canView(cashpoolMember)) throw NotFound()
+        CashpoolMemberPolicy.canView(cashpoolMember)
         return cashpoolMember
     }
 
     context(ctx: ServiceContext)
     suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolMember> {
         val isMember = cashpoolRepo.isMember(cashpoolId, ctx.user.id)
-        if (CashpoolPolicy.canView(isMember)) return cashpoolMemberRepo.findByCashpoolId(cashpoolId)
-        return emptyList()
+        CashpoolPolicy.canView(isMember)
+        return cashpoolMemberRepo.findByCashpoolId(cashpoolId)
     }
 
     context(ctx: ServiceContext)
     suspend fun findAll(): List<CashpoolMember> {
-        if (CashpoolMemberPolicy.canView(null)) return cashpoolMemberRepo.findAll()
+        CashpoolMemberPolicy.canView(null)
         return cashpoolMemberRepo.findAllByUserId(ctx.user.id)
     }
 }

@@ -1,7 +1,6 @@
 package service.cashpool_transaction
 
 import core.exceptions.TransactionNotFound
-import core.exceptions.Unauthorized
 import core.utils.UpdateProperty
 import domain.commands.AttachImageCashpoolTransactionCommand
 import domain.commands.CreateCashpoolTransactionCommand
@@ -9,36 +8,31 @@ import domain.commands.UpdateCashpoolTransactionCommand
 import domain.contexts.ServiceContext
 import domain.models.CashpoolTransaction
 import domain.models.events.CashpoolTransactionEvent
+import domain.policies.CashpoolTransactionPolicy
 import domain.repositories.CashpoolTransactionRepository
 import io.ktor.util.cio.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import service.cashpool.CashpoolService
-import service.user.UserService
 import java.io.File
 import java.util.*
 
 class CashpoolTransactionService(
     private val transactionRepo: CashpoolTransactionRepository,
     private val cashpoolService: CashpoolService,
-    private val userService: UserService,
 ) {
     private val _events = MutableSharedFlow<CashpoolTransactionEvent>()
     val events = _events.asSharedFlow()
 
     context(ctx: ServiceContext)
-    private suspend fun requireOwnershipOrAdmin(transaction: CashpoolTransaction, userId: Int) {
-        val user = context(ServiceContext.internal()) { userService.findById(userId) }
-        if (transaction.owner.id != userId && !user.isAdmin) {
-            throw Unauthorized("You are not the owner of this transaction.")
-        }
-    }
-
-    context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction {
-        cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
-        cashpoolService.requireOpened(cmd.cashpoolId)
+        CashpoolTransactionPolicy.canCreate(
+            cmd,
+            runCatching { cashpoolService.findById(cmd.cashpoolId) }.isSuccess,
+            cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
+            cashpoolService.isOpened(cmd.cashpoolId)
+        )
 
         val created = transactionRepo.create(cmd)
         _events.emit(CashpoolTransactionEvent.Created(cmd.cashpoolId, created))
@@ -47,10 +41,10 @@ class CashpoolTransactionService(
 
     context(ctx: ServiceContext)
     suspend fun attachImage(cmd: AttachImageCashpoolTransactionCommand): CashpoolTransaction {
-        cashpoolService.requireMembership(cmd.cashpoolId, ctx.user.id)
-        cashpoolService.requireOpened(cmd.cashpoolId)
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
-        requireOwnershipOrAdmin(transaction, ctx.user.id)
+        CashpoolTransactionPolicy.canAttachImage(
+            cashpoolService.isOpened(cmd.cashpoolId), cashpoolService.isMember(cmd.cashpoolId, ctx.user.id), transaction
+        )
 
         val attachedImageUUID = transaction.attachedImageUUID ?: UUID.randomUUID()
         val file = File("uploads/$attachedImageUUID")
@@ -71,17 +65,23 @@ class CashpoolTransactionService(
 
     context(ctx: ServiceContext)
     suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolTransaction> {
-        cashpoolService.requireMembership(cashpoolId, ctx.user.id)
+        CashpoolTransactionPolicy.canView(
+            cashpoolService.isMember(
+                cashpoolId, ctx.user.id
+            )
+        )
         return transactionRepo.findByCashpoolId(cashpoolId)
     }
 
     context(ctx: ServiceContext)
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
-        cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
-        cashpoolService.requireOpened(cmd.cashpoolId)
-
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
-        requireOwnershipOrAdmin(transaction, cmd.ownerId)
+        CashpoolTransactionPolicy.canUpdate(
+            cmd,
+            cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
+            cashpoolService.isOpened(cmd.cashpoolId),
+            transaction
+        )
 
         val updated = transactionRepo.update(cmd) ?: throw TransactionNotFound()
         if (transaction.attachedImageUUID != null && transaction.attachedImageUUID != updated.attachedImageUUID) {
@@ -93,11 +93,12 @@ class CashpoolTransactionService(
 
     context(ctx: ServiceContext)
     suspend fun deleteById(cashpoolId: Int, transactionId: Int) {
-        cashpoolService.requireMembership(cashpoolId, ctx.user.id)
-        cashpoolService.requireOpened(cashpoolId)
-
         val transaction = transactionRepo.findById(transactionId) ?: throw TransactionNotFound()
-        requireOwnershipOrAdmin(transaction, ctx.user.id)
+        CashpoolTransactionPolicy.canDelete(
+            cashpoolService.isOpened(cashpoolId),
+            cashpoolService.isMember(cashpoolId, ctx.user.id),
+            transaction,
+        )
 
         if (transaction.attachedImageUUID != null) {
             runCatching { File("uploads/${transaction.attachedImageUUID}").delete() }

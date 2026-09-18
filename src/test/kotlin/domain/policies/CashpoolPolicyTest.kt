@@ -7,8 +7,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import testutils.Contexts
 import testutils.Users
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertFails
 import kotlin.time.Clock
 
 class CashpoolPolicyTest {
@@ -30,7 +29,7 @@ class CashpoolPolicyTest {
     fun `canCreate - admin override`() {
         context(Contexts.of(adminUser)) {
             val cmd = CreateCashpoolCommand("Title", "Desc", ownerUser.id)
-            assertTrue(CashpoolPolicy.canCreate(cmd))
+            CashpoolPolicy.canCreate(cmd)
         }
     }
 
@@ -38,7 +37,7 @@ class CashpoolPolicyTest {
     fun `canCreate - owner user`() {
         context(Contexts.of(ownerUser)) {
             val cmd = CreateCashpoolCommand("Title", "Desc", ownerUser.id)
-            assertTrue(CashpoolPolicy.canCreate(cmd))
+            CashpoolPolicy.canCreate(cmd)
         }
     }
 
@@ -46,70 +45,70 @@ class CashpoolPolicyTest {
     fun `canCreate - different user fails`() {
         context(Contexts.of(otherUser)) {
             val cmd = CreateCashpoolCommand("Title", "Desc", ownerUser.id)
-            assertFalse(CashpoolPolicy.canCreate(cmd))
+            assertFails { CashpoolPolicy.canCreate(cmd) }
         }
     }
 
     @Test
     fun `canView - admin override`() {
         context(Contexts.of(adminUser)) {
-            assertTrue(CashpoolPolicy.canView(isMember = false))
+            CashpoolPolicy.canView(isMember = false)
         }
     }
 
     @Test
     fun `canView - is member`() {
         context(Contexts.of(otherUser)) {
-            assertTrue(CashpoolPolicy.canView(isMember = true))
+            CashpoolPolicy.canView(isMember = true)
         }
     }
 
     @Test
     fun `canView - not member fails`() {
         context(Contexts.of(otherUser)) {
-            assertFalse(CashpoolPolicy.canView(isMember = false))
+            assertFails { CashpoolPolicy.canView(isMember = false) }
         }
     }
 
     @Test
     fun `canUpdate - admin override`() {
         context(Contexts.of(adminUser)) {
-            assertTrue(CashpoolPolicy.canUpdate(cashpool, isMember = false))
+            CashpoolPolicy.canUpdate(cashpool, isMember = false)
         }
     }
 
     @Test
     fun `canUpdate - owner and member`() {
         context(Contexts.of(ownerUser)) {
-            assertTrue(CashpoolPolicy.canUpdate(cashpool, isMember = true))
+            CashpoolPolicy.canUpdate(cashpool, isMember = true)
         }
     }
 
     @Test
     fun `canUpdate - member but not owner fails`() {
         context(Contexts.of(otherUser)) {
-            assertFalse(CashpoolPolicy.canUpdate(cashpool, isMember = true))
+            assertFails { CashpoolPolicy.canUpdate(cashpool, isMember = true) }
         }
     }
 
     @Test
     fun `canDelete - admin override`() {
         context(Contexts.of(adminUser)) {
-            assertTrue(CashpoolPolicy.canDelete(cashpool, isMember = false))
+            CashpoolPolicy.canDelete(cashpool, isMember = false)
         }
     }
 
     @Test
     fun `canDelete - owner and member`() {
         context(Contexts.of(ownerUser)) {
-            assertTrue(CashpoolPolicy.canDelete(cashpool, isMember = true))
+            CashpoolPolicy.canDelete(cashpool, isMember = true)
         }
     }
 
     @Test
     fun `canDelete - member but not owner fails`() {
         context(Contexts.of(otherUser)) {
-            assertFalse(CashpoolPolicy.canDelete(cashpool, isMember = true))
+            assertFails { CashpoolPolicy.canDelete(cashpool, isMember = true) }
         }
     }
 }

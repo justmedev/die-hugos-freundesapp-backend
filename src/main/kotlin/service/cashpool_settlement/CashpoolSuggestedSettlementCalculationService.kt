@@ -1,6 +1,5 @@
 package service.cashpool_settlement
 
-import core.exceptions.Forbidden
 import domain.contexts.ServiceContext
 import domain.models.CashpoolSuggestedSettlement
 import domain.models.CashpoolUserSettlementSummary
@@ -131,9 +130,7 @@ class CashpoolSuggestedSettlementCalculationService(
         cashpoolId: Int,
         userId: Int,
     ): CashpoolUserSettlementSummary {
-        val requestingUser = userService.findById(ctx.user.id)
-
-        if (userId != requestingUser.id && !requestingUser.isAdmin) throw Forbidden("You are only allowed to access your own summary!");
+        CashpoolSuggestedSettlementPolicy.canCalculateUserSettlementSummary(userId)
 
         val allSettlements = calculateSettlements(cashpoolId)
         val netUserBalance = allSettlements.sumOf { settlement ->
