@@ -1,6 +1,7 @@
 package controller
 
 import com.auth0.jwt.interfaces.Payload
+import domain.contexts.ServiceContext
 import domain.models.User
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
@@ -41,7 +42,7 @@ abstract class BaseControllerTest {
             every { getClaim("email_verified") } returns mockk { every { asBoolean() } returns true }
             every { getClaim("preferred_username") } returns mockk { every { asString() } returns user.email }
         }
-        coEvery { userService.findByKeycloakId(user.keycloakId) } returns user
+        coEvery { context(any<ServiceContext>()) { userService.findByKeycloakId(user.keycloakId) } } returns user
         return JWTPrincipal(payload)
     }
 

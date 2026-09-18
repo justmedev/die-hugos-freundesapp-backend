@@ -5,6 +5,7 @@ import core.exceptions.NotaCashpoolMember
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
 import domain.commands.CreateCashpoolSettlementCommand
+import domain.contexts.ServiceContext
 import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.CashpoolSettlementRepositoryImpl
@@ -38,8 +39,8 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - success`() {
         runBlocking {
-            val fromUser = userService.create(Commands.User.create())
-            val toUser = userService.create(Commands.User.create())
+            val fromUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
+            val toUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cpId = createTestCashpool(fromUser.id)
 
             cashpoolMemberRepo.create(CreateCashpoolMemberCommand(toUser.id, cpId))
@@ -56,9 +57,9 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - not a member - fails`() {
         runBlocking {
-            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
-            val fromUser = userService.create(Commands.User.create())
-            val toUser = userService.create(Commands.User.create())
+            val owner = context(Contexts.internal) { userService.create(Commands.User.create(email = "owner@ex.com")) }
+            val fromUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
+            val toUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cpId = createTestCashpool(owner.id)
 
             val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, cpId, "Purpose", 10_00)
@@ -71,8 +72,8 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `create settlement - cashpool not found - fails`() {
         runBlocking {
-            val fromUser = userService.create(Commands.User.create())
-            val toUser = userService.create(Commands.User.create())
+            val fromUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
+            val toUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, -1, "Purpose", 10_00)
             assertFailsWith<CashpoolNotFound> {
                 context(Contexts.of(fromUser)) { settlementService.create(cmd) }
@@ -83,9 +84,9 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - returns settlements`() {
         runBlocking {
-            val fromUser = userService.create(Commands.User.create())
-            val toUser = userService.create(Commands.User.create())
-            val owner = userService.create(Commands.User.create())
+            val fromUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
+            val toUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
+            val owner = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cpId = createTestCashpool(owner.id)
 
             cashpoolMemberRepo.create(CreateCashpoolMemberCommand(fromUser.id, cpId))
@@ -103,8 +104,8 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - not a member - fails`() {
         runBlocking {
-            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
-            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val owner = context(Contexts.internal) { userService.create(Commands.User.create(email = "owner@ex.com")) }
+            val other = context(Contexts.internal) { userService.create(Commands.User.create(email = "other@ex.com")) }
             val cpId = createTestCashpool(owner.id)
 
             assertFailsWith<NotaCashpoolMember> {

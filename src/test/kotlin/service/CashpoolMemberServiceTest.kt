@@ -6,6 +6,7 @@ import core.exceptions.Conflict
 import core.exceptions.UserNotFound
 import domain.commands.CreateCashpoolCommand
 import domain.commands.CreateCashpoolMemberCommand
+import domain.contexts.ServiceContext
 import domain.repositories.CashpoolMemberRepositoryImpl
 import domain.repositories.CashpoolRepositoryImpl
 import domain.repositories.UserRepositoryImpl
@@ -37,7 +38,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `create member - success`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cashpoolId = createTestCashpool(user.id)
             context(Contexts.of(user)) {
                 val cmd = CreateCashpoolMemberCommand(user.id, cashpoolId)
@@ -54,7 +55,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `create member - user not found - fails`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cashpoolId = createTestCashpool(user.id)
             assertFailsWith<UserNotFound> {
                 context(Contexts.default) {
@@ -67,7 +68,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `create member - cashpool not found - fails`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             assertFailsWith<CashpoolNotFound> {
                 context(Contexts.of(user)) {
                     cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, 999))
@@ -79,7 +80,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `create member - conflict already a member - fails`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cashpoolId = createTestCashpool(user.id)
 
             context(Contexts.of(user)) {
@@ -94,8 +95,8 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - returns all members`() {
         runBlocking {
-            val u1 = userService.create(Commands.User.create(email = "u1@ex.com"))
-            val u2 = userService.create(Commands.User.create(email = "u2@ex.com"))
+            val u1 = context(Contexts.internal) { userService.create(Commands.User.create(email = "u1@ex.com")) }
+            val u2 = context(Contexts.internal) { userService.create(Commands.User.create(email = "u2@ex.com")) }
             val cp = createTestCashpool(u1.id)
             context(Contexts.of(u1)) {
                 cashpoolMemberService.create(CreateCashpoolMemberCommand(u1.id, cp))
@@ -112,7 +113,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `findById - exists - returns member`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cashpoolId = createTestCashpool(user.id)
             context(Contexts.of(user)) {
                 val member = cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpoolId))
@@ -139,7 +140,7 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
     @Test
     fun `findAll - returns all`() {
         runBlocking {
-            val user = userService.create(Commands.User.create())
+            val user = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cashpoolId = createTestCashpool(user.id)
             context(Contexts.of(user)) {
                 cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpoolId))

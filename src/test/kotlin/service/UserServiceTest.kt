@@ -1,21 +1,21 @@
 package service
 
+import core.exceptions.Forbidden
 import core.exceptions.UserNotFound
 import core.utils.UpdateProperty
 import domain.commands.UpdateUserCommand
+import domain.contexts.ServiceContext
 import domain.models.valueobjects.IBAN
 import domain.repositories.UserRepositoryImpl
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.junit.Test
 import service.user.UserService
 import testutils.Commands
 import testutils.Contexts
+import testutils.Users
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.time.Clock
 
 class UserServiceTest : BaseServiceTest() {
     private val userRepo = UserRepositoryImpl()
@@ -26,7 +26,7 @@ class UserServiceTest : BaseServiceTest() {
         runBlocking {
             val cmd = Commands.User.create()
 
-            val user = userService.create(cmd)
+            val user = context(Contexts.internal) { userService.create(cmd) }
 
             assertNotNull(user)
             assertEquals(cmd.email, user.email)
@@ -35,12 +35,12 @@ class UserServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `findById - existing user - returns user`() {
+    fun `findById - existing authorized user - returns user`() {
         runBlocking {
             val cmd = Commands.User.create()
-            val created = userService.create(cmd)
+            val created = context(Contexts.internal) { userService.create(cmd) }
 
-            val found = userService.findById(created.id)
+            val found = context(ServiceContext.external(created)) { userService.findById(created.id) }
 
             assertNotNull(found)
             assertEquals(created.id, found.id)
@@ -48,10 +48,22 @@ class UserServiceTest : BaseServiceTest() {
     }
 
     @Test
+    fun `findById - existing unauthorized user - returns user`() {
+        runBlocking {
+            val cmd = Commands.User.create()
+            val created = context(Contexts.internal) { userService.create(cmd) }
+
+            assertFailsWith<Forbidden> {
+                context(ServiceContext.external(Users.nonAdminUser)) { userService.findById(created.id) }
+            }
+        }
+    }
+
+    @Test
     fun `findById - non-existing user - throws UserNotFound`() {
         runBlocking {
             assertFailsWith<UserNotFound> {
-                userService.findById(999)
+                context(Contexts.internal) { userService.findById(999) }
             }
         }
     }
@@ -60,9 +72,9 @@ class UserServiceTest : BaseServiceTest() {
     fun `findByEmail - existing user - returns user`() {
         runBlocking {
             val cmd = Commands.User.create()
-            userService.create(cmd)
+            val created = context(Contexts.internal) { userService.create(cmd) }
 
-            val found = userService.findByEmail(cmd.email)
+            val found = context(ServiceContext.external(created)) { userService.findByEmail(cmd.email) }
 
             assertNotNull(found)
             assertEquals(cmd.email, found.email)
@@ -73,7 +85,7 @@ class UserServiceTest : BaseServiceTest() {
     fun `findByEmail - non-existing user - throws UserNotFound`() {
         runBlocking {
             assertFailsWith<UserNotFound> {
-                userService.findByEmail("notfound@example.com")
+                context(Contexts.internal) { userService.findByEmail("notfound@example.com") }
             }
         }
     }
@@ -81,7 +93,7 @@ class UserServiceTest : BaseServiceTest() {
     @Test
     fun `update - success`() {
         runBlocking {
-            val created = userService.create(Commands.User.create())
+            val created = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val updateCmd = UpdateUserCommand(
                 email = UpdateProperty("updated@example.com"),
                 firstName = UpdateProperty("Updated"),
