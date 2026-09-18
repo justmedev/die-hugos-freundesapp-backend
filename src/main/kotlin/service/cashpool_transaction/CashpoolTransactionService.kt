@@ -28,10 +28,10 @@ class CashpoolTransactionService(
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolTransactionCommand): CashpoolTransaction {
         CashpoolTransactionPolicy.canCreate(
-            cmd,
-            runCatching { cashpoolService.findById(cmd.cashpoolId) }.isSuccess,
-            cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
-            cashpoolService.isOpened(cmd.cashpoolId)
+            cmd = cmd,
+            cpExists = context(ServiceContext.internal()) { runCatching { cashpoolService.findById(cmd.cashpoolId) }.isSuccess },
+            isOpened = cashpoolService.isOpened(cmd.cashpoolId),
+            isMember = cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
         )
 
         val created = transactionRepo.create(cmd)
@@ -77,10 +77,10 @@ class CashpoolTransactionService(
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         val transaction = transactionRepo.findById(cmd.transactionId) ?: throw TransactionNotFound()
         CashpoolTransactionPolicy.canUpdate(
-            cmd,
-            cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
-            cashpoolService.isOpened(cmd.cashpoolId),
-            transaction
+            cmd = cmd,
+            isOpened = cashpoolService.isOpened(cmd.cashpoolId),
+            isMember = cashpoolService.isMember(cmd.cashpoolId, cmd.ownerId),
+            transaction = transaction
         )
 
         val updated = transactionRepo.update(cmd) ?: throw TransactionNotFound()

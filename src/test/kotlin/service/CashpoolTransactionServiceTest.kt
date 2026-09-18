@@ -1,6 +1,7 @@
 package service
 
 import core.exceptions.CashpoolNotFound
+import core.exceptions.Forbidden
 import core.exceptions.NotaCashpoolMember
 import core.exceptions.TransactionNotFound
 import core.exceptions.Unauthorized
@@ -196,7 +197,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
                 transactionService.create(CreateCashpoolTransactionCommand(owner.id, cpId, "T1", 1000, emptyList()))
             }
 
-            assertFailsWith<Unauthorized> {
+            assertFailsWith<Forbidden> {
                 context(Contexts.of(other)) { transactionService.deleteById(cpId, tx.id) }
             }
         }
@@ -215,7 +216,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             }
 
             val updateCmd = UpdateCashpoolTransactionCommand(other.id, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
-            assertFailsWith<Unauthorized> {
+            assertFailsWith<Forbidden> {
                 context(Contexts.of(other)) { transactionService.update(updateCmd) }
             }
         }
@@ -405,7 +406,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
             val cmd = AttachImageCashpoolTransactionCommand(cpId, tx.id, provider)
-            assertFailsWith<Unauthorized> {
+            assertFailsWith<Forbidden> {
                 context(Contexts.of(other)) { transactionService.attachImage(cmd) }
             }
         }

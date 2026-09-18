@@ -76,7 +76,7 @@ class CashpoolSettlementServiceTest : BaseServiceTest() {
             val toUser = context(Contexts.internal) { userService.create(Commands.User.create()) }
             val cmd = CreateCashpoolSettlementCommand(fromUser.id, toUser.id, -1, "Purpose", 10_00)
             assertFailsWith<CashpoolNotFound> {
-                context(Contexts.of(fromUser)) { settlementService.create(cmd) }
+                context(Contexts.internal) { settlementService.create(cmd) }
             }
         }
     }

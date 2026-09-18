@@ -26,7 +26,7 @@ class CashpoolService(
 
     suspend fun isMember(cashpoolId: Int, userId: Int): Boolean = cashpoolRepo.isMember(cashpoolId, userId)
 
-    suspend fun isOpened(cashpoolId: Int) = cashpoolRepo.findById(cashpoolId)!!.isOpened
+    suspend fun isOpened(cashpoolId: Int) = cashpoolRepo.findById(cashpoolId)?.isOpened == true
 
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool {
@@ -39,7 +39,7 @@ class CashpoolService(
     context(ctx: ServiceContext)
     suspend fun findById(id: Int): Cashpool {
         val cp = cashpoolRepo.findById(id) ?: throw CashpoolNotFound()
-        val isMember = cashpoolRepo.isMember(id, ctx.user.id)
+        val isMember = ctx.calledInternallyOrByAdmin || cashpoolRepo.isMember(id, ctx.user.id)
         CashpoolPolicy.canView(isMember)
 
         return cp
@@ -47,8 +47,6 @@ class CashpoolService(
 
     context(ctx: ServiceContext)
     suspend fun findAll(): List<Cashpool> {
-        CashpoolPolicy.canView(false)
-
         if (ctx.calledInternallyOrByAdmin) return cashpoolRepo.findAll()
         return cashpoolRepo.findByUserMembership(ctx.user.id)
     }

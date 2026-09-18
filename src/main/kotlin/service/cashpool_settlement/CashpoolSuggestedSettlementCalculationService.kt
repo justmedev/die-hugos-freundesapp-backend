@@ -23,8 +23,8 @@ class CashpoolSuggestedSettlementCalculationService(
      */
     context(ctx: ServiceContext)
     suspend fun calculateSettlements(cashpoolId: Int): List<CashpoolSuggestedSettlement> {
-        CashpoolSuggestedSettlementPolicy.canCalculateSettlement(cashpoolService.isMember(cashpoolId, ctx.user.id))
         val cashpool = cashpoolService.findById(cashpoolId)
+        CashpoolSuggestedSettlementPolicy.canCalculateSettlement(cashpoolService.isMember(cashpoolId, ctx.user.id))
         val members = cashpoolMemberService.findByCashpoolId(cashpool.id)
         if (members.isEmpty()) return listOf()
 

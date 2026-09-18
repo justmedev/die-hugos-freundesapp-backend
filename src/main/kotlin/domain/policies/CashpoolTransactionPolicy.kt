@@ -33,7 +33,7 @@ object CashpoolTransactionPolicy {
         if (!isMember) throw NotaCashpoolMember()
         if (!isOpened) throw CashpoolClosed()
         if (ctx.calledInternallyOrByAdmin) return
-        if (cmd.ownerId != ctx.user.id && transaction.owner.id != ctx.user.id) throw Forbidden("You cannot update this transaction.")
+        if (transaction.owner.id != ctx.user.id) throw Forbidden("You cannot update this transaction.")
     }
 
     context(ctx: ServiceContext)

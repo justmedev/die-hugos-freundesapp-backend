@@ -124,7 +124,7 @@ class UserServiceTest : BaseServiceTest() {
                 birthdate = UpdateProperty()
             )
             assertFailsWith<UserNotFound> {
-                context(Contexts.default) { userService.update(999, updateCmd) }
+                context(Contexts.internal) { userService.update(999, updateCmd) }
             }
         }
     }

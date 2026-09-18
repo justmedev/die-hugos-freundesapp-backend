@@ -2,6 +2,7 @@ package domain.policies
 
 import core.exceptions.Forbidden
 import core.exceptions.NotaCashpoolMember
+import core.exceptions.NotCashpoolOwner
 import domain.commands.CreateCashpoolCommand
 import domain.contexts.ServiceContext
 import domain.models.Cashpool
@@ -26,7 +27,7 @@ object CashpoolPolicy {
 
         val isOwner = cashpool.owner.id == ctx.user.id
         if (!isMember) throw NotaCashpoolMember()
-        if (!isOwner) throw Forbidden("You are not the owner of this cashpool")
+        if (!isOwner) throw NotCashpoolOwner()
     }
 
     context(ctx: ServiceContext)
@@ -35,6 +36,6 @@ object CashpoolPolicy {
 
         val isOwner = cashpool.owner.id == ctx.user.id
         if (!isMember) throw NotaCashpoolMember()
-        if (!isOwner) throw Forbidden("You are not the owner of this cashpool")
+        if (!isOwner) throw NotCashpoolOwner()
     }
 }

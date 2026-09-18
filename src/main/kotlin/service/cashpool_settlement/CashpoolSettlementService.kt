@@ -13,6 +13,7 @@ class CashpoolSettlementService(
 ) {
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolSettlementCommand): CashpoolSettlement {
+        cashpoolService.findById(cmd.cashpoolId)
         CashpoolSettlementPolicy.canCreate(
             cmd,
             cashpoolService.isMember(cmd.cashpoolId, cmd.fromId),
