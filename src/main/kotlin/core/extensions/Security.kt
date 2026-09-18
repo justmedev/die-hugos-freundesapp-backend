@@ -11,12 +11,16 @@ import service.user.UserService
 
 suspend fun ApplicationCall.requireUserId(): Int {
     val kid = requireKeycloakId()
-    return application.dependencies.resolve<UserService>().findByKeycloakId(kid).id
+    return context(ServiceContext.internal()) {
+        application.dependencies.resolve<UserService>().findByKeycloakId(kid)
+    }.id
 }
 
 suspend fun ApplicationCall.requireUser(): User {
     val kid = requireKeycloakId()
-    return application.dependencies.resolve<UserService>().findByKeycloakId(kid)
+    return context(ServiceContext.internal()) {
+        application.dependencies.resolve<UserService>().findByKeycloakId(kid)
+    }
 }
 
 suspend fun ApplicationCall.requireCtx(): ServiceContext {
@@ -28,5 +32,5 @@ fun ApplicationCall.requireKeycloakId(): String = principal<JWTPrincipal>()?.pay
 
 suspend fun ApplicationCall.requireUser(userService: UserService): User {
     val keycloakId = requireKeycloakId()
-    return userService.findByKeycloakId(keycloakId)
+    return context(ServiceContext.internal()) { userService.findByKeycloakId(keycloakId) }
 }
