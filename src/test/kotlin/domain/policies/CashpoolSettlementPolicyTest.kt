@@ -64,6 +64,28 @@ class CashpoolSettlementPolicyTest {
     }
 
     @Test
+    fun `canCreate - should fail when settling with oneself`() {
+        val cmd = mockk<CreateCashpoolSettlementCommand> {
+            every { fromId } returns currentUser.id
+            every { toId } returns currentUser.id
+        }
+        context(Contexts.of(currentUser)) {
+            assertFails { CashpoolSettlementPolicy.canCreate(cmd, isFromMember = true, isToMember = true) }
+        }
+    }
+
+    @Test
+    fun `canCreate - should fail when sender is not a member`() {
+        val cmd = mockk<CreateCashpoolSettlementCommand> {
+            every { fromId } returns currentUser.id
+            every { toId } returns otherUser.id
+        }
+        context(Contexts.of(currentUser)) {
+            assertFails { CashpoolSettlementPolicy.canCreate(cmd, isFromMember = false, isToMember = true) }
+        }
+    }
+
+    @Test
     fun `canView - admin override`() {
         context(Contexts.of(adminUser)) {
             CashpoolSettlementPolicy.canView(isMember = false)

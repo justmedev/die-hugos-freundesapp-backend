@@ -69,6 +69,26 @@ class CashpoolTransactionPolicyTest {
     }
 
     @Test
+    fun `canCreate - admin override should fail when cashpool not found`() {
+        val cmd = mockk<CreateCashpoolTransactionCommand>()
+        context(Contexts.of(adminUser)) {
+            assertFails {
+                CashpoolTransactionPolicy.canCreate(cmd, cpExists = false, isOpened = true, isMember = false)
+            }
+        }
+    }
+
+    @Test
+    fun `canCreate - admin override should fail when cashpool closed`() {
+        val cmd = mockk<CreateCashpoolTransactionCommand>()
+        context(Contexts.of(adminUser)) {
+            assertFails {
+                CashpoolTransactionPolicy.canCreate(cmd, cpExists = true, isOpened = false, isMember = false)
+            }
+        }
+    }
+
+    @Test
     fun `canView - admin override`() {
         context(Contexts.of(adminUser)) {
             CashpoolTransactionPolicy.canView(isMember = false)
@@ -131,6 +151,28 @@ class CashpoolTransactionPolicyTest {
                     isMember = true,
                     transaction = transaction
                 )
+            }
+        }
+    }
+
+    @Test
+    fun `canUpdate - admin override should fail when admin is not a member`() {
+        val cmd = mockk<UpdateCashpoolTransactionCommand>()
+        val tx = CashpoolTransactions.of(owner = otherUser)
+        context(Contexts.of(adminUser)) {
+            assertFails {
+                CashpoolTransactionPolicy.canUpdate(cmd, isOpened = true, isMember = false, transaction = tx)
+            }
+        }
+    }
+
+    @Test
+    fun `canUpdate - admin override should fail when cashpool is closed`() {
+        val cmd = mockk<UpdateCashpoolTransactionCommand>()
+        val tx = CashpoolTransactions.of(owner = otherUser)
+        context(Contexts.of(adminUser)) {
+            assertFails {
+                CashpoolTransactionPolicy.canUpdate(cmd, isOpened = false, isMember = true, transaction = tx)
             }
         }
     }

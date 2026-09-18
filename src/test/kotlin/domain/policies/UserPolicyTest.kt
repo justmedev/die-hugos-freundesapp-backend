@@ -39,6 +39,13 @@ class UserPolicyTest {
     }
 
     @Test
+    fun `canView - should fail when id is null`() {
+        context(Contexts.of(currentUser)) {
+            assertFails { UserPolicy.canView(id = null) }
+        }
+    }
+
+    @Test
     fun `canUpdate - self`() {
         context(Contexts.of(currentUser)) {
             UserPolicy.canUpdate(currentUser.id)

@@ -16,6 +16,6 @@ object CashpoolMemberPolicy {
     context(ctx: ServiceContext)
     fun canView(member: CashpoolMember?) {
         if (ctx.isCalledInternally) return
-        if (member != null && member.user.id != ctx.user.id) throw Forbidden("User ${ctx.user.id} is not allowed to view cashpool member (${member.user.id}).")
+        if (member == null || member.user.id != ctx.user.id) throw Forbidden("User ${ctx.user.id} is not allowed to view cashpool member (${member?.user?.id}).")
     }
 }

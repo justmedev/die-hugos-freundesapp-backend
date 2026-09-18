@@ -48,7 +48,9 @@ class CashpoolMemberService(
 
     context(ctx: ServiceContext)
     suspend fun findAll(): List<CashpoolMember> {
-        CashpoolMemberPolicy.canView(null)
-        return cashpoolMemberRepo.findAllByUserId(ctx.user.id)
+        runCatching { CashpoolMemberPolicy.canView(null) }.let {
+            if (it.isFailure) return cashpoolMemberRepo.findAllByUserId(ctx.user.id)
+            return cashpoolMemberRepo.findAll()
+        }
     }
 }

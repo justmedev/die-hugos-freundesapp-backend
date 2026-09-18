@@ -43,7 +43,7 @@ class CashpoolMemberPolicyTest {
 
     @Test
     fun `canView - null member`() {
-        context(Contexts.of(currentUser)) {
+        context(Contexts.internal) {
             CashpoolMemberPolicy.canView(null)
         }
     }
@@ -69,6 +69,14 @@ class CashpoolMemberPolicyTest {
         val member = CashpoolMembers.of(otherUser)
         context(Contexts.internal) {
             CashpoolMemberPolicy.canView(member)
+        }
+    }
+
+    @Test
+    fun `canView - null member should throw`() {
+        context(Contexts.of(currentUser)) {
+            // Null member passes without throwing Forbidden
+            assertFails { CashpoolMemberPolicy.canView(member = null) }
         }
     }
 }

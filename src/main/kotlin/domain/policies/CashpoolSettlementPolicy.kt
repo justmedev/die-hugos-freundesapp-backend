@@ -12,6 +12,7 @@ object CashpoolSettlementPolicy {
         if (ctx.calledInternallyOrByAdmin) return
         if (!isFromMember) throw NotaCashpoolMember(cmd.fromId)
         if (!isToMember) throw NotaCashpoolMember(cmd.toId)
+        if (cmd.fromId == cmd.toId) throw Forbidden("User ${cmd.fromId} cannot settle with themselves!")
         if (cmd.fromId != ctx.user.id) throw Forbidden("User ${cmd.fromId} is not allowed to create a settlement in this cashpool!")
     }
 
