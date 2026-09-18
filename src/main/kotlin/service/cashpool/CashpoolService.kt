@@ -8,6 +8,7 @@ import domain.commands.CreateCashpoolCommand
 import domain.commands.UpdateCashpoolCommand
 import domain.contexts.ServiceContext
 import domain.models.Cashpool
+import domain.policies.CashpoolMemberPolicy
 import domain.policies.CashpoolPolicy
 import domain.repositories.CashpoolRepository
 import service.user.UserService
@@ -52,10 +53,8 @@ class CashpoolService(
 
     context(ctx: ServiceContext)
     suspend fun findAll(): List<Cashpool> {
-        // Since canView also checks for admin perms even if the admin is not a member, we can use it to just check for
-        // admin
         if (CashpoolPolicy.canView(false)) return cashpoolRepo.findAll()
-        return emptyList()
+        return cashpoolRepo.findByUserMembership(ctx.user.id)
     }
 
     context(ctx: ServiceContext)

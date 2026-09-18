@@ -99,6 +99,8 @@ class CashpoolMemberServiceTest : BaseServiceTest() {
             val cp = createTestCashpool(u1.id)
             context(Contexts.of(u1)) {
                 cashpoolMemberService.create(CreateCashpoolMemberCommand(u1.id, cp))
+            }
+            context(Contexts.of(u2)) {
                 cashpoolMemberService.create(CreateCashpoolMemberCommand(u2.id, cp))
 
                 val members = cashpoolMemberService.findByCashpoolId(cp)

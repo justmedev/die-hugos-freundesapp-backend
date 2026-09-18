@@ -131,8 +131,10 @@ class CashpoolServiceTest : BaseServiceTest() {
         runBlocking {
             val user = userService.create(Commands.User.create())
             context(Contexts.of(user)) {
-                cashpoolService.create(CreateCashpoolCommand("T1", "D1", user.id))
-                cashpoolService.create(CreateCashpoolCommand("T2", "D2", user.id))
+                val cp1 = cashpoolService.create(CreateCashpoolCommand("T1", "D1", user.id))
+                val cp2 = cashpoolService.create(CreateCashpoolCommand("T2", "D2", user.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cp1.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cp2.id))
 
                 val all = cashpoolService.findAll()
                 assertEquals(2, all.size)

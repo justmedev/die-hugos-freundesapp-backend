@@ -1,12 +1,11 @@
 package service.cashpool_member
 
-import core.exceptions.CashpoolMemberNotFound
-import core.exceptions.CashpoolNotFound
-import core.exceptions.Conflict
-import core.exceptions.UserNotFound
+import core.exceptions.*
 import domain.commands.CreateCashpoolMemberCommand
 import domain.contexts.ServiceContext
 import domain.models.CashpoolMember
+import domain.policies.CashpoolMemberPolicy
+import domain.policies.CashpoolPolicy
 import domain.repositories.CashpoolMemberRepository
 import domain.repositories.CashpoolRepository
 import domain.repositories.UserRepository
@@ -21,6 +20,9 @@ class CashpoolMemberService(
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember {
         userRepo.findById(cmd.userId) ?: throw UserNotFound()
         cashpoolRepo.findById(cmd.cashpoolId) ?: throw CashpoolNotFound()
+        if (!CashpoolMemberPolicy.canCreate(cmd)) {
+            throw Forbidden("User ${ctx.user.id} cannot create cashpool membership for user ${cmd.userId}")
+        }
         return try {
             cashpoolMemberRepo.create(cmd)
         } catch (e: ExposedSQLException) {
@@ -32,11 +34,22 @@ class CashpoolMemberService(
     }
 
     context(ctx: ServiceContext)
-    suspend fun findById(id: Int) = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()
+    suspend fun findById(id: Int): CashpoolMember {
+        val cashpoolMember = cashpoolMemberRepo.findById(id) ?: throw CashpoolMemberNotFound()
+        if (!CashpoolMemberPolicy.canView(cashpoolMember)) throw NotFound()
+        return cashpoolMember
+    }
 
     context(ctx: ServiceContext)
-    suspend fun findByCashpoolId(cashpoolId: Int) = cashpoolMemberRepo.findByCashpoolId(cashpoolId)
+    suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolMember> {
+        val isMember = cashpoolRepo.isMember(cashpoolId, ctx.user.id)
+        if (CashpoolPolicy.canView(isMember)) return cashpoolMemberRepo.findByCashpoolId(cashpoolId)
+        return emptyList()
+    }
 
     context(ctx: ServiceContext)
-    suspend fun findAll() = cashpoolMemberRepo.findAll()
+    suspend fun findAll(): List<CashpoolMember> {
+        if (CashpoolMemberPolicy.canView(null)) return cashpoolMemberRepo.findAll()
+        return cashpoolMemberRepo.findAllByUserId(ctx.user.id)
+    }
 }
