@@ -13,6 +13,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+# These env vars need to be set that the program compiles (because they are used in build.gradle.kts)
+# The values are dummy values, because the actual value of these does not matter for running tests.
+env:
+  POSTGRES_URL: POSTGRES_URL
+  POSTGRES_USER: USER
+  POSTGRES_PASSWORD: PASSWORD
+
 jobs:
   build:
 
