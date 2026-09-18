@@ -3,6 +3,7 @@ package controller
 import core.exceptions.CashpoolNotFound
 import core.exceptions.NotaCashpoolMember
 import core.utils.UpdateProperty
+import domain.contexts.ServiceContext
 import domain.models.Cashpool
 import dto.cashpool.CashpoolResponse
 import dto.cashpool.CreateCashpoolRequest
@@ -28,8 +29,8 @@ class CashpoolControllerTest : BaseControllerTest() {
         val request = CreateCashpoolRequest("Title", "Description")
         val created = Cashpool(1, request.title, request.description, owner, true, now)
 
-        coEvery { cashpoolService.create(any()) } returns created
-        coEvery { cashpoolMemberService.create(any()) } returns mockk()
+        coEvery { context(any<ServiceContext>()) { cashpoolService.create(any()) } } returns created
+        coEvery { context(any<ServiceContext>()) { cashpoolMemberService.create(any()) } } returns mockk()
 
         val client = createClient()
         val response = client.post("/cashpools") {
@@ -48,7 +49,7 @@ class CashpoolControllerTest : BaseControllerTest() {
         val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
         val updated = Cashpool(1, request.title.value!!, request.description.value!!, owner, true, now)
 
-        coEvery { cashpoolService.update(owner.id, any()) } returns updated
+        coEvery { context(any<ServiceContext>()) { cashpoolService.update(any()) } } returns updated
 
         val client = createClient()
         val response = client.put("/cashpools/1") {
@@ -66,7 +67,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     fun `put cashpool - unauthorized`() = withTestApplication(createMockPrincipal(Users.nonAdminUser)) {
         val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
 
-        coEvery { cashpoolService.update(any(), any()) } throws core.exceptions.Unauthorized("Forbidden")
+        coEvery { context(any<ServiceContext>()) { cashpoolService.update(any()) } } throws core.exceptions.Unauthorized("Forbidden")
 
         val client = createClient()
         val response = client.put("/cashpools/1") {
@@ -82,7 +83,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     fun `put cashpool - not a member`() = withTestApplication(createMockPrincipal(owner)) {
         val request = UpdateCashpoolRequest(UpdateProperty("New Title"), UpdateProperty("New Description"))
 
-        coEvery { cashpoolService.update(any(), any()) } throws NotaCashpoolMember()
+        coEvery { context(any<ServiceContext>()) { cashpoolService.update(any()) } } throws NotaCashpoolMember()
 
         val client = createClient()
         val response = client.put("/cashpools/1") {
@@ -101,7 +102,7 @@ class CashpoolControllerTest : BaseControllerTest() {
             Cashpool(2, "Title 2", "Desc 2", owner, true, now)
         )
 
-        coEvery { cashpoolService.findAll() } returns cashpools
+        coEvery { context(any<ServiceContext>()) { cashpoolService.findAll() } } returns cashpools
 
         val client = createClient()
         val response = client.get("/cashpools") {
@@ -117,7 +118,7 @@ class CashpoolControllerTest : BaseControllerTest() {
     fun `get cashpool by id - success`() = withTestApplication(createMockPrincipal(owner)) {
         val cashpool = Cashpool(1, "Title", "Desc", owner, true, now)
 
-        coEvery { cashpoolService.findByIdOnlyIfMember(1, owner.id) } returns cashpool
+        coEvery { context(any<ServiceContext>()) { cashpoolService.findByIdOnlyIfMember(1, owner.id) } } returns cashpool
 
         val client = createClient()
         val response = client.get("/cashpools/1") {
@@ -131,7 +132,7 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `get cashpool by id - not found`() = withTestApplication(createMockPrincipal(owner)) {
-        coEvery { cashpoolService.findByIdOnlyIfMember(1, owner.id) } throws CashpoolNotFound()
+        coEvery { context(any<ServiceContext>()) { cashpoolService.findByIdOnlyIfMember(1, owner.id) } } throws CashpoolNotFound()
 
         val client = createClient()
         val response = client.get("/cashpools/1") {
@@ -143,7 +144,7 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `get cashpool by id - forbidden`() = withTestApplication(createMockPrincipal(owner)) {
-        coEvery { cashpoolService.findByIdOnlyIfMember(1, owner.id) } throws NotaCashpoolMember()
+        coEvery { context(any<ServiceContext>()) { cashpoolService.findByIdOnlyIfMember(1, owner.id) } } throws NotaCashpoolMember()
 
         val client = createClient()
         val response = client.get("/cashpools/1") {
@@ -155,7 +156,7 @@ class CashpoolControllerTest : BaseControllerTest() {
 
     @Test
     fun `delete cashpool by id - success`() = withTestApplication(createMockPrincipal(owner)) {
-        coEvery { cashpoolService.deleteById(1, owner.id) } returns Unit
+        coEvery { context(any<ServiceContext>()) { cashpoolService.deleteById(1, owner.id) } } returns Unit
 
         val client = createClient()
         val response = client.delete("/cashpools/1") {

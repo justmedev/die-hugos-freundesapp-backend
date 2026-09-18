@@ -1,5 +1,6 @@
 package controller
 
+import domain.contexts.ServiceContext
 import domain.models.CashpoolSettlement
 import dto.cashpool_settlement.CashpoolSettlementResponse
 import dto.cashpool_settlement.CreateCashpoolSettlementRequest
@@ -24,7 +25,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
         val request = CreateCashpoolSettlementRequest(from.id, to.id, 10_00, "Label")
         val created = CashpoolSettlement(1, from, to, request.amountCents, request.purpose, now)
 
-        coEvery { cashpoolSettlementService.create(any()) } returns created
+        coEvery { with(any<ServiceContext>()) { cashpoolSettlementService.create(any()) } } returns created
 
         val client = createClient()
         val response = client.post("/cashpools/1/settle") {
@@ -48,7 +49,7 @@ class CashpoolSettlementControllerTest : BaseControllerTest() {
             CashpoolSettlement(2, from, to, 25_00, "Label 2", now)
         )
 
-        coEvery { cashpoolSettlementService.findByCashpoolId(1, from.id) } returns settlements
+        coEvery { with(any<ServiceContext>()) { cashpoolSettlementService.findByCashpoolId(1) } } returns settlements
 
         val client = createClient()
         val response = client.get("/cashpools/1/settle") {

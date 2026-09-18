@@ -17,6 +17,7 @@ import service.cashpool.CashpoolService
 import service.cashpool_member.CashpoolMemberService
 import service.user.UserService
 import testutils.Commands
+import testutils.Contexts
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -32,65 +33,67 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `create cashpool - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cmd = CreateCashpoolCommand("Title", "Desc", userId)
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                val cmd = CreateCashpoolCommand("Title", "Desc", user.id)
 
-            val cashpool = cashpoolService.create(cmd)
+                val cashpool = cashpoolService.create(cmd)
 
-            assertNotNull(cashpool)
-            assertEquals("Title", cashpool.title)
-            assertEquals(userId, cashpool.owner.id)
+                assertNotNull(cashpool)
+                assertEquals("Title", cashpool.title)
+                assertEquals(user.id, cashpool.owner.id)
+            }
         }
     }
 
     @Test
     fun `update cashpool - owner - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", user.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpool.id))
 
-            // Need to be a member to update (owner is usually a member, but we need to ensure it for findByIdOnlyIfMember)
-            val cashpoolMemberRepo = CashpoolMemberRepositoryImpl()
-            val cashpoolMemberService =
-                CashpoolMemberService(cashpoolMemberRepo, userRepo, cashpoolRepo)
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+                val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
+                val updated = cashpoolService.update(cmd)
 
-            val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
-            val updated = cashpoolService.update(userId, cmd)
-
-            assertEquals("New Title", updated.title)
-            assertEquals("New Desc", updated.description)
+                assertEquals("New Title", updated.title)
+                assertEquals("New Desc", updated.description)
+            }
         }
     }
 
     @Test
     fun `update cashpool - partial update - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Original Title", "Original Desc", userId))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                val cashpool = cashpoolService.create(CreateCashpoolCommand("Original Title", "Original Desc", user.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpool.id))
 
-            val cmd = UpdateCashpoolCommand(cashpool.id, title = UpdateProperty("Updated Title"))
-            val updated = cashpoolService.update(userId, cmd)
+                val cmd = UpdateCashpoolCommand(cashpool.id, title = UpdateProperty("Updated Title"))
+                val updated = cashpoolService.update(cmd)
 
-            assertEquals("Updated Title", updated.title)
-            assertEquals("Original Desc", updated.description)
+                assertEquals("Updated Title", updated.title)
+                assertEquals("Original Desc", updated.description)
+            }
         }
     }
 
     @Test
     fun `update cashpool - not owner - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cashpool = context(Contexts.of(owner)) { cashpoolService.create(CreateCashpoolCommand("Title", "Desc", owner.id)) }
 
-            // Other user is a member but NOT owner
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(otherId, cashpool.id))
+            context(Contexts.of(other)) {
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(other.id, cashpool.id))
 
-            val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
-            assertFailsWith<NotCashpoolOwner> {
-                cashpoolService.update(otherId, cmd)
+                val cmd = UpdateCashpoolCommand(cashpool.id, UpdateProperty("New Title"), UpdateProperty("New Desc"))
+                assertFailsWith<NotCashpoolOwner> {
+                    cashpoolService.update(cmd)
+                }
             }
         }
     }
@@ -109,7 +112,7 @@ class CashpoolServiceTest : BaseServiceTest() {
         runBlocking {
             val cmd = CreateCashpoolCommand("Title", "Desc", 999)
             assertFailsWith<UserNotFound> {
-                cashpoolService.create(cmd)
+                context(Contexts.default) { cashpoolService.create(cmd) }
             }
         }
     }
@@ -117,25 +120,29 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `findByIdOnlyIfMember - is member - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", user.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpool.id))
 
-            val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, userId)
-            assertNotNull(found)
-            assertEquals(cashpool.id, found.id)
+                val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, user.id)
+                assertNotNull(found)
+                assertEquals(cashpool.id, found.id)
+            }
         }
     }
 
     @Test
     fun `findByIdOnlyIfMember - not member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cashpool = context(Contexts.of(owner)) { cashpoolService.create(CreateCashpoolCommand("Title", "Desc", owner.id)) }
 
-            assertFailsWith<NotaCashpoolMember> {
-                cashpoolService.findByIdOnlyIfMember(cashpool.id, otherId)
+            context(Contexts.of(other)) {
+                assertFailsWith<NotaCashpoolMember> {
+                    cashpoolService.findByIdOnlyIfMember(cashpool.id, other.id)
+                }
             }
         }
     }
@@ -144,7 +151,7 @@ class CashpoolServiceTest : BaseServiceTest() {
     fun `findById - non-existing - fails`() {
         runBlocking {
             assertFailsWith<CashpoolNotFound> {
-                cashpoolService.findById(999)
+                context(Contexts.default) { cashpoolService.findById(999) }
             }
         }
     }
@@ -152,59 +159,74 @@ class CashpoolServiceTest : BaseServiceTest() {
     @Test
     fun `findAll - returns all cashpools`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            cashpoolService.create(CreateCashpoolCommand("T1", "D1", userId))
-            cashpoolService.create(CreateCashpoolCommand("T2", "D2", userId))
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                cashpoolService.create(CreateCashpoolCommand("T1", "D1", user.id))
+                cashpoolService.create(CreateCashpoolCommand("T2", "D2", user.id))
 
-            val all = cashpoolService.findAll()
-            assertEquals(2, all.size)
+                val all = cashpoolService.findAll()
+                assertEquals(2, all.size)
+            }
         }
     }
 
     @Test
     fun `deleteById - non-existing - fails`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            assertFailsWith<CashpoolNotFound> { cashpoolService.deleteById(1, userId) }
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                assertFailsWith<CashpoolNotFound> { cashpoolService.deleteById(1, user.id) }
+            }
         }
     }
 
     @Test
     fun `deleteById - not a member - fails`() {
         runBlocking {
-            val notAMemberId = userService.create(Commands.User.create()).id
-            val ownerId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(ownerId, cashpool.id))
+            val notAMember = userService.create(Commands.User.create())
+            val owner = userService.create(Commands.User.create())
+            val cashpool = context(Contexts.of(owner)) {
+                val cp = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", owner.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(owner.id, cp.id))
+                cp
+            }
 
-            assertFailsWith<NotaCashpoolMember> { cashpoolService.deleteById(cashpool.id, notAMemberId) }
+            context(Contexts.of(notAMember)) {
+                assertFailsWith<NotaCashpoolMember> { cashpoolService.deleteById(cashpool.id, notAMember.id) }
+            }
         }
     }
 
     @Test
     fun `deleteById - not owner - fails`() {
         runBlocking {
-            val notOwnerId = userService.create(Commands.User.create()).id
-            val ownerId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(ownerId, cashpool.id))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(notOwnerId, cashpool.id))
-
-            assertFailsWith<NotCashpoolOwner> { cashpoolService.deleteById(cashpool.id, notOwnerId) }
+            val notOwner = userService.create(Commands.User.create())
+            val owner = userService.create(Commands.User.create())
+            val cashpool = context(Contexts.of(owner)) {
+                val cp = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", owner.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(owner.id, cp.id))
+                cp
+            }
+            context(Contexts.of(notOwner)) {
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(notOwner.id, cashpool.id))
+                assertFailsWith<NotCashpoolOwner> { cashpoolService.deleteById(cashpool.id, notOwner.id) }
+            }
         }
     }
 
     @Test
     fun `deleteById - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", userId))
-            cashpoolMemberService.create(CreateCashpoolMemberCommand(userId, cashpool.id))
+            val user = userService.create(Commands.User.create())
+            context(Contexts.of(user)) {
+                val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", user.id))
+                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpool.id))
 
-            cashpoolService.deleteById(cashpool.id, userId)
+                cashpoolService.deleteById(cashpool.id, user.id)
 
-            assertFailsWith<CashpoolNotFound> {
-                cashpoolService.findById(cashpool.id)
+                assertFailsWith<CashpoolNotFound> {
+                    cashpoolService.findById(cashpool.id)
+                }
             }
         }
     }

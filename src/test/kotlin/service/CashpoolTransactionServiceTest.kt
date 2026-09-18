@@ -20,6 +20,7 @@ import service.cashpool.CashpoolService
 import service.cashpool_transaction.CashpoolTransactionService
 import service.user.UserService
 import testutils.Commands
+import testutils.Contexts
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -35,7 +36,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     private val transactionService = CashpoolTransactionService(transactionRepo, cashpoolService, userService)
 
     private suspend fun createTestCashpool(ownerId: Int): Int {
-        val cpId = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id
+        val cpId = context(Contexts.of(ownerId)) { cashpoolService.create(CreateCashpoolCommand("Title", "Desc", ownerId)).id }
         cashpoolMemberRepo.create(CreateCashpoolMemberCommand(ownerId, cpId))
         return cpId
     }
@@ -43,11 +44,11 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val cmd = CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000, listOf(1))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val cmd = CreateCashpoolTransactionCommand(user.id, cpId, "Label", 1000, listOf(1))
 
-            val tx = transactionService.create(cmd)
+            val tx = context(Contexts.of(user)) { transactionService.create(cmd) }
 
             assertNotNull(tx)
             assertEquals("Label", tx.label)
@@ -59,13 +60,13 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - not a member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
 
-            val cmd = CreateCashpoolTransactionCommand(otherId, cpId, "Label", 1000, emptyList())
+            val cmd = CreateCashpoolTransactionCommand(other.id, cpId, "Label", 1000, emptyList())
             assertFailsWith<NotaCashpoolMember> {
-                transactionService.create(cmd)
+                context(Contexts.of(other)) { transactionService.create(cmd) }
             }
         }
     }
@@ -73,13 +74,14 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000, listOf(1, 2)))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "Old", 1000, listOf(1, 2)))
+            }
 
             val updateCmd = UpdateCashpoolTransactionCommand(
-                userId,
+                user.id,
                 cpId,
                 tx.id,
                 UpdateProperty("New"),
@@ -87,7 +89,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
                 UpdateProperty(null),
                 UpdateProperty(listOf(1))
             )
-            val updated = transactionService.update(updateCmd)
+            val updated = context(Contexts.of(user)) { transactionService.update(updateCmd) }
 
             assertEquals("New", updated.label)
             assertEquals(2000, updated.amountCents)
@@ -98,12 +100,14 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - partial update - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "Old", 1000, emptyList()))
+            }
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, label = UpdateProperty("New Only"))
-            val updated = transactionService.update(updateCmd)
+            val updateCmd = UpdateCashpoolTransactionCommand(user.id, cpId, tx.id, label = UpdateProperty("New Only"))
+            val updated = context(Contexts.of(user)) { transactionService.update(updateCmd) }
 
             assertEquals("New Only", updated.label)
             assertEquals(1000, updated.amountCents)
@@ -113,12 +117,12 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - not found - fails`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, 999, UpdateProperty("New"), UpdateProperty(2000L))
+            val updateCmd = UpdateCashpoolTransactionCommand(user.id, cpId, 999, UpdateProperty("New"), UpdateProperty(2000L))
             assertFailsWith<TransactionNotFound> {
-                transactionService.update(updateCmd)
+                context(Contexts.of(user)) { transactionService.update(updateCmd) }
             }
         }
     }
@@ -126,25 +130,27 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `findByCashpoolId - returns transactions`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000, emptyList()))
-            transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T2", 2000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "T1", 1000, emptyList()))
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "T2", 2000, emptyList()))
 
-            val txs = transactionService.findByCashpoolId(cpId, userId)
-            assertEquals(2, txs.size)
+                val txs = transactionService.findByCashpoolId(cpId)
+                assertEquals(2, txs.size)
+            }
         }
     }
 
     @Test
     fun `findByCashpoolId - not a member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
 
             assertFailsWith<NotaCashpoolMember> {
-                transactionService.findByCashpoolId(cpId, otherId)
+                context(Contexts.of(other)) { transactionService.findByCashpoolId(cpId) }
             }
         }
     }
@@ -152,10 +158,10 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - cashpool not found - fails`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cmd = CreateCashpoolTransactionCommand(userId, 999, "Label", 1000, emptyList())
+            val user = userService.create(Commands.User.create())
+            val cmd = CreateCashpoolTransactionCommand(user.id, 999, "Label", 1000, emptyList())
             assertFailsWith<CashpoolNotFound> {
-                transactionService.create(cmd)
+                context(Contexts.of(user)) { transactionService.create(cmd) }
             }
         }
     }
@@ -163,30 +169,34 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `deleteById - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "T1", 1000, emptyList()))
+            }
 
-            transactionService.deleteById(cpId, tx.id, userId)
-
-            val txs = transactionService.findByCashpoolId(cpId, userId)
-            assertEquals(0, txs.size)
+            context(Contexts.of(user)) {
+                transactionService.deleteById(cpId, tx.id)
+                val txs = transactionService.findByCashpoolId(cpId)
+                assertEquals(0, txs.size)
+            }
         }
     }
 
     @Test
     fun `deleteById - not the owner - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(other.id, cpId))
 
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "T1", 1000, emptyList()))
+            val tx = context(Contexts.of(owner)) {
+                transactionService.create(CreateCashpoolTransactionCommand(owner.id, cpId, "T1", 1000, emptyList()))
+            }
 
-            // This should fail because otherId is not the owner of tx
             assertFailsWith<Unauthorized> {
-                transactionService.deleteById(cpId, tx.id, otherId)
+                context(Contexts.of(other)) { transactionService.deleteById(cpId, tx.id) }
             }
         }
     }
@@ -194,18 +204,18 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - not the owner - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(other.id, cpId))
 
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Old", 1000, emptyList()))
+            val tx = context(Contexts.of(owner)) {
+                transactionService.create(CreateCashpoolTransactionCommand(owner.id, cpId, "Old", 1000, emptyList()))
+            }
 
-            val updateCmd = UpdateCashpoolTransactionCommand(otherId, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
-            // This should fail because otherId is not the owner of tx
+            val updateCmd = UpdateCashpoolTransactionCommand(other.id, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
             assertFailsWith<Unauthorized> {
-                transactionService.update(updateCmd)
+                context(Contexts.of(other)) { transactionService.update(updateCmd) }
             }
         }
     }
@@ -213,21 +223,19 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `create transaction - emits created event`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
 
             val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
             val job = launch {
                 transactionService.events.collect { emittedEvents.add(it) }
             }
 
-            // Allow collector coroutine to start up and reach the collect() point
             yield()
 
-            val cmd = CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000, emptyList())
-            val tx = transactionService.create(cmd)
+            val cmd = CreateCashpoolTransactionCommand(user.id, cpId, "Label", 1000, emptyList())
+            val tx = context(Contexts.of(user)) { transactionService.create(cmd) }
 
-            // Let the collector coroutine process the emitted event
             yield()
             job.cancel()
 
@@ -242,9 +250,11 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `update transaction - emits updated event`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Old", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "Old", 1000, emptyList()))
+            }
 
             val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
             val job = launch {
@@ -252,8 +262,8 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             }
             yield()
 
-            val updateCmd = UpdateCashpoolTransactionCommand(userId, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
-            val updated = transactionService.update(updateCmd)
+            val updateCmd = UpdateCashpoolTransactionCommand(user.id, cpId, tx.id, UpdateProperty("New"), UpdateProperty(2000L))
+            val updated = context(Contexts.of(user)) { transactionService.update(updateCmd) }
 
             yield()
             job.cancel()
@@ -269,9 +279,11 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `deleteById - emits deleted event`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "T1", 1000, emptyList()))
+            }
 
             val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
             val job = launch {
@@ -279,7 +291,7 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             }
             yield()
 
-            transactionService.deleteById(cpId, tx.id, userId)
+            context(Contexts.of(user)) { transactionService.deleteById(cpId, tx.id) }
 
             yield()
             job.cancel()
@@ -294,16 +306,17 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `attachImage - success`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "Label", 1000, emptyList()))
+            }
 
             val imageContent = "test-image-content".toByteArray()
             val provider = ByteReadChannel(imageContent)
-            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider)
+            val cmd = AttachImageCashpoolTransactionCommand(cpId, tx.id, provider)
 
-            val updated = transactionService.attachImage(cmd)
+            val updated = context(Contexts.of(user)) { transactionService.attachImage(cmd) }
 
             assertNotNull(updated.attachedImageUUID)
             val imageFile = File("uploads/${updated.attachedImageUUID}")
@@ -316,10 +329,11 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `attachImage - emits updated event`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "Label", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "Label", 1000, emptyList()))
+            }
 
             val emittedEvents = mutableListOf<CashpoolTransactionEvent>()
             val job = launch {
@@ -328,8 +342,8 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
             yield()
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
-            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider)
-            val updated = transactionService.attachImage(cmd)
+            val cmd = AttachImageCashpoolTransactionCommand(cpId, tx.id, provider)
+            val updated = context(Contexts.of(user)) { transactionService.attachImage(cmd) }
 
             yield()
             job.cancel()
@@ -347,16 +361,17 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `attachImage - not a member - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Label", 1000, emptyList()))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
+            val tx = context(Contexts.of(owner)) {
+                transactionService.create(CreateCashpoolTransactionCommand(owner.id, cpId, "Label", 1000, emptyList()))
+            }
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
-            val cmd = AttachImageCashpoolTransactionCommand(otherId, cpId, tx.id, provider)
+            val cmd = AttachImageCashpoolTransactionCommand(cpId, tx.id, provider)
             assertFailsWith<NotaCashpoolMember> {
-                transactionService.attachImage(cmd)
+                context(Contexts.of(other)) { transactionService.attachImage(cmd) }
             }
         }
     }
@@ -364,13 +379,13 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `attachImage - transaction not found - fails`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
-            val cmd = AttachImageCashpoolTransactionCommand(userId, cpId, 999, provider)
+            val cmd = AttachImageCashpoolTransactionCommand(cpId, 999, provider)
             assertFailsWith<TransactionNotFound> {
-                transactionService.attachImage(cmd)
+                context(Contexts.of(user)) { transactionService.attachImage(cmd) }
             }
         }
     }
@@ -378,18 +393,19 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `attachImage - not the owner - fails`() {
         runBlocking {
-            val ownerId = userService.create(Commands.User.create(email = "owner@ex.com")).id
-            val otherId = userService.create(Commands.User.create(email = "other@ex.com")).id
-            val cpId = createTestCashpool(ownerId)
-            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(otherId, cpId))
+            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
+            val other = userService.create(Commands.User.create(email = "other@ex.com"))
+            val cpId = createTestCashpool(owner.id)
+            cashpoolMemberRepo.create(CreateCashpoolMemberCommand(other.id, cpId))
 
-            val tx =
-                transactionService.create(CreateCashpoolTransactionCommand(ownerId, cpId, "Label", 1000, emptyList()))
+            val tx = context(Contexts.of(owner)) {
+                transactionService.create(CreateCashpoolTransactionCommand(owner.id, cpId, "Label", 1000, emptyList()))
+            }
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
-            val cmd = AttachImageCashpoolTransactionCommand(otherId, cpId, tx.id, provider)
+            val cmd = AttachImageCashpoolTransactionCommand(cpId, tx.id, provider)
             assertFailsWith<Unauthorized> {
-                transactionService.attachImage(cmd)
+                context(Contexts.of(other)) { transactionService.attachImage(cmd) }
             }
         }
     }
@@ -397,16 +413,20 @@ class CashpoolTransactionServiceTest : BaseServiceTest() {
     @Test
     fun `deleteById - deletes attached image file if present`() {
         runBlocking {
-            val userId = userService.create(Commands.User.create()).id
-            val cpId = createTestCashpool(userId)
-            val tx = transactionService.create(CreateCashpoolTransactionCommand(userId, cpId, "T1", 1000, emptyList()))
+            val user = userService.create(Commands.User.create())
+            val cpId = createTestCashpool(user.id)
+            val tx = context(Contexts.of(user)) {
+                transactionService.create(CreateCashpoolTransactionCommand(user.id, cpId, "T1", 1000, emptyList()))
+            }
 
             val provider = ByteReadChannel("image-bytes".toByteArray())
-            val updated = transactionService.attachImage(AttachImageCashpoolTransactionCommand(userId, cpId, tx.id, provider))
+            val updated = context(Contexts.of(user)) {
+                transactionService.attachImage(AttachImageCashpoolTransactionCommand(cpId, tx.id, provider))
+            }
             val imageFile = File("uploads/${updated.attachedImageUUID}")
             kotlin.test.assertTrue(imageFile.exists())
 
-            transactionService.deleteById(cpId, tx.id, userId)
+            context(Contexts.of(user)) { transactionService.deleteById(cpId, tx.id) }
 
             kotlin.test.assertFalse(imageFile.exists())
         }
