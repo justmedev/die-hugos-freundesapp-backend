@@ -1,8 +1,11 @@
 package service.cashpool_settlement
 
+import core.exceptions.Forbidden
 import domain.commands.CreateCashpoolSettlementCommand
 import domain.contexts.ServiceContext
 import domain.models.CashpoolSettlement
+import domain.policies.CashpoolMemberPolicy
+import domain.policies.CashpoolSettlementPolicy
 import domain.repositories.CashpoolSettlementRepository
 import service.cashpool.CashpoolService
 
@@ -12,6 +15,9 @@ class CashpoolSettlementService(
 ) {
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolSettlementCommand): CashpoolSettlement {
+        if (!CashpoolSettlementPolicy.canCreate(cmd)) {
+            throw Forbidden("User ${ctx.user.id} cannot create cashpool settlement for user ${cmd.fromId}")
+        }
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.fromId)
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.toId)
         return settlementRepo.create(cmd)
