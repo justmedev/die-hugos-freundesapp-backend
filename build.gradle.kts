@@ -24,9 +24,9 @@ kotlin {
 exposed {
     migrations {
         tablesPackage.set("domain.tables")
-        databaseUrl.set(env.POSTGRES_URL.value)
-        databaseUser.set(env.POSTGRES_USER.value)
-        databasePassword.set(env.POSTGRES_PASSWORD.value)
+        databaseUrl.set(env.fetch("POSTGRES_URL"))
+        databaseUser.set(env.fetch("POSTGRES_USER"))
+        databasePassword.set(env.fetch("POSTGRES_PASSWORD"))
         fileVersionFormat = VersionFormat.MAJOR_TIMESTAMP
     }
 }
