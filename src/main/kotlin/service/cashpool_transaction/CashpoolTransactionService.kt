@@ -28,7 +28,7 @@ class CashpoolTransactionService(
     val events = _events.asSharedFlow()
 
     private suspend fun requireOwnershipOrAdmin(transaction: CashpoolTransaction, userId: Int) {
-        val user = userService.findById(userId)
+        val user = context(ServiceContext.internal()) { userService.findById(userId) }
         if (transaction.owner.id != userId && !user.isAdmin) {
             throw Unauthorized("You are not the owner of this transaction.")
         }

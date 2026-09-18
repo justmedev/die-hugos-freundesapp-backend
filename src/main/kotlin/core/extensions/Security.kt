@@ -20,13 +20,13 @@ suspend fun ApplicationCall.requireUser(): User {
 }
 
 suspend fun ApplicationCall.requireCtx(): ServiceContext {
-    return ServiceContext(requireUser())
+    return ServiceContext.external(requireUser())
 }
 
 fun ApplicationCall.requireKeycloakId(): String = principal<JWTPrincipal>()?.payload?.subject
     ?: throw Unauthorized()
 
-suspend fun ApplicationCall.requireUser(userService: UserService): domain.models.User {
+suspend fun ApplicationCall.requireUser(userService: UserService): User {
     val keycloakId = requireKeycloakId()
     return userService.findByKeycloakId(keycloakId)
 }

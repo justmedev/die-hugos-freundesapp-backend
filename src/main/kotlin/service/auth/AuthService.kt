@@ -32,8 +32,8 @@ class AuthService(
             val kcJWT = KeycloakJWT.from(credential)
 
             try {
-                val user = userService.findByKeycloakId(keycloakId)
-                context(ServiceContext(user)) {
+                val user = context(ServiceContext.internal()) { userService.findByKeycloakId(keycloakId) }
+                context(ServiceContext.external(user)) {
                     userService.update(
                         user.id, UpdateUserCommand(
                             email = UpdateProperty(kcJWT.email, true),
@@ -43,16 +43,18 @@ class AuthService(
                     )
                 }
             } catch (_: UserNotFound) {
-                userService.create(
-                    CreateUserCommand(
-                        keycloakId = kcJWT.keycloakId,
-                        email = kcJWT.email,
-                        firstName = kcJWT.firstName,
-                        lastName = kcJWT.lastName,
-                        birthdate = LocalDate(2000, 1, 1), // TODO: birthdate
-                        isAdmin = false, // TODO: roles
+                context(ServiceContext.internal()) {
+                    userService.create(
+                        CreateUserCommand(
+                            keycloakId = kcJWT.keycloakId,
+                            email = kcJWT.email,
+                            firstName = kcJWT.firstName,
+                            lastName = kcJWT.lastName,
+                            birthdate = LocalDate(2000, 1, 1), // TODO: birthdate
+                            isAdmin = false, // TODO: roles
+                        )
                     )
-                )
+                }
             }
 
             return JWTPrincipal(credential.payload)

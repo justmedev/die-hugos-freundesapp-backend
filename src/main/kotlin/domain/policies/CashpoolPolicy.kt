@@ -8,17 +8,17 @@ object CashpoolPolicy {
 
     context(ctx: ServiceContext)
     fun canCreate(cmd: CreateCashpoolCommand): Boolean {
-        return ctx.user.isAdmin || cmd.ownerId == ctx.user.id
+        return ctx.calledInternallyOrByAdmin || cmd.ownerId == ctx.user.id
     }
 
     context(ctx: ServiceContext)
     fun canView(isMember: Boolean): Boolean {
-        return ctx.user.isAdmin || isMember
+        return ctx.calledInternallyOrByAdmin || isMember
     }
 
     context(ctx: ServiceContext)
     fun canUpdate(cashpool: Cashpool, isMember: Boolean): Boolean {
-        if (ctx.user.isAdmin) return true
+        if (ctx.calledInternallyOrByAdmin) return true
 
         val isOwner = cashpool.owner.id == ctx.user.id
         return isMember && isOwner
@@ -26,7 +26,7 @@ object CashpoolPolicy {
 
     context(ctx: ServiceContext)
     fun canDelete(cashpool: Cashpool, isMember: Boolean): Boolean {
-        if (ctx.user.isAdmin) return true
+        if (ctx.calledInternallyOrByAdmin) return true
 
         val isOwner = cashpool.owner.id == ctx.user.id
         return isMember && isOwner
