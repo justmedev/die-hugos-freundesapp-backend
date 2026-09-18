@@ -4,11 +4,11 @@ import domain.commands.CreateCashpoolSettlementCommand
 import domain.contexts.ServiceContext
 import domain.models.CashpoolMember
 
-object CashpoolSettlementPolicy {
+object CashpoolSuggestedSettlementPolicy {
 
     context(ctx: ServiceContext)
-    fun canCreate(cmd: CreateCashpoolSettlementCommand, isFromMember: Boolean, isToMember: Boolean): Boolean {
-        return isFromMember && isToMember && (ctx.calledInternallyOrByAdmin || cmd.fromId == ctx.user.id)
+    fun canCalculateSettlement(isMember: Boolean): Boolean {
+        return ctx.calledInternallyOrByAdmin || isMember
     }
 
     context(ctx: ServiceContext)

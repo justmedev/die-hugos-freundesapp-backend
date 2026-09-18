@@ -27,6 +27,7 @@ class CashpoolTransactionService(
     private val _events = MutableSharedFlow<CashpoolTransactionEvent>()
     val events = _events.asSharedFlow()
 
+    context(ctx: ServiceContext)
     private suspend fun requireOwnershipOrAdmin(transaction: CashpoolTransaction, userId: Int) {
         val user = context(ServiceContext.internal()) { userService.findById(userId) }
         if (transaction.owner.id != userId && !user.isAdmin) {
@@ -74,11 +75,7 @@ class CashpoolTransactionService(
         return transactionRepo.findByCashpoolId(cashpoolId)
     }
 
-    suspend fun findByCashpoolIdAndTransactionOwnerId(cashpoolId: Int, ownerId: Int): List<CashpoolTransaction> {
-        cashpoolService.requireMembership(cashpoolId, ownerId)
-        return transactionRepo.findByCashpoolIdAndOwnerId(cashpoolId, ownerId)
-    }
-
+    context(ctx: ServiceContext)
     suspend fun update(cmd: UpdateCashpoolTransactionCommand): CashpoolTransaction {
         cashpoolService.requireMembership(cmd.cashpoolId, cmd.ownerId)
         cashpoolService.requireOpened(cmd.cashpoolId)

@@ -27,6 +27,8 @@ class CashpoolService(
         }
     }
 
+    suspend fun isMember(cashpoolId: Int, userId: Int): Boolean = cashpoolRepo.isMember(cashpoolId, userId)
+
     /// Requires the cashpool to be opened (isOpened = true)
     suspend fun requireOpened(cashpoolId: Int) {
         if (!cashpoolRepo.findById(cashpoolId)!!.isOpened) {
