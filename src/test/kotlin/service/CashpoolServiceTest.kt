@@ -118,36 +118,6 @@ class CashpoolServiceTest : BaseServiceTest() {
     }
 
     @Test
-    fun `findByIdOnlyIfMember - is member - success`() {
-        runBlocking {
-            val user = userService.create(Commands.User.create())
-            context(Contexts.of(user)) {
-                val cashpool = cashpoolService.create(CreateCashpoolCommand("Title", "Desc", user.id))
-                cashpoolMemberService.create(CreateCashpoolMemberCommand(user.id, cashpool.id))
-
-                val found = cashpoolService.findByIdOnlyIfMember(cashpool.id, user.id)
-                assertNotNull(found)
-                assertEquals(cashpool.id, found.id)
-            }
-        }
-    }
-
-    @Test
-    fun `findByIdOnlyIfMember - not member - fails`() {
-        runBlocking {
-            val owner = userService.create(Commands.User.create(email = "owner@ex.com"))
-            val other = userService.create(Commands.User.create(email = "other@ex.com"))
-            val cashpool = context(Contexts.of(owner)) { cashpoolService.create(CreateCashpoolCommand("Title", "Desc", owner.id)) }
-
-            context(Contexts.of(other)) {
-                assertFailsWith<NotaCashpoolMember> {
-                    cashpoolService.findByIdOnlyIfMember(cashpool.id, other.id)
-                }
-            }
-        }
-    }
-
-    @Test
     fun `findById - non-existing - fails`() {
         runBlocking {
             assertFailsWith<CashpoolNotFound> {

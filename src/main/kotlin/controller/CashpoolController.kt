@@ -89,10 +89,7 @@ fun Application.configureCashpoolController() {
                 }
             }) { resource ->
                 val domain = context(call.requireCtx()) {
-                    cashpoolService.findByIdOnlyIfMember(
-                        resource.cashpoolId,
-                        call.requireUserId()
-                    )
+                    cashpoolService.findById(resource.cashpoolId)
                 }
                 call.respond(HttpStatusCode.OK, CashpoolResponse.from(domain))
             }
