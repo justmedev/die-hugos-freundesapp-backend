@@ -3,6 +3,7 @@ package domain.models
 import domain.entities.CashpoolTransactionEntity
 import kotlinx.datetime.LocalDateTime
 import java.util.UUID
+import kotlin.time.Instant
 
 data class CashpoolTransaction(
     val id: Int,

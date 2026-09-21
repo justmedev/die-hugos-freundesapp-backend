@@ -9,6 +9,7 @@ import core.extensions.requireUserId
 import domain.commands.AttachImageCashpoolTransactionCommand
 import domain.commands.CreateCashpoolTransactionCommand
 import domain.commands.UpdateCashpoolTransactionCommand
+import domain.contexts.ServiceContext
 import domain.models.events.CashpoolTransactionEvent
 import dto.cashpool_transaction.CashpoolTransactionDeletedEventResponse
 import dto.cashpool_transaction.CashpoolTransactionResponse
@@ -161,15 +162,17 @@ fun Application.configureCashpoolTransactionsController() {
                 }
             }) { resource ->
                 val updateRequest = call.receive<UpdateCashpoolTransactionRequest>()
-                val updated = cashpoolTransactionService.update(
-                    UpdateCashpoolTransactionCommand(
-                        call.requireUserId(),
-                        resource.parent.parent.cashpoolId,
-                        resource.transactionId,
-                        updateRequest.label,
-                        updateRequest.amountCents
+                val updated = context(call.requireCtx()) {
+                    cashpoolTransactionService.update(
+                        UpdateCashpoolTransactionCommand(
+                            call.requireUserId(),
+                            resource.parent.parent.cashpoolId,
+                            resource.transactionId,
+                            updateRequest.label,
+                            updateRequest.amountCents
+                        )
                     )
-                )
+                }
 
                 call.respond(HttpStatusCode.OK, CashpoolTransactionResponse.from(updated))
             }

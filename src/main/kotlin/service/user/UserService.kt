@@ -6,24 +6,44 @@ import domain.commands.CreateUserCommand
 import domain.commands.UpdateUserCommand
 import domain.contexts.ServiceContext
 import domain.models.User
+import domain.policies.UserPolicy
 import domain.repositories.UserRepository
 
 class UserService(
     private val userRepo: UserRepository,
 ) {
+    context(ctx: ServiceContext)
     suspend fun create(cmd: CreateUserCommand): User {
+        UserPolicy.canCreate()
         if (userRepo.findByEmail(cmd.email) != null) {
             throw UserEmailAlreadyTaken()
         }
         return userRepo.create(cmd)
     }
 
-    suspend fun findById(id: Int) = userRepo.findById(id) ?: throw UserNotFound()
-
-    suspend fun findByEmail(email: String) = userRepo.findByEmail(email) ?: throw UserNotFound()
-
-    suspend fun findByKeycloakId(keycloakId: String) = userRepo.findByKeycloakId(keycloakId) ?: throw UserNotFound()
+    context(ctx: ServiceContext)
+    suspend fun findById(id: Int): User {
+        UserPolicy.canView(id)
+        return userRepo.findById(id) ?: throw UserNotFound()
+    }
 
     context(ctx: ServiceContext)
-    suspend fun update(id: Int, cmd: UpdateUserCommand): User = userRepo.update(id, cmd) ?: throw UserNotFound()
+    suspend fun findByEmail(email: String): User {
+        val user = userRepo.findByEmail(email)
+        UserPolicy.canView(user?.id)
+        return user ?: throw UserNotFound()
+    }
+
+    context(ctx: ServiceContext)
+    suspend fun findByKeycloakId(keycloakId: String): User {
+        val user = userRepo.findByKeycloakId(keycloakId)
+        UserPolicy.canView(user?.id)
+        return user ?: throw UserNotFound()
+    }
+
+    context(ctx: ServiceContext)
+    suspend fun update(id: Int, cmd: UpdateUserCommand): User {
+        UserPolicy.canUpdate(id)
+        return userRepo.update(id, cmd) ?: throw UserNotFound()
+    }
 }

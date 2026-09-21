@@ -3,6 +3,7 @@ package service.cashpool_settlement
 import domain.commands.CreateCashpoolSettlementCommand
 import domain.contexts.ServiceContext
 import domain.models.CashpoolSettlement
+import domain.policies.CashpoolSettlementPolicy
 import domain.repositories.CashpoolSettlementRepository
 import service.cashpool.CashpoolService
 
@@ -12,14 +13,18 @@ class CashpoolSettlementService(
 ) {
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolSettlementCommand): CashpoolSettlement {
-        cashpoolService.requireMembership(cmd.cashpoolId, cmd.fromId)
-        cashpoolService.requireMembership(cmd.cashpoolId, cmd.toId)
+        cashpoolService.findById(cmd.cashpoolId)
+        CashpoolSettlementPolicy.canCreate(
+            cmd,
+            cashpoolService.isMember(cmd.cashpoolId, cmd.fromId),
+            cashpoolService.isMember(cmd.cashpoolId, cmd.toId)
+        )
         return settlementRepo.create(cmd)
     }
 
     context(ctx: ServiceContext)
     suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolSettlement> {
-        cashpoolService.requireMembership(cashpoolId, ctx.user.id)
+        CashpoolSettlementPolicy.canView(cashpoolService.isMember(cashpoolId, ctx.user.id))
         return settlementRepo.findByCashpoolId(cashpoolId)
     }
 }

@@ -3,9 +3,9 @@ package domain.repositories
 import domain.commands.CreateCashpoolCommand
 import domain.commands.UpdateCashpoolCommand
 import domain.entities.CashpoolEntity
+import domain.entities.CashpoolMemberEntity
 import domain.models.Cashpool
 import domain.tables.CashpoolMembersTable
-import domain.tables.CashpoolsTable
 import domain.tables.UsersTable
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -17,6 +17,7 @@ interface CashpoolRepository {
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool
     suspend fun findById(id: Int): Cashpool?
     suspend fun findAll(): List<Cashpool>
+    suspend fun findByUserMembership(userId: Int): List<Cashpool>
     suspend fun isMember(cashpoolId: Int, userId: Int): Boolean
     suspend fun update(cmd: UpdateCashpoolCommand): Cashpool?
     suspend fun deleteById(id: Int)
@@ -35,8 +36,12 @@ class CashpoolRepositoryImpl : CashpoolRepository {
         CashpoolEntity.findById(id)?.let { Cashpool.from(it) }
     }
 
+    override suspend fun findByUserMembership(userId: Int): List<Cashpool> = suspendTransaction {
+        CashpoolMemberEntity.find { CashpoolMembersTable.user eq userId }.map { Cashpool.from(it.cashpool)!! }
+    }
+
     override suspend fun findAll(): List<Cashpool> = suspendTransaction {
-        CashpoolEntity.all().map { Cashpool.from(it)!! }.toList()
+        CashpoolEntity.all().map { Cashpool.from(it)!! }
     }
 
     override suspend fun update(cmd: UpdateCashpoolCommand): Cashpool? = suspendTransaction {

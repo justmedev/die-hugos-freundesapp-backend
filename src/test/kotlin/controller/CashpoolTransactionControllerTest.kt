@@ -108,7 +108,7 @@ class CashpoolTransactionControllerTest : BaseControllerTest() {
         val updated =
             CashpoolTransaction(1, user, request.label.value!!, null, emptyList(), request.amountCents.value!!, now)
 
-        coEvery { cashpoolTransactionService.update(any()) } returns updated
+        coEvery { with(any<ServiceContext>()) { cashpoolTransactionService.update(any()) } } returns updated
 
         val client = createClient()
         val response = client.put("/cashpools/1/transactions/1") {

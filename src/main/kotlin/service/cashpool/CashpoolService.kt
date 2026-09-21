@@ -1,13 +1,12 @@
 package service.cashpool
 
 import core.exceptions.CashpoolNotFound
-import core.exceptions.Forbidden
-import core.exceptions.NotCashpoolOwner
 import core.exceptions.NotaCashpoolMember
 import domain.commands.CreateCashpoolCommand
 import domain.commands.UpdateCashpoolCommand
 import domain.contexts.ServiceContext
 import domain.models.Cashpool
+import domain.policies.CashpoolPolicy
 import domain.repositories.CashpoolRepository
 import service.user.UserService
 
@@ -15,13 +14,6 @@ class CashpoolService(
     private val userService: UserService,
     private val cashpoolRepo: CashpoolRepository,
 ) {
-    private suspend fun requireOwnershipOrAdmin(cashpool: Cashpool, userId: Int) {
-        val user = userService.findById(userId)
-        if (cashpool.owner.id != userId && !user.isAdmin) {
-            throw NotCashpoolOwner()
-        }
-    }
-
     /**
      * Validates the cashpool exists and the user is a member of it.
      */
@@ -32,43 +24,48 @@ class CashpoolService(
         }
     }
 
-    /// Requires the cashpool to be opened (isOpened = true)
-    suspend fun requireOpened(cashpoolId: Int) {
-        if (!cashpoolRepo.findById(cashpoolId)!!.isOpened) {
-            throw Forbidden("This cashpool is not opened.")
-        }
-    }
+    suspend fun isMember(cashpoolId: Int, userId: Int): Boolean = cashpoolRepo.isMember(cashpoolId, userId)
+
+    suspend fun isOpened(cashpoolId: Int) = cashpoolRepo.findById(cashpoolId)?.isOpened == true
 
     context(ctx: ServiceContext)
     suspend fun create(cmd: CreateCashpoolCommand): Cashpool {
         userService.findById(cmd.ownerId)
+        CashpoolPolicy.canCreate(cmd)
+
         return cashpoolRepo.create(cmd)
     }
 
     context(ctx: ServiceContext)
-    suspend fun findById(id: Int) = cashpoolRepo.findById(id) ?: throw CashpoolNotFound()
+    suspend fun findById(id: Int): Cashpool {
+        val cp = cashpoolRepo.findById(id) ?: throw CashpoolNotFound()
+        val isMember = ctx.calledInternallyOrByAdmin || cashpoolRepo.isMember(id, ctx.user.id)
+        CashpoolPolicy.canView(isMember)
 
-    context(ctx: ServiceContext)
-    suspend fun findByIdOnlyIfMember(id: Int, userId: Int): Cashpool {
-        val cp = findById(id)
-        if (!cashpoolRepo.isMember(id, userId)) throw NotaCashpoolMember()
         return cp
     }
 
     context(ctx: ServiceContext)
-    suspend fun findAll(): List<Cashpool> = cashpoolRepo.findAll()
+    suspend fun findAll(): List<Cashpool> {
+        if (ctx.calledInternallyOrByAdmin) return cashpoolRepo.findAll()
+        return cashpoolRepo.findByUserMembership(ctx.user.id)
+    }
 
     context(ctx: ServiceContext)
     suspend fun update(cmd: UpdateCashpoolCommand): Cashpool {
-        val cashpool = findByIdOnlyIfMember(cmd.cashpoolId, ctx.user.id)
-        requireOwnershipOrAdmin(cashpool, ctx.user.id)
+        val cashpool = findById(cmd.cashpoolId)
+        val isMember = cashpoolRepo.isMember(cmd.cashpoolId, ctx.user.id)
+        CashpoolPolicy.canUpdate(cashpool, isMember)
+
         return cashpoolRepo.update(cmd) ?: throw CashpoolNotFound()
     }
 
     context(ctx: ServiceContext)
     suspend fun deleteById(id: Int, userId: Int) {
-        val cashpool = findByIdOnlyIfMember(id, userId)
-        requireOwnershipOrAdmin(cashpool, userId)
+        val cashpool = findById(id)
+        val isMember = cashpoolRepo.isMember(id, userId)
+        CashpoolPolicy.canDelete(cashpool, isMember)
+
         cashpoolRepo.deleteById(id)
     }
 }

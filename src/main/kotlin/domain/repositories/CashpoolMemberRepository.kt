@@ -1,5 +1,6 @@
 package domain.repositories
 
+import domain.commands.CreateCashpoolMemberCommand
 import domain.entities.CashpoolMemberEntity
 import domain.models.CashpoolMember
 import domain.tables.CashpoolMembersTable
@@ -8,12 +9,12 @@ import domain.tables.UsersTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
-import domain.commands.CreateCashpoolMemberCommand
 
 interface CashpoolMemberRepository {
     suspend fun create(cmd: CreateCashpoolMemberCommand): CashpoolMember
     suspend fun findById(id: Int): CashpoolMember?
     suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolMember>
+    suspend fun findAllByUserId(userId: Int): List<CashpoolMember>
     suspend fun findAll(): List<CashpoolMember>
 }
 
@@ -31,6 +32,10 @@ class CashpoolMemberRepositoryImpl : CashpoolMemberRepository {
 
     override suspend fun findByCashpoolId(cashpoolId: Int): List<CashpoolMember> = suspendTransaction {
         CashpoolMemberEntity.find { CashpoolMembersTable.cashpool eq cashpoolId }.map { CashpoolMember.from(it)!! }
+    }
+
+    override suspend fun findAllByUserId(userId: Int): List<CashpoolMember> = suspendTransaction {
+        CashpoolMemberEntity.find { CashpoolMembersTable.user eq userId }.map { CashpoolMember.from(it)!! }
     }
 
     override suspend fun findAll(): List<CashpoolMember> = suspendTransaction {
